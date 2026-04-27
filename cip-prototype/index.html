@@ -439,7 +439,45 @@ body {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--text-2);
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
+.info-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 1px solid var(--muted);
+  font-size: 9px;
+  color: var(--muted);
+  cursor: help;
+  flex-shrink: 0;
+  font-style: normal;
+}
+.info-tip:hover { border-color: var(--accent); color: var(--accent); }
+.info-tip .tip-text {
+  display: none;
+  position: absolute;
+  left: calc(100% + 8px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 6px 10px;
+  border-radius: var(--radius-md);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 11px;
+  font-style: normal;
+  white-space: nowrap;
+  z-index: 10;
+  pointer-events: none;
+}
+.info-tip:hover .tip-text { display: block; }
 .weight-input {
   width: 64px;
   background: var(--surface-2);
@@ -984,23 +1022,23 @@ body {
             <div class="card" style="margin-bottom:16px">
               <div class="section-header" style="margin-bottom:4px">Weight Configuration</div>
               <div class="weight-row">
-                <span class="weight-label">Children &lt;12</span>
+                <span class="weight-label">Children &lt;12 <i class="info-tip">i<span class="tip-text">% of households with children under 12</span></i></span>
                 <input type="number" min="0" max="100" value="25" class="weight-input" id="w-yfi" oninput="checkWeightTotal()">
               </div>
               <div class="weight-row">
-                <span class="weight-label">Household Size</span>
+                <span class="weight-label">Household Size <i class="info-tip">i<span class="tip-text">Average number of people per household</span></i></span>
                 <input type="number" min="0" max="100" value="20" class="weight-input" id="w-wfi" oninput="checkWeightTotal()">
               </div>
               <div class="weight-row">
-                <span class="weight-label">SES Alignment</span>
+                <span class="weight-label">SES Alignment <i class="info-tip">i<span class="tip-text">Income, education, and occupation match</span></i></span>
                 <input type="number" min="0" max="100" value="20" class="weight-input" id="w-ses" oninput="checkWeightTotal()">
               </div>
               <div class="weight-row">
-                <span class="weight-label">Growth Rate</span>
+                <span class="weight-label">Growth Rate <i class="info-tip">i<span class="tip-text">Population growth since 2020</span></i></span>
                 <input type="number" min="0" max="100" value="15" class="weight-input" id="w-growth" oninput="checkWeightTotal()">
               </div>
               <div class="weight-row" style="border-bottom:none">
-                <span class="weight-label">Rel. Openness</span>
+                <span class="weight-label">Rel. Openness <i class="info-tip">i<span class="tip-text">Receptivity to faith-based outreach</span></i></span>
                 <input type="number" min="0" max="100" value="20" class="weight-input" id="w-rel" oninput="checkWeightTotal()">
               </div>
               <div class="weight-total-row">
