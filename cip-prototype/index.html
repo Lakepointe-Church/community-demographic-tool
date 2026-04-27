@@ -424,23 +424,25 @@ body {
 /* ── SITE SCORER ────────────────── */
 .scorer-grid {
   display: grid;
-  grid-template-columns: 300px 1fr;
+  grid-template-columns: 360px minmax(0, 1fr);
   gap: 24px;
 }
 .weight-slider {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 .weight-slider label {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 11px;
   color: var(--text-2);
-  min-width: 120px;
+  min-width: 110px;
+  flex-shrink: 0;
 }
 .weight-slider input[type="range"] {
   flex: 1;
+  min-width: 60px;
   -webkit-appearance: none;
   height: 4px;
   background: var(--surface-2);
@@ -459,8 +461,9 @@ body {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
   color: var(--accent);
-  min-width: 36px;
+  min-width: 40px;
   text-align: right;
+  flex-shrink: 0;
 }
 
 /* ── SECTION HEADERS ────────────── */
@@ -501,11 +504,13 @@ body {
 }
 
 /* ── RESPONSIVE ─────────────────── */
+@media (max-width: 1200px) {
+  .scorer-grid { grid-template-columns: 1fr; }
+}
 @media (max-width: 1024px) {
   .sidebar { width: 200px; }
   .main { margin-left: 200px; }
   .chart-row { grid-template-columns: 1fr; }
-  .scorer-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
   .sidebar { display: none; }
@@ -957,12 +962,12 @@ body {
             <div class="card" style="margin-bottom:16px">
               <div class="section-header" style="margin-bottom:12px">Weight Configuration</div>
               <div class="weight-slider">
-                <label>Young Families</label>
+                <label>Children &lt;12</label>
                 <input type="range" min="0" max="100" value="25" id="w-yfi" oninput="updateWeightDisplay()">
                 <span class="weight-val" id="wv-yfi">25%</span>
               </div>
               <div class="weight-slider">
-                <label>Working Families</label>
+                <label>Household Size</label>
                 <input type="range" min="0" max="100" value="20" id="w-wfi" oninput="updateWeightDisplay()">
                 <span class="weight-val" id="wv-wfi">20%</span>
               </div>
@@ -991,7 +996,7 @@ body {
             <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:auto;max-height:680px;">
               <table class="data-table">
                 <thead>
-                  <tr><th>Rank</th><th>ZIP</th><th>Area</th><th>Score</th><th>YFI</th><th>WFI</th><th>SES</th><th>Growth</th><th>Rel.</th></tr>
+                  <tr><th>#</th><th>ZIP</th><th>Area</th><th>Score</th><th>SES</th><th>Growth</th><th>Kids &lt;12</th><th>HH Size</th></tr>
                 </thead>
                 <tbody id="scorer-table"></tbody>
               </table>
@@ -1480,9 +1485,11 @@ function recalcScores() {
 
   const scored = ZIPS.map(z => {
     const growthNorm = Math.min(100, z.growth * 2.5);
+    const cu12Norm = Math.min(100, z.cu12 * 3.2);
+    const hhNorm = Math.min(100, (z.hhSize - 2.0) * 55);
     const score = Math.round(
-      (z.yfi * w.yfi / total) +
-      (z.wfi * w.wfi / total) +
+      (cu12Norm * w.yfi / total) +
+      (hhNorm * w.wfi / total) +
       (z.sesScore * w.ses / total) +
       (growthNorm * w.growth / total) +
       (z.relOpen * w.rel / total)
@@ -1492,13 +1499,13 @@ function recalcScores() {
 
   // Top 3
   document.getElementById('top-sites').innerHTML = scored.slice(0, 3).map((z, i) => `
-    <div style="display:flex;align-items:center;gap:16px;padding:12px 0;${i < 2 ? 'border-bottom:1px solid var(--border)' : ''}">
-      <div style="font-family:'Bebas Neue';font-size:28px;color:${['var(--accent)','var(--accent3)','var(--accent5)'][i]};min-width:32px">#${i+1}</div>
-      <div style="flex:1">
-        <div style="font-weight:600;color:var(--text)">${z.zip} — ${z.area}</div>
-        <div style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text-2)">YFI ${z.yfi} · WFI ${z.wfi} · SES ${z.sesScore} · Growth ${fmtPct(z.growth)}</div>
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;${i < 2 ? 'border-bottom:1px solid var(--border)' : ''}">
+      <div style="font-family:'Bebas Neue';font-size:24px;color:${['var(--accent)','var(--accent3)','var(--accent5)'][i]};min-width:28px;flex-shrink:0">#${i+1}</div>
+      <div style="flex:1;min-width:0;overflow:hidden">
+        <div style="font-weight:600;color:var(--text);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${z.zip} — ${z.area}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SES ${z.sesScore} · Growth ${fmtPct(z.growth)} · ${z.cu12}% kids</div>
       </div>
-      <div style="font-family:'Bebas Neue';font-size:32px;color:${['var(--accent)','var(--accent3)','var(--accent5)'][i]}">${z.score}</div>
+      <div style="font-family:'Bebas Neue';font-size:28px;color:${['var(--accent)','var(--accent3)','var(--accent5)'][i]};flex-shrink:0">${z.score}</div>
     </div>
   `).join('');
 
@@ -1509,11 +1516,10 @@ function recalcScores() {
       <td class="mono">${z.zip}</td>
       <td>${z.area}</td>
       <td><div class="bar-inline"><div class="bar-track"><div class="bar-fill" style="width:${z.score}%;background:${z.score > 75 ? 'var(--accent)' : z.score > 50 ? 'var(--accent3)' : 'var(--accent5)'}"></div></div><span class="bar-val">${z.score}</span></div></td>
-      <td class="mono">${z.yfi}</td>
-      <td class="mono">${z.wfi}</td>
       <td class="mono">${z.sesScore}</td>
-      <td class="mono">${fmtPct(z.growth)}</td>
-      <td class="mono">${z.relOpen}</td>
+      <td class="mono" style="color:${getGrowthColor(z.growth)}">${fmtPct(z.growth)}</td>
+      <td class="mono">${z.cu12}%</td>
+      <td class="mono">${z.hhSize}</td>
     </tr>
   `).join('');
 }
