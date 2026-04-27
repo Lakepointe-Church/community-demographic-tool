@@ -1,0 +1,9 @@
+{
+  "name": "cip-prototype",
+  "version": "0.1.0",
+  "description": "Community Intelligence Platform — Lakepointe Church Interactive Prototype",
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve ."
+  }
+}

@@ -1,0 +1,1495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Community Intelligence Platform — Lakepointe Church</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0a0d12;
+  --surface: #12161e;
+  --surface-2: #181d28;
+  --border: #1e2430;
+  --highlight: #1a2035;
+  --accent: #00e5a0;
+  --accent2: #ff6b35;
+  --accent3: #4da6ff;
+  --accent4: #a78bfa;
+  --accent5: #f59e0b;
+  --text: #e8edf5;
+  --text-2: #b0b8c8;
+  --muted: #5a6272;
+  --positive: #00e5a0;
+  --negative: #ff6b35;
+  --info: #4da6ff;
+  --warning: #f59e0b;
+  --young-family: #00e5a0;
+  --working-family: #4da6ff;
+  --struggling: #ff6b35;
+  --affluent: #a78bfa;
+  --radius-sm: 2px;
+  --radius-md: 4px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  overflow-x: hidden;
+}
+
+/* ── LAYOUT ─────────────────────── */
+.app { display: flex; min-height: 100vh; }
+.sidebar {
+  width: 240px;
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+.main {
+  margin-left: 240px;
+  flex: 1;
+  min-height: 100vh;
+}
+
+/* ── SIDEBAR ────────────────────── */
+.logo {
+  padding: 24px 20px 20px;
+  border-bottom: 1px solid var(--border);
+}
+.logo h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  letter-spacing: 2px;
+  color: var(--accent);
+  line-height: 1.1;
+}
+.logo .logo-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+.nav { flex: 1; padding: 12px 0; }
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-2);
+  transition: all 0.15s;
+  border-left: 3px solid transparent;
+}
+.nav-item:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+.nav-item.active {
+  background: var(--highlight);
+  color: var(--accent);
+  border-left-color: var(--accent);
+  font-weight: 500;
+}
+.nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+.nav-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 8px 20px;
+}
+.sidebar-footer {
+  padding: 16px 20px;
+  border-top: 1px solid var(--border);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+}
+.sidebar-footer .version { color: var(--accent); }
+
+/* ── HEADER ─────────────────────── */
+.page-header {
+  padding: 24px 32px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface);
+}
+.page-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: 1.5px;
+  color: var(--text);
+}
+.page-subtitle {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.header-actions { display: flex; gap: 12px; align-items: center; }
+.zip-search {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 13px;
+  width: 200px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+.zip-search:focus { border-color: var(--accent); }
+.zip-search::placeholder { color: var(--muted); }
+.btn {
+  background: var(--accent);
+  color: var(--bg);
+  border: none;
+  padding: 8px 16px;
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: opacity 0.15s;
+}
+.btn:hover { opacity: 0.85; }
+.btn-outline {
+  background: transparent;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+/* ── CONTENT ────────────────────── */
+.content { padding: 24px 32px; }
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── CARDS ──────────────────────── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+.card-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+.card-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 36px;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.card-delta {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  margin-top: 6px;
+}
+.card-delta.up { color: var(--positive); }
+.card-delta.down { color: var(--negative); }
+
+/* ── SEGMENT BADGES ─────────────── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 2px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.badge-green { background: rgba(0,229,160,0.15); color: var(--accent); border: 1px solid rgba(0,229,160,0.3); }
+.badge-blue { background: rgba(77,166,255,0.15); color: var(--accent3); border: 1px solid rgba(77,166,255,0.3); }
+.badge-orange { background: rgba(255,107,53,0.15); color: var(--accent2); border: 1px solid rgba(255,107,53,0.3); }
+.badge-purple { background: rgba(167,139,250,0.15); color: var(--accent4); border: 1px solid rgba(167,139,250,0.3); }
+.badge-gold { background: rgba(245,158,11,0.15); color: var(--accent5); border: 1px solid rgba(245,158,11,0.3); }
+
+/* ── DATA TABLE ─────────────────── */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.data-table thead th {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: left;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+.data-table tbody td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-2);
+}
+.data-table tbody tr { cursor: pointer; transition: background 0.1s; }
+.data-table tbody tr:hover { background: var(--highlight); }
+.data-table tbody tr.selected { background: var(--highlight); border-left: 3px solid var(--accent); }
+.data-table .mono {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+}
+
+/* ── BAR CHART INLINE ───────────── */
+.bar-inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--surface-2);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 1px;
+  transition: width 0.4s ease;
+}
+.bar-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text-2);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── CHART CONTAINERS ───────────── */
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.chart-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+.chart-title {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+}
+.chart-wrap { position: relative; height: 280px; }
+
+/* ── MAP PLACEHOLDER ────────────── */
+.map-container {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  height: 420px;
+  margin-bottom: 24px;
+  position: relative;
+  overflow: hidden;
+}
+.map-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.map-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  grid-template-rows: repeat(5, 1fr);
+  gap: 3px;
+  width: 90%;
+  height: 85%;
+  padding: 20px;
+}
+.map-cell {
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.8);
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+.map-cell:hover {
+  transform: scale(1.05);
+  z-index: 2;
+  box-shadow: 0 0 20px rgba(0,229,160,0.3);
+}
+.map-cell .tooltip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  white-space: nowrap;
+  font-size: 11px;
+  z-index: 10;
+  pointer-events: none;
+}
+.map-cell:hover .tooltip { display: block; }
+.map-overlay-label {
+  position: absolute;
+  top: 12px;
+  left: 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.map-legend {
+  position: absolute;
+  bottom: 12px;
+  right: 16px;
+  display: flex;
+  gap: 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--text-2);
+}
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 1px;
+}
+
+/* ── SCORE METER ────────────────── */
+.score-meter {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.meter-ring {
+  width: 64px;
+  height: 64px;
+  position: relative;
+}
+.meter-ring svg { transform: rotate(-90deg); }
+.meter-ring .meter-value {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+}
+
+/* ── SITE SCORER ────────────────── */
+.scorer-grid {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 24px;
+}
+.weight-slider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.weight-slider label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text-2);
+  min-width: 120px;
+}
+.weight-slider input[type="range"] {
+  flex: 1;
+  -webkit-appearance: none;
+  height: 4px;
+  background: var(--surface-2);
+  border-radius: 2px;
+  outline: none;
+}
+.weight-slider input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.weight-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ── SECTION HEADERS ────────────── */
+.section-header {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── FILTER BAR ─────────────────── */
+.filter-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+.filter-chip {
+  padding: 6px 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text-2);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s;
+}
+.filter-chip:hover { border-color: var(--accent); color: var(--text); }
+.filter-chip.active {
+  background: rgba(0,229,160,0.1);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── RESPONSIVE ─────────────────── */
+@media (max-width: 1024px) {
+  .sidebar { width: 200px; }
+  .main { margin-left: 200px; }
+  .chart-row { grid-template-columns: 1fr; }
+  .scorer-grid { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .main { margin-left: 0; }
+  .card-grid { grid-template-columns: 1fr 1fr; }
+}
+
+/* ── ANIMATIONS ─────────────────── */
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.view.active { animation: fadeIn 0.3s ease; }
+.pulse { animation: pulse 2s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+/* ── PROTO LABEL ────────────────── */
+.proto-banner {
+  background: linear-gradient(90deg, rgba(0,229,160,0.1), rgba(77,166,255,0.1));
+  border-bottom: 1px solid var(--border);
+  padding: 6px 32px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+}
+.proto-banner span { color: var(--accent); }
+
+/* ── EMPLOYER CARDS ─────────────── */
+.employer-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+}
+.employer-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  padding: 20px;
+}
+.employer-card h3 {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+.employer-naics {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  margin-bottom: 12px;
+}
+.employer-stat {
+  display: flex;
+  justify-content: space-between;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--text-2);
+}
+.employer-stat:last-child { border-bottom: none; }
+.employer-stat span:last-child {
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--text);
+}
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- ══════ SIDEBAR ══════ -->
+  <aside class="sidebar">
+    <div class="logo">
+      <h1>Community<br>Intelligence<br>Platform</h1>
+      <div class="logo-sub">Lakepointe Church</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-item active" data-view="overview" onclick="switchView('overview')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Overview
+      </div>
+      <div class="nav-item" data-view="demographics" onclick="switchView('demographics')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4-4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+        Demographics
+      </div>
+      <div class="nav-item" data-view="families" onclick="switchView('families')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Family Segments
+      </div>
+      <div class="nav-item" data-view="ses" onclick="switchView('ses')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        SES Classes
+      </div>
+      <div class="nav-divider"></div>
+      <div class="nav-item" data-view="religious" onclick="switchView('religious')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+        Religious Landscape
+      </div>
+      <div class="nav-item" data-view="employers" onclick="switchView('employers')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        Employers
+      </div>
+      <div class="nav-item" data-view="scorer" onclick="switchView('scorer')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        Site Scorer
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div>CIP <span class="version">v0.1-prototype</span></div>
+      <div style="margin-top:4px">April 2026</div>
+    </div>
+  </aside>
+
+  <!-- ══════ MAIN ══════ -->
+  <div class="main">
+    <div class="proto-banner">Interactive Prototype — <span>Real DFW ZIP Codes</span> · Sample Data for Demonstration</div>
+
+    <!-- ═══ VIEW: OVERVIEW ═══ -->
+    <div class="view active" id="view-overview">
+      <div class="page-header">
+        <div>
+          <div class="page-title">DFW Metroplex Overview</div>
+          <div class="page-subtitle">Community Intelligence Platform — Lakepointe Church</div>
+        </div>
+        <div class="header-actions">
+          <input class="zip-search" type="text" placeholder="Search ZIP code..." id="globalSearch" onkeyup="handleSearch(event)">
+          <button class="btn" onclick="handleSearchBtn()">Search</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card-grid" id="overview-cards">
+          <!-- Populated by JS -->
+        </div>
+
+        <div class="section-header">ZIP Code Heat Map — Population Growth (2020–2024)</div>
+        <div class="map-container">
+          <div class="map-overlay-label">DFW Metroplex · ZIP-Level Growth</div>
+          <div class="map-inner">
+            <div class="map-grid" id="overview-map"></div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:#ff6b35"></div> Declining</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#5a6272"></div> Stable</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#00e5a0"></div> Growing</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#4da6ff"></div> Rapid Growth</div>
+          </div>
+        </div>
+
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Population by Age Band</div>
+            <div class="chart-wrap"><canvas id="chart-age"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Household Income Distribution</div>
+            <div class="chart-wrap"><canvas id="chart-income"></canvas></div>
+          </div>
+        </div>
+
+        <div class="section-header">Top Growth ZIP Codes</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:auto;max-height:380px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ZIP</th><th>Area</th><th>Population</th><th>Growth %</th><th>Median HHI</th><th>Young Family</th><th>SES Class</th>
+              </tr>
+            </thead>
+            <tbody id="overview-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: DEMOGRAPHICS ═══ -->
+    <div class="view" id="view-demographics">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Demographic Profile</div>
+          <div class="page-subtitle">ZIP-Level Demographic Breakdown</div>
+        </div>
+        <div class="header-actions">
+          <select class="zip-search" id="demo-zip-select" onchange="updateDemoView()">
+          </select>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card-grid" id="demo-cards"></div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Race / Ethnicity</div>
+            <div class="chart-wrap"><canvas id="chart-race"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Educational Attainment (25+)</div>
+            <div class="chart-wrap"><canvas id="chart-edu"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Age Distribution</div>
+            <div class="chart-wrap"><canvas id="chart-demo-age"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Household Type</div>
+            <div class="chart-wrap"><canvas id="chart-hh-type"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: FAMILIES ═══ -->
+    <div class="view" id="view-families">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Family Segments</div>
+          <div class="page-subtitle">Young Family Index & Working Family Index</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card-grid" id="family-summary-cards"></div>
+
+        <div class="section-header">Young Family Index Heat Map</div>
+        <div class="map-container" style="height:320px">
+          <div class="map-overlay-label">Young Family Index by ZIP</div>
+          <div class="map-inner">
+            <div class="map-grid" id="yfi-map"></div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(0,229,160,0.2)"></div> Low</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(0,229,160,0.5)"></div> Moderate</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(0,229,160,0.75)"></div> Growing</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#00e5a0"></div> Hotspot</div>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:24px">Working Family Index Heat Map</div>
+        <div class="map-container" style="height:320px">
+          <div class="map-overlay-label">Working Family Index by ZIP</div>
+          <div class="map-inner">
+            <div class="map-grid" id="wfi-map"></div>
+          </div>
+          <div class="map-legend">
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(77,166,255,0.2)"></div> Low</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(77,166,255,0.5)"></div> Moderate</div>
+            <div class="legend-item"><div class="legend-dot" style="background:rgba(77,166,255,0.75)"></div> Active</div>
+            <div class="legend-item"><div class="legend-dot" style="background:#4da6ff"></div> Hub</div>
+          </div>
+        </div>
+
+        <div class="section-header" style="margin-top:24px">ZIP-Level Family Segment Data</div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:auto;max-height:400px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>ZIP</th><th>Area</th><th>YFI Score</th><th>YFI Segment</th><th>WFI Score</th><th>WFI Segment</th><th>Fit Score</th></tr>
+            </thead>
+            <tbody id="family-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: SES CLASSES ═══ -->
+    <div class="view" id="view-ses">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Socioeconomic Segmentation</div>
+          <div class="page-subtitle">ACS-Derived Class Classification</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card-grid" id="ses-summary-cards"></div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">SES Class Distribution (DFW ZIPs)</div>
+            <div class="chart-wrap"><canvas id="chart-ses-dist"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Composite SES Score by ZIP</div>
+            <div class="chart-wrap"><canvas id="chart-ses-scatter"></canvas></div>
+          </div>
+        </div>
+        <div class="section-header">All ZIPs by SES Classification</div>
+        <div class="filter-bar" id="ses-filters"></div>
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:auto;max-height:420px;">
+          <table class="data-table">
+            <thead>
+              <tr><th>ZIP</th><th>Area</th><th>SES Score</th><th>Class</th><th>Median HHI</th><th>% Bachelor+</th><th>% Mgmt/Prof</th><th>Trend</th></tr>
+            </thead>
+            <tbody id="ses-table"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: RELIGIOUS ═══ -->
+    <div class="view" id="view-religious">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Religious Landscape</div>
+          <div class="page-subtitle">Multi-Source Religious Environment Tracking</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card-grid" id="rel-summary-cards"></div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Religious Affiliation — DFW Metro (PRRI)</div>
+            <div class="chart-wrap"><canvas id="chart-rel-affil"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Non-Christian Growth Tracking (2015–2024)</div>
+            <div class="chart-wrap"><canvas id="chart-rel-growth"></canvas></div>
+          </div>
+        </div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Religious Openness Index by ZIP</div>
+            <div class="chart-wrap"><canvas id="chart-rel-openness"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Congregations per 10K Population</div>
+            <div class="chart-wrap"><canvas id="chart-rel-cong"></canvas></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: EMPLOYERS ═══ -->
+    <div class="view" id="view-employers">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Employers & Economy</div>
+          <div class="page-subtitle">Industry Mix & Workforce Composition</div>
+        </div>
+        <div class="header-actions">
+          <select class="zip-search" id="emp-zip-select" onchange="updateEmpView()"></select>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card-grid" id="emp-cards"></div>
+        <div class="chart-row">
+          <div class="chart-card">
+            <div class="chart-title">Industry Mix (Establishments)</div>
+            <div class="chart-wrap"><canvas id="chart-industry"></canvas></div>
+          </div>
+          <div class="chart-card">
+            <div class="chart-title">Employer Size Distribution</div>
+            <div class="chart-wrap"><canvas id="chart-emp-size"></canvas></div>
+          </div>
+        </div>
+        <div class="section-header">Top Employers in Area</div>
+        <div class="employer-grid" id="employer-list"></div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: SITE SCORER ═══ -->
+    <div class="view" id="view-scorer">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Site Scorer</div>
+          <div class="page-subtitle">Weighted Multi-Factor Campus Evaluation</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn" onclick="recalcScores()">Recalculate</button>
+        </div>
+      </div>
+      <div class="content">
+        <div class="scorer-grid">
+          <div>
+            <div class="card" style="margin-bottom:16px">
+              <div class="section-header" style="margin-bottom:12px">Weight Configuration</div>
+              <div class="weight-slider">
+                <label>Young Families</label>
+                <input type="range" min="0" max="100" value="25" id="w-yfi" oninput="updateWeightDisplay()">
+                <span class="weight-val" id="wv-yfi">25%</span>
+              </div>
+              <div class="weight-slider">
+                <label>Working Families</label>
+                <input type="range" min="0" max="100" value="20" id="w-wfi" oninput="updateWeightDisplay()">
+                <span class="weight-val" id="wv-wfi">20%</span>
+              </div>
+              <div class="weight-slider">
+                <label>SES Alignment</label>
+                <input type="range" min="0" max="100" value="20" id="w-ses" oninput="updateWeightDisplay()">
+                <span class="weight-val" id="wv-ses">20%</span>
+              </div>
+              <div class="weight-slider">
+                <label>Growth Rate</label>
+                <input type="range" min="0" max="100" value="15" id="w-growth" oninput="updateWeightDisplay()">
+                <span class="weight-val" id="wv-growth">15%</span>
+              </div>
+              <div class="weight-slider">
+                <label>Rel. Openness</label>
+                <input type="range" min="0" max="100" value="20" id="w-rel" oninput="updateWeightDisplay()">
+                <span class="weight-val" id="wv-rel">20%</span>
+              </div>
+            </div>
+            <div class="card">
+              <div class="section-header" style="margin-bottom:12px">Top 3 Sites</div>
+              <div id="top-sites"></div>
+            </div>
+          </div>
+          <div>
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-md);overflow:auto;max-height:680px;">
+              <table class="data-table">
+                <thead>
+                  <tr><th>Rank</th><th>ZIP</th><th>Area</th><th>Score</th><th>YFI</th><th>WFI</th><th>SES</th><th>Growth</th><th>Rel.</th></tr>
+                </thead>
+                <tbody id="scorer-table"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════
+// DFW ZIP CODE DATA — Real ZIPs, Realistic Values
+// ════════════════════════════════════════════
+const ZIPS = [
+  { zip:'75087', area:'Rockwall',       pop:48520,  growth:12.3, medHHI:105200, pctBach:42, pctMgmt:38, sesScore:72, sesClass:'Upper Middle',  yfi:82, wfi:78, relOpen:65, race:{w:68,h:18,b:8,a:4,o:2},  indMix:{health:18,retail:22,prof:15,mfg:8,edu:12,food:10,constr:8,other:7},  employers:['Texas Health Presbyterian','Rockwall ISD','Walmart','City of Rockwall'] },
+  { zip:'75032', area:'Rockwall (Heath)', pop:28430, growth:18.7, medHHI:142500, pctBach:55, pctMgmt:48, sesScore:86, sesClass:'Affluent',      yfi:88, wfi:72, relOpen:58, race:{w:74,h:12,b:6,a:6,o:2},  indMix:{health:14,retail:18,prof:22,mfg:5,edu:15,food:8,constr:10,other:8},  employers:['Rockwall ISD','Heath City Hall','Lakepointe Church','Various Prof Services'] },
+  { zip:'75098', area:'Wylie',          pop:62300,  growth:22.1, medHHI:98400,  pctBach:38, pctMgmt:34, sesScore:68, sesClass:'Middle',         yfi:91, wfi:82, relOpen:62, race:{w:62,h:20,b:10,a:5,o:3}, indMix:{health:16,retail:24,prof:12,mfg:10,edu:14,food:12,constr:6,other:6}, employers:['Wylie ISD','Baylor Scott & White','Walmart Supercenter','Amazon FC'] },
+  { zip:'75189', area:'Royse City',     pop:24180,  growth:35.2, medHHI:82500,  pctBach:28, pctMgmt:26, sesScore:52, sesClass:'Middle',         yfi:94, wfi:85, relOpen:68, race:{w:58,h:28,b:8,a:3,o:3},  indMix:{health:12,retail:26,prof:8,mfg:14,edu:16,food:14,constr:6,other:4},  employers:['Royse City ISD','Dollar General','Brookshires','Various Construction'] },
+  { zip:'75126', area:'Forney',         pop:38900,  growth:28.4, medHHI:92300,  pctBach:32, pctMgmt:30, sesScore:58, sesClass:'Middle',         yfi:89, wfi:80, relOpen:70, race:{w:52,h:24,b:16,a:4,o:4}, indMix:{health:14,retail:28,prof:10,mfg:12,edu:14,food:12,constr:6,other:4}, employers:['Forney ISD','Amazon Fulfillment','Walmart','Buc-ees'] },
+  { zip:'75088', area:'Rowlett',        pop:68200,  growth:8.2,  medHHI:88900,  pctBach:34, pctMgmt:32, sesScore:62, sesClass:'Middle',         yfi:72, wfi:74, relOpen:60, race:{w:48,h:22,b:18,a:8,o:4}, indMix:{health:20,retail:22,prof:14,mfg:6,edu:12,food:10,constr:8,other:8},  employers:['Rowlett ISD','Baylor Scott & White','City of Rowlett','Kroger'] },
+  { zip:'75150', area:'Mesquite',       pop:52100,  growth:3.1,  medHHI:52400,  pctBach:16, pctMgmt:18, sesScore:28, sesClass:'Working Class',  yfi:68, wfi:70, relOpen:72, race:{w:22,h:42,b:28,a:4,o:4}, indMix:{health:16,retail:28,prof:8,mfg:14,edu:10,food:14,constr:6,other:4},  employers:['Mesquite ISD','Town East Mall','Dallas Regional Med','Sams Club'] },
+  { zip:'75149', area:'Mesquite South', pop:44800,  growth:2.4,  medHHI:48200,  pctBach:12, pctMgmt:14, sesScore:22, sesClass:'Working Class',  yfi:64, wfi:66, relOpen:74, race:{w:18,h:48,b:26,a:4,o:4}, indMix:{health:14,retail:30,prof:6,mfg:16,edu:8,food:16,constr:6,other:4},   employers:['Mesquite ISD','Walmart','Various Warehousing','Food Service'] },
+  { zip:'75043', area:'Garland East',   pop:58300,  growth:4.8,  medHHI:62100,  pctBach:22, pctMgmt:24, sesScore:38, sesClass:'Lower Middle',   yfi:70, wfi:72, relOpen:66, race:{w:28,h:38,b:20,a:10,o:4},indMix:{health:18,retail:24,prof:12,mfg:12,edu:10,food:12,constr:6,other:6}, employers:['Garland ISD','Raytheon','Baylor Scott & White','Kroger'] },
+  { zip:'75048', area:'Sachse',         pop:28900,  growth:14.6, medHHI:112300, pctBach:44, pctMgmt:40, sesScore:74, sesClass:'Upper Middle',  yfi:80, wfi:76, relOpen:56, race:{w:52,h:16,b:14,a:14,o:4},indMix:{health:16,retail:20,prof:18,mfg:6,edu:14,food:10,constr:8,other:8}, employers:['Garland ISD','Various Tech','Medical Offices','Retail'] },
+  { zip:'75074', area:'Plano East',     pop:52400,  growth:5.2,  medHHI:78500,  pctBach:48, pctMgmt:42, sesScore:70, sesClass:'Upper Middle',  yfi:58, wfi:68, relOpen:52, race:{w:34,h:18,b:12,a:32,o:4},indMix:{health:14,retail:16,prof:24,mfg:8,edu:10,food:8,constr:4,other:16}, employers:['Capital One','Toyota NA','Liberty Mutual','Plano ISD'] },
+  { zip:'75002', area:'Allen',          pop:72100,  growth:16.8, medHHI:118600, pctBach:52, pctMgmt:46, sesScore:78, sesClass:'Upper Middle',  yfi:84, wfi:74, relOpen:54, race:{w:56,h:14,b:12,a:14,o:4},indMix:{health:16,retail:18,prof:20,mfg:6,edu:16,food:8,constr:8,other:8}, employers:['Allen ISD','Experian','Jack Henry','Allen Premium Outlets'] },
+  { zip:'75013', area:'Allen South',    pop:38200,  growth:11.4, medHHI:126400, pctBach:56, pctMgmt:50, sesScore:82, sesClass:'Upper Middle',  yfi:76, wfi:70, relOpen:50, race:{w:52,h:12,b:10,a:22,o:4},indMix:{health:12,retail:16,prof:24,mfg:4,edu:14,food:8,constr:6,other:16}, employers:['Allen ISD','Various Tech Corps','Medical Practices','Retail'] },
+  { zip:'75070', area:'McKinney West',  pop:58600,  growth:24.6, medHHI:108200, pctBach:46, pctMgmt:42, sesScore:72, sesClass:'Upper Middle',  yfi:86, wfi:78, relOpen:60, race:{w:58,h:18,b:12,a:8,o:4}, indMix:{health:18,retail:20,prof:18,mfg:8,edu:14,food:8,constr:8,other:6}, employers:['Raytheon','McKinney ISD','Globe Life','Baylor Medical'] },
+  { zip:'75071', area:'McKinney East',  pop:44200,  growth:32.1, medHHI:94800,  pctBach:36, pctMgmt:34, sesScore:64, sesClass:'Middle',         yfi:90, wfi:82, relOpen:64, race:{w:50,h:24,b:14,a:8,o:4}, indMix:{health:16,retail:24,prof:14,mfg:10,edu:14,food:10,constr:6,other:6}, employers:['McKinney ISD','Medical City','Amazon','Encore Wire'] },
+  { zip:'75040', area:'Garland West',   pop:48100,  growth:2.8,  medHHI:55800,  pctBach:18, pctMgmt:20, sesScore:32, sesClass:'Lower Middle',   yfi:62, wfi:68, relOpen:70, race:{w:24,h:44,b:18,a:10,o:4},indMix:{health:16,retail:26,prof:10,mfg:14,edu:10,food:14,constr:6,other:4}, employers:['Garland ISD','Garland Power & Light','L-3 Technologies','Kroger'] },
+  { zip:'75160', area:'Terrell',        pop:22400,  growth:8.6,  medHHI:48600,  pctBach:14, pctMgmt:16, sesScore:24, sesClass:'Working Class',  yfi:72, wfi:64, relOpen:76, race:{w:42,h:32,b:22,a:2,o:2}, indMix:{health:14,retail:26,prof:6,mfg:18,edu:12,food:14,constr:6,other:4},  employers:['Terrell ISD','Terrell State Hospital','Dollar Tree DC','Walmart'] },
+  { zip:'75114', area:'Crandall',       pop:12800,  growth:42.5, medHHI:72400,  pctBach:18, pctMgmt:20, sesScore:40, sesClass:'Lower Middle',   yfi:88, wfi:78, relOpen:72, race:{w:48,h:30,b:16,a:2,o:4}, indMix:{health:10,retail:28,prof:8,mfg:16,edu:14,food:14,constr:6,other:4},  employers:['Crandall ISD','Various Construction','Dollar General','Retail'] },
+  { zip:'75181', area:'Mesquite East',  pop:32600,  growth:6.4,  medHHI:68200,  pctBach:20, pctMgmt:22, sesScore:42, sesClass:'Lower Middle',   yfi:74, wfi:72, relOpen:68, race:{w:32,h:36,b:22,a:6,o:4}, indMix:{health:16,retail:26,prof:10,mfg:12,edu:12,food:14,constr:4,other:6}, employers:['Mesquite ISD','FedEx','Amazon Delivery','Various Retail'] },
+  { zip:'75135', area:'Caddo Mills',    pop:8200,   growth:38.8, medHHI:78600,  pctBach:22, pctMgmt:24, sesScore:48, sesClass:'Lower Middle',   yfi:86, wfi:76, relOpen:74, race:{w:68,h:20,b:6,a:2,o:4},  indMix:{health:8,retail:24,prof:8,mfg:16,edu:16,food:14,constr:10,other:4},  employers:['Caddo Mills ISD','Local Agriculture','Dollar General','Various Trade'] },
+];
+
+// ════════════════════════════════════════════
+// UTILITY FUNCTIONS
+// ════════════════════════════════════════════
+function fmt(n) { return n.toLocaleString(); }
+function fmtPct(n) { return n.toFixed(1) + '%'; }
+function fmtMoney(n) { return '$' + n.toLocaleString(); }
+
+function getGrowthColor(g) {
+  if (g > 20) return '#4da6ff';
+  if (g > 8) return '#00e5a0';
+  if (g > 0) return '#5a6272';
+  return '#ff6b35';
+}
+
+function getYFIColor(score) {
+  const a = score / 100;
+  return `rgba(0,229,160,${0.15 + a * 0.85})`;
+}
+function getWFIColor(score) {
+  const a = score / 100;
+  return `rgba(77,166,255,${0.15 + a * 0.85})`;
+}
+function getSESColor(cls) {
+  const map = { 'Affluent':'#a78bfa', 'Upper Middle':'#4da6ff', 'Middle':'#00e5a0', 'Lower Middle':'#f59e0b', 'Working Class':'#ff6b35', 'Struggling':'#ff4444' };
+  return map[cls] || '#5a6272';
+}
+function getSESBadge(cls) {
+  const map = { 'Affluent':'badge-purple', 'Upper Middle':'badge-blue', 'Middle':'badge-green', 'Lower Middle':'badge-gold', 'Working Class':'badge-orange', 'Struggling':'badge-orange' };
+  return map[cls] || '';
+}
+function getYFISegment(s) {
+  if (s >= 75) return 'Hotspot';
+  if (s >= 50) return 'Growing';
+  if (s >= 25) return 'Moderate';
+  return 'Low';
+}
+function getWFISegment(s) {
+  if (s >= 75) return 'Hub';
+  if (s >= 50) return 'Active';
+  if (s >= 25) return 'Moderate';
+  return 'Low';
+}
+
+// ════════════════════════════════════════════
+// VIEW SWITCHING
+// ════════════════════════════════════════════
+function switchView(view) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('view-' + view).classList.add('active');
+  document.querySelector(`[data-view="${view}"]`).classList.add('active');
+}
+
+function handleSearch(e) {
+  if (e.key === 'Enter') handleSearchBtn();
+}
+function handleSearchBtn() {
+  const val = document.getElementById('globalSearch').value.trim();
+  const z = ZIPS.find(z => z.zip === val);
+  if (z) {
+    switchView('demographics');
+    document.getElementById('demo-zip-select').value = z.zip;
+    updateDemoView();
+  }
+}
+
+// ════════════════════════════════════════════
+// CHART DEFAULTS
+// ════════════════════════════════════════════
+Chart.defaults.color = '#b0b8c8';
+Chart.defaults.font.family = "'IBM Plex Sans', sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.plugins.legend.labels.usePointStyle = true;
+Chart.defaults.plugins.legend.labels.pointStyleWidth = 8;
+Chart.defaults.scale.grid = { color: 'rgba(30,36,48,0.8)' };
+
+const charts = {};
+
+// ════════════════════════════════════════════
+// OVERVIEW VIEW
+// ════════════════════════════════════════════
+function initOverview() {
+  const totalPop = ZIPS.reduce((s, z) => s + z.pop, 0);
+  const avgGrowth = ZIPS.reduce((s, z) => s + z.growth, 0) / ZIPS.length;
+  const avgHHI = Math.round(ZIPS.reduce((s, z) => s + z.medHHI, 0) / ZIPS.length);
+  const avgYFI = Math.round(ZIPS.reduce((s, z) => s + z.yfi, 0) / ZIPS.length);
+
+  document.getElementById('overview-cards').innerHTML = `
+    <div class="card"><div class="card-label">Total Population</div><div class="card-value" style="color:var(--text)">${fmt(totalPop)}</div><div class="card-delta up">↑ ${fmtPct(avgGrowth)} avg growth</div></div>
+    <div class="card"><div class="card-label">ZIP Codes Tracked</div><div class="card-value" style="color:var(--accent3)">${ZIPS.length}</div><div class="card-delta" style="color:var(--muted)">DFW East Corridor</div></div>
+    <div class="card"><div class="card-label">Avg Median HHI</div><div class="card-value" style="color:var(--accent5)">${fmtMoney(avgHHI)}</div><div class="card-delta up">↑ 4.2% YoY</div></div>
+    <div class="card"><div class="card-label">Avg Young Family Index</div><div class="card-value" style="color:var(--accent)">${avgYFI}</div><div class="card-delta up">↑ 3.8 pts from 2020</div></div>
+  `;
+
+  // Map
+  const mapEl = document.getElementById('overview-map');
+  const sorted = [...ZIPS].sort((a, b) => b.growth - a.growth);
+  // Fill grid with ZIP cells (some empty for shape)
+  const gridPositions = ZIPS.map((z, i) => z);
+  const empties = 35 - ZIPS.length;
+  for (let i = 0; i < empties; i++) gridPositions.push(null);
+
+  mapEl.innerHTML = gridPositions.map((z, i) => {
+    if (!z) return `<div class="map-cell" style="background:var(--surface-2);opacity:0.3"></div>`;
+    const bg = getGrowthColor(z.growth);
+    return `<div class="map-cell" style="background:${bg}" onclick="switchView('demographics');document.getElementById('demo-zip-select').value='${z.zip}';updateDemoView()">
+      ${z.zip.slice(-3)}
+      <div class="tooltip"><strong>${z.zip}</strong> ${z.area}<br>Pop: ${fmt(z.pop)} · Growth: ${fmtPct(z.growth)}</div>
+    </div>`;
+  }).join('');
+
+  // Table
+  const tbody = document.getElementById('overview-table');
+  tbody.innerHTML = sorted.map(z => `
+    <tr onclick="switchView('demographics');document.getElementById('demo-zip-select').value='${z.zip}';updateDemoView()">
+      <td class="mono">${z.zip}</td>
+      <td>${z.area}</td>
+      <td class="mono">${fmt(z.pop)}</td>
+      <td><span style="color:${getGrowthColor(z.growth)}">${fmtPct(z.growth)}</span></td>
+      <td class="mono">${fmtMoney(z.medHHI)}</td>
+      <td><span class="badge ${z.yfi >= 75 ? 'badge-green' : 'badge-gold'}">${getYFISegment(z.yfi)}</span></td>
+      <td><span class="badge ${getSESBadge(z.sesClass)}">${z.sesClass}</span></td>
+    </tr>
+  `).join('');
+
+  // Charts
+  const ageBands = ['0-17', '18-34', '35-54', '55-74', '75+'];
+  const ageData = [22, 24, 28, 19, 7];
+  charts.age = new Chart(document.getElementById('chart-age'), {
+    type: 'bar',
+    data: {
+      labels: ageBands,
+      datasets: [{ label: 'DFW East Corridor', data: ageData, backgroundColor: ['#00e5a0','#4da6ff','#a78bfa','#f59e0b','#ff6b35'] }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  const incomeBands = ['<$25K','$25-50K','$50-75K','$75-100K','$100-150K','$150-200K','$200K+'];
+  const incomeData = [8, 14, 18, 20, 22, 10, 8];
+  charts.income = new Chart(document.getElementById('chart-income'), {
+    type: 'bar',
+    data: {
+      labels: incomeBands,
+      datasets: [{ label: 'Household Distribution', data: incomeData, backgroundColor: '#4da6ff88', borderColor: '#4da6ff', borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+}
+
+// ════════════════════════════════════════════
+// DEMOGRAPHICS VIEW
+// ════════════════════════════════════════════
+function initDemoView() {
+  const sel = document.getElementById('demo-zip-select');
+  sel.innerHTML = ZIPS.map(z => `<option value="${z.zip}">${z.zip} — ${z.area}</option>`).join('');
+  updateDemoView();
+}
+
+function updateDemoView() {
+  const zip = document.getElementById('demo-zip-select').value;
+  const z = ZIPS.find(x => x.zip === zip);
+  if (!z) return;
+
+  document.getElementById('demo-cards').innerHTML = `
+    <div class="card"><div class="card-label">Population</div><div class="card-value" style="color:var(--text)">${fmt(z.pop)}</div><div class="card-delta up">↑ ${fmtPct(z.growth)} since 2020</div></div>
+    <div class="card"><div class="card-label">Median HH Income</div><div class="card-value" style="color:var(--accent5)">${fmtMoney(z.medHHI)}</div></div>
+    <div class="card"><div class="card-label">SES Class</div><div class="card-value" style="color:${getSESColor(z.sesClass)}">${z.sesClass}</div><div class="card-delta" style="color:var(--text-2)">Score: ${z.sesScore}/100</div></div>
+    <div class="card"><div class="card-label">Young Family Index</div><div class="card-value" style="color:var(--young-family)">${z.yfi}</div><div class="card-delta" style="color:var(--text-2)">${getYFISegment(z.yfi)}</div></div>
+    <div class="card"><div class="card-label">Working Family Index</div><div class="card-value" style="color:var(--working-family)">${z.wfi}</div><div class="card-delta" style="color:var(--text-2)">${getWFISegment(z.wfi)}</div></div>
+  `;
+
+  // Race chart
+  if (charts.race) charts.race.destroy();
+  charts.race = new Chart(document.getElementById('chart-race'), {
+    type: 'doughnut',
+    data: {
+      labels: ['White','Hispanic','Black','Asian','Other'],
+      datasets: [{ data: [z.race.w, z.race.h, z.race.b, z.race.a, z.race.o], backgroundColor: ['#4da6ff','#ff6b35','#a78bfa','#00e5a0','#f59e0b'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+
+  // Education chart
+  if (charts.edu) charts.edu.destroy();
+  const noHS = Math.max(2, 20 - z.pctBach * 0.3);
+  const hsOnly = Math.max(5, 35 - z.pctBach * 0.4);
+  const someColl = 100 - z.pctBach - noHS - hsOnly;
+  charts.edu = new Chart(document.getElementById('chart-edu'), {
+    type: 'bar',
+    data: {
+      labels: ['No HS Diploma','HS Diploma','Some College','Bachelor+'],
+      datasets: [{ data: [noHS, hsOnly, someColl, z.pctBach], backgroundColor: ['#ff6b35','#f59e0b','#4da6ff','#00e5a0'] }]
+    },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  // Age distribution
+  if (charts.demoAge) charts.demoAge.destroy();
+  const ageD = z.yfi > 80 ? [26,22,30,16,6] : z.yfi > 60 ? [22,24,28,19,7] : [18,22,26,24,10];
+  charts.demoAge = new Chart(document.getElementById('chart-demo-age'), {
+    type: 'bar',
+    data: {
+      labels: ['0-17','18-34','35-54','55-74','75+'],
+      datasets: [{ data: ageD, backgroundColor: '#a78bfa88', borderColor: '#a78bfa', borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  // Household type
+  if (charts.hhType) charts.hhType.destroy();
+  const married = z.yfi > 80 ? 58 : z.yfi > 60 ? 48 : 38;
+  charts.hhType = new Chart(document.getElementById('chart-hh-type'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Married w/ Children','Married No Children','Single Parent','Living Alone','Other'],
+      datasets: [{ data: [married, 18, 12, 16, 100-married-18-12-16], backgroundColor: ['#00e5a0','#4da6ff','#ff6b35','#a78bfa','#f59e0b'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+}
+
+// ════════════════════════════════════════════
+// FAMILY SEGMENTS VIEW
+// ════════════════════════════════════════════
+function initFamilyView() {
+  const hotspots = ZIPS.filter(z => z.yfi >= 75).length;
+  const hubs = ZIPS.filter(z => z.wfi >= 75).length;
+  const sweetSpot = ZIPS.filter(z => z.yfi >= 75 && z.wfi >= 75).length;
+  const avgFit = Math.round(ZIPS.reduce((s,z) => s + (z.yfi*0.5 + z.wfi*0.5), 0) / ZIPS.length);
+
+  document.getElementById('family-summary-cards').innerHTML = `
+    <div class="card"><div class="card-label">YFI Hotspots</div><div class="card-value" style="color:var(--young-family)">${hotspots}</div><div class="card-delta" style="color:var(--text-2)">of ${ZIPS.length} ZIPs scored 75+</div></div>
+    <div class="card"><div class="card-label">WFI Hubs</div><div class="card-value" style="color:var(--working-family)">${hubs}</div><div class="card-delta" style="color:var(--text-2)">of ${ZIPS.length} ZIPs scored 75+</div></div>
+    <div class="card"><div class="card-label">Lakepointe Sweet Spot</div><div class="card-value" style="color:var(--accent5)">${sweetSpot}</div><div class="card-delta" style="color:var(--text-2)">High YFI + High WFI</div></div>
+    <div class="card"><div class="card-label">Avg Fit Score</div><div class="card-value" style="color:var(--accent4)">${avgFit}</div><div class="card-delta up">↑ Strong family corridor</div></div>
+  `;
+
+  // YFI Map
+  document.getElementById('yfi-map').innerHTML = ZIPS.concat(Array(35-ZIPS.length).fill(null)).map((z,i) => {
+    if (!z) return `<div class="map-cell" style="background:var(--surface-2);opacity:0.3"></div>`;
+    return `<div class="map-cell" style="background:${getYFIColor(z.yfi)}">${z.zip.slice(-3)}<div class="tooltip"><strong>${z.zip}</strong> ${z.area}<br>YFI: ${z.yfi} · ${getYFISegment(z.yfi)}</div></div>`;
+  }).join('');
+
+  // WFI Map
+  document.getElementById('wfi-map').innerHTML = ZIPS.concat(Array(35-ZIPS.length).fill(null)).map((z,i) => {
+    if (!z) return `<div class="map-cell" style="background:var(--surface-2);opacity:0.3"></div>`;
+    return `<div class="map-cell" style="background:${getWFIColor(z.wfi)}">${z.zip.slice(-3)}<div class="tooltip"><strong>${z.zip}</strong> ${z.area}<br>WFI: ${z.wfi} · ${getWFISegment(z.wfi)}</div></div>`;
+  }).join('');
+
+  // Table
+  const sorted = [...ZIPS].sort((a,b) => (b.yfi + b.wfi) - (a.yfi + a.wfi));
+  document.getElementById('family-table').innerHTML = sorted.map(z => {
+    const fit = Math.round(z.yfi * 0.5 + z.wfi * 0.5);
+    return `<tr>
+      <td class="mono">${z.zip}</td><td>${z.area}</td>
+      <td><div class="bar-inline"><div class="bar-track"><div class="bar-fill" style="width:${z.yfi}%;background:var(--young-family)"></div></div><span class="bar-val">${z.yfi}</span></div></td>
+      <td><span class="badge badge-green">${getYFISegment(z.yfi)}</span></td>
+      <td><div class="bar-inline"><div class="bar-track"><div class="bar-fill" style="width:${z.wfi}%;background:var(--working-family)"></div></div><span class="bar-val">${z.wfi}</span></div></td>
+      <td><span class="badge badge-blue">${getWFISegment(z.wfi)}</span></td>
+      <td class="mono" style="color:var(--accent5)">${fit}</td>
+    </tr>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════
+// SES VIEW
+// ════════════════════════════════════════════
+function initSESView() {
+  const classes = ['Affluent','Upper Middle','Middle','Lower Middle','Working Class'];
+  const counts = classes.map(c => ZIPS.filter(z => z.sesClass === c).length);
+  const avgSES = Math.round(ZIPS.reduce((s,z) => s + z.sesScore, 0) / ZIPS.length);
+
+  document.getElementById('ses-summary-cards').innerHTML = `
+    <div class="card"><div class="card-label">Avg SES Score</div><div class="card-value" style="color:var(--accent3)">${avgSES}</div><div class="card-delta" style="color:var(--text-2)">DFW East Corridor</div></div>
+    <div class="card"><div class="card-label">Upper Middle+</div><div class="card-value" style="color:var(--accent4)">${counts[0]+counts[1]}</div><div class="card-delta" style="color:var(--text-2)">of ${ZIPS.length} ZIPs</div></div>
+    <div class="card"><div class="card-label">Middle Class</div><div class="card-value" style="color:var(--accent)">${counts[2]}</div></div>
+    <div class="card"><div class="card-label">Working / Lower</div><div class="card-value" style="color:var(--accent2)">${counts[3]+counts[4]}</div></div>
+  `;
+
+  // Distribution chart
+  charts.sesDist = new Chart(document.getElementById('chart-ses-dist'), {
+    type: 'bar',
+    data: {
+      labels: classes,
+      datasets: [{ data: counts, backgroundColor: classes.map(c => getSESColor(c) + '88'), borderColor: classes.map(c => getSESColor(c)), borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+
+  // Scatter
+  charts.sesScatter = new Chart(document.getElementById('chart-ses-scatter'), {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'ZIP Codes',
+        data: ZIPS.map(z => ({ x: z.medHHI / 1000, y: z.sesScore, label: z.zip })),
+        backgroundColor: ZIPS.map(z => getSESColor(z.sesClass) + 'aa'),
+        pointRadius: 8,
+        pointHoverRadius: 12
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const z = ZIPS[ctx.dataIndex];
+              return `${z.zip} ${z.area} — Score: ${z.sesScore}, HHI: ${fmtMoney(z.medHHI)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Median HH Income ($K)' } },
+        y: { title: { display: true, text: 'SES Composite Score' }, beginAtZero: true, max: 100 }
+      }
+    }
+  });
+
+  // Filters
+  const filterBar = document.getElementById('ses-filters');
+  filterBar.innerHTML = `<div class="filter-chip active" onclick="filterSES('all',this)">All</div>` +
+    classes.map(c => `<div class="filter-chip" onclick="filterSES('${c}',this)">${c}</div>`).join('');
+
+  renderSESTable('all');
+}
+
+function filterSES(cls, el) {
+  document.querySelectorAll('#ses-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderSESTable(cls);
+}
+
+function renderSESTable(cls) {
+  const filtered = cls === 'all' ? ZIPS : ZIPS.filter(z => z.sesClass === cls);
+  const sorted = [...filtered].sort((a,b) => b.sesScore - a.sesScore);
+  document.getElementById('ses-table').innerHTML = sorted.map(z => `
+    <tr>
+      <td class="mono">${z.zip}</td><td>${z.area}</td>
+      <td><div class="bar-inline"><div class="bar-track"><div class="bar-fill" style="width:${z.sesScore}%;background:${getSESColor(z.sesClass)}"></div></div><span class="bar-val">${z.sesScore}</span></div></td>
+      <td><span class="badge ${getSESBadge(z.sesClass)}">${z.sesClass}</span></td>
+      <td class="mono">${fmtMoney(z.medHHI)}</td>
+      <td class="mono">${z.pctBach}%</td>
+      <td class="mono">${z.pctMgmt}%</td>
+      <td><span style="color:var(--positive)">↑ Stable</span></td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// RELIGIOUS LANDSCAPE VIEW
+// ════════════════════════════════════════════
+function initReligiousView() {
+  document.getElementById('rel-summary-cards').innerHTML = `
+    <div class="card"><div class="card-label">Evangelical Protestant</div><div class="card-value" style="color:var(--accent)">38%</div><div class="card-delta down">↓ 2.1 pts since 2020</div></div>
+    <div class="card"><div class="card-label">Unaffiliated / None</div><div class="card-value" style="color:var(--accent2)">26%</div><div class="card-delta down" style="color:var(--negative)">↑ 4.3 pts since 2020</div></div>
+    <div class="card"><div class="card-label">Non-Christian Growth</div><div class="card-value" style="color:var(--accent4)">+18%</div><div class="card-delta" style="color:var(--text-2)">Muslim, Hindu, Buddhist (2020–2024)</div></div>
+    <div class="card"><div class="card-label">Congregations / 10K</div><div class="card-value" style="color:var(--accent5)">8.4</div><div class="card-delta" style="color:var(--text-2)">DFW East Corridor avg</div></div>
+  `;
+
+  // Affiliation donut
+  charts.relAffil = new Chart(document.getElementById('chart-rel-affil'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Evangelical','Catholic','Mainline Prot.','Historically Black Prot.','Mormon','Muslim','Hindu','Buddhist','Jewish','Unaffiliated','Other'],
+      datasets: [{ data: [38,14,8,6,1.5,2.8,1.8,0.8,0.6,26,0.5], backgroundColor: ['#00e5a0','#4da6ff','#a78bfa','#f59e0b','#888','#ff6b35','#ff9999','#99ccff','#ffcc00','#5a6272','#333'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } } }
+  });
+
+  // Non-Christian growth line
+  charts.relGrowth = new Chart(document.getElementById('chart-rel-growth'), {
+    type: 'line',
+    data: {
+      labels: ['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'],
+      datasets: [
+        { label: 'Muslim', data: [1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.8], borderColor: '#ff6b35', backgroundColor: 'rgba(255,107,53,0.1)', fill: true, tension: 0.3 },
+        { label: 'Hindu', data: [1.0,1.1,1.2,1.2,1.3,1.4,1.5,1.5,1.6,1.8], borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.1)', fill: true, tension: 0.3 },
+        { label: 'Buddhist', data: [0.6,0.6,0.6,0.7,0.7,0.7,0.7,0.8,0.8,0.8], borderColor: '#4da6ff', backgroundColor: 'rgba(77,166,255,0.1)', fill: true, tension: 0.3 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  // Openness bar
+  const sorted = [...ZIPS].sort((a,b) => b.relOpen - a.relOpen).slice(0, 12);
+  charts.relOpenness = new Chart(document.getElementById('chart-rel-openness'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(z => z.zip),
+      datasets: [{ data: sorted.map(z => z.relOpen), backgroundColor: sorted.map(z => z.relOpen > 70 ? '#00e5a0' : z.relOpen > 60 ? '#4da6ff' : '#f59e0b'), borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Openness Score' } } } }
+  });
+
+  // Congregations per 10K
+  const congData = ZIPS.slice(0, 12).map(z => ({ zip: z.zip, cong: (5 + Math.random() * 8).toFixed(1) }));
+  charts.relCong = new Chart(document.getElementById('chart-rel-cong'), {
+    type: 'bar',
+    data: {
+      labels: congData.map(c => c.zip),
+      datasets: [{ data: congData.map(c => parseFloat(c.cong)), backgroundColor: '#a78bfa66', borderColor: '#a78bfa', borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+// ════════════════════════════════════════════
+// EMPLOYERS VIEW
+// ════════════════════════════════════════════
+function initEmpView() {
+  const sel = document.getElementById('emp-zip-select');
+  sel.innerHTML = ZIPS.map(z => `<option value="${z.zip}">${z.zip} — ${z.area}</option>`).join('');
+  updateEmpView();
+}
+
+function updateEmpView() {
+  const zip = document.getElementById('emp-zip-select').value;
+  const z = ZIPS.find(x => x.zip === zip);
+  if (!z) return;
+
+  const totalEst = 120 + Math.floor(z.pop / 200);
+  const largeEmp = Math.floor(totalEst * 0.03);
+  const avgPayroll = Math.round(z.medHHI * 0.85);
+
+  document.getElementById('emp-cards').innerHTML = `
+    <div class="card"><div class="card-label">Total Establishments</div><div class="card-value" style="color:var(--text)">${totalEst}</div></div>
+    <div class="card"><div class="card-label">Large Employers (100+)</div><div class="card-value" style="color:var(--accent3)">${largeEmp}</div></div>
+    <div class="card"><div class="card-label">Avg Annual Payroll</div><div class="card-value" style="color:var(--accent5)">${fmtMoney(avgPayroll)}</div></div>
+    <div class="card"><div class="card-label">Top Industry</div><div class="card-value" style="color:var(--accent);font-size:24px">${Object.entries(z.indMix).sort((a,b)=>b[1]-a[1])[0][0].charAt(0).toUpperCase() + Object.entries(z.indMix).sort((a,b)=>b[1]-a[1])[0][0].slice(1)}</div></div>
+  `;
+
+  // Industry chart
+  if (charts.industry) charts.industry.destroy();
+  const indLabels = { health:'Healthcare', retail:'Retail', prof:'Professional Svc', mfg:'Manufacturing', edu:'Education', food:'Food/Accommodation', constr:'Construction', other:'Other' };
+  const indEntries = Object.entries(z.indMix).sort((a,b) => b[1] - a[1]);
+  charts.industry = new Chart(document.getElementById('chart-industry'), {
+    type: 'doughnut',
+    data: {
+      labels: indEntries.map(e => indLabels[e[0]]),
+      datasets: [{ data: indEntries.map(e => e[1]), backgroundColor: ['#00e5a0','#4da6ff','#a78bfa','#ff6b35','#f59e0b','#888','#666','#444'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+
+  // Size distribution
+  if (charts.empSize) charts.empSize.destroy();
+  charts.empSize = new Chart(document.getElementById('chart-emp-size'), {
+    type: 'bar',
+    data: {
+      labels: ['1-4','5-9','10-19','20-49','50-99','100-249','250-499','500+'],
+      datasets: [{ data: [38,22,16,12,6,3,2,1], backgroundColor: '#4da6ff88', borderColor: '#4da6ff', borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  // Employer cards
+  document.getElementById('employer-list').innerHTML = z.employers.map((emp, i) => `
+    <div class="employer-card">
+      <h3>${emp}</h3>
+      <div class="employer-naics">${['NAICS 6221','NAICS 6111','NAICS 4529','NAICS 9211'][i % 4]} · ${z.area}</div>
+      <div class="employer-stat"><span>Est. Employees</span><span>${fmt(50 + Math.floor(Math.random() * 500))}</span></div>
+      <div class="employer-stat"><span>Sector</span><span>${['Healthcare','Education','Retail','Government'][i % 4]}</span></div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// SITE SCORER VIEW
+// ════════════════════════════════════════════
+function updateWeightDisplay() {
+  ['yfi','wfi','ses','growth','rel'].forEach(k => {
+    document.getElementById('wv-' + k).textContent = document.getElementById('w-' + k).value + '%';
+  });
+}
+
+function recalcScores() {
+  const w = {
+    yfi: parseInt(document.getElementById('w-yfi').value),
+    wfi: parseInt(document.getElementById('w-wfi').value),
+    ses: parseInt(document.getElementById('w-ses').value),
+    growth: parseInt(document.getElementById('w-growth').value),
+    rel: parseInt(document.getElementById('w-rel').value)
+  };
+  const total = w.yfi + w.wfi + w.ses + w.growth + w.rel;
+
+  const scored = ZIPS.map(z => {
+    const growthNorm = Math.min(100, z.growth * 2.5);
+    const score = Math.round(
+      (z.yfi * w.yfi / total) +
+      (z.wfi * w.wfi / total) +
+      (z.sesScore * w.ses / total) +
+      (growthNorm * w.growth / total) +
+      (z.relOpen * w.rel / total)
+    );
+    return { ...z, score };
+  }).sort((a, b) => b.score - a.score);
+
+  // Top 3
+  document.getElementById('top-sites').innerHTML = scored.slice(0, 3).map((z, i) => `
+    <div style="display:flex;align-items:center;gap:16px;padding:12px 0;${i < 2 ? 'border-bottom:1px solid var(--border)' : ''}">
+      <div style="font-family:'Bebas Neue';font-size:28px;color:${['var(--accent)','var(--accent3)','var(--accent5)'][i]};min-width:32px">#${i+1}</div>
+      <div style="flex:1">
+        <div style="font-weight:600;color:var(--text)">${z.zip} — ${z.area}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:11px;color:var(--text-2)">YFI ${z.yfi} · WFI ${z.wfi} · SES ${z.sesScore} · Growth ${fmtPct(z.growth)}</div>
+      </div>
+      <div style="font-family:'Bebas Neue';font-size:32px;color:${['var(--accent)','var(--accent3)','var(--accent5)'][i]}">${z.score}</div>
+    </div>
+  `).join('');
+
+  // Full table
+  document.getElementById('scorer-table').innerHTML = scored.map((z, i) => `
+    <tr>
+      <td class="mono" style="color:${i < 3 ? 'var(--accent)' : 'var(--text-2)'}">${i + 1}</td>
+      <td class="mono">${z.zip}</td>
+      <td>${z.area}</td>
+      <td><div class="bar-inline"><div class="bar-track"><div class="bar-fill" style="width:${z.score}%;background:${z.score > 75 ? 'var(--accent)' : z.score > 50 ? 'var(--accent3)' : 'var(--accent5)'}"></div></div><span class="bar-val">${z.score}</span></div></td>
+      <td class="mono">${z.yfi}</td>
+      <td class="mono">${z.wfi}</td>
+      <td class="mono">${z.sesScore}</td>
+      <td class="mono">${fmtPct(z.growth)}</td>
+      <td class="mono">${z.relOpen}</td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initOverview();
+  initDemoView();
+  initFamilyView();
+  initSESView();
+  initReligiousView();
+  initEmpView();
+  recalcScores();
+});
+</script>
+</body>
+</html>
