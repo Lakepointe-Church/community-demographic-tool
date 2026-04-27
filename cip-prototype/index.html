@@ -6,6 +6,8 @@
 <title>Community Intelligence Platform — Lakepointe Church</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.css" rel="stylesheet">
+<script src="https://api.mapbox.com/mapbox-gl-js/v3.3.0/mapbox-gl.js"></script>
 <style>
 :root {
   --bg: #0a0d12;
@@ -703,6 +705,46 @@ body {
   color: var(--text);
   font-weight: 500;
 }
+
+/* ── MAP VIEW ─────────────────────── */
+.mapbox-container { width: 100%; height: calc(100vh - 80px); border-radius: var(--radius-md); overflow: hidden; position: relative; }
+.mapboxgl-popup-content { background: var(--surface) !important; color: var(--text) !important; border: 1px solid var(--border); border-radius: var(--radius-md) !important; font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; padding: 12px 16px !important; }
+.mapboxgl-popup-tip { border-top-color: var(--surface) !important; }
+.mapboxgl-popup-close-button { color: var(--text-2) !important; font-size: 18px; }
+.map-controls { position: absolute; top: 12px; left: 12px; z-index: 2; display: flex; gap: 8px; align-items: center; }
+.map-controls select { background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 8px 12px; border-radius: var(--radius-md); font-family: 'IBM Plex Sans', sans-serif; font-size: 13px; cursor: pointer; }
+.map-legend { position: absolute; bottom: 30px; right: 12px; z-index: 2; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 12px 16px; min-width: 160px; }
+.map-legend h4 { font-family: 'Bebas Neue', sans-serif; font-size: 14px; letter-spacing: 1px; margin-bottom: 8px; color: var(--text-2); }
+.map-legend-item { display: flex; align-items: center; gap: 8px; font-size: 12px; margin-bottom: 4px; color: var(--text-2); }
+.map-legend-swatch { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.campus-marker { width: 28px; height: 28px; background: var(--accent); border: 2px solid #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 700; color: #0a0d12; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+
+/* ── GIVING POTENTIAL VIEW ─────────────────────── */
+.giving-input-row { display: flex; gap: 12px; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
+.giving-input-row label { font-size: 13px; color: var(--text-2); }
+.giving-input-row input[type="number"] { width: 80px; background: var(--surface); color: var(--text); border: 1px solid var(--border); padding: 8px 10px; border-radius: var(--radius-md); font-family: 'IBM Plex Mono', monospace; font-size: 14px; text-align: center; }
+.giving-input-row input[type="number"]:focus { outline: none; border-color: var(--accent); }
+
+/* ── COMMUNITY NEEDS VIEW ─────────────────────── */
+.severity-high { color: #ff4444; font-weight: 600; }
+.severity-med { color: #f59e0b; font-weight: 600; }
+.severity-low { color: #00e5a0; font-weight: 600; }
+.needs-cell { padding: 4px 8px; border-radius: var(--radius-sm); font-family: 'IBM Plex Mono', monospace; font-size: 13px; }
+.needs-cell-high { background: rgba(255,68,68,0.12); color: #ff4444; }
+.needs-cell-med { background: rgba(245,158,11,0.12); color: #f59e0b; }
+.needs-cell-low { background: rgba(0,229,160,0.12); color: #00e5a0; }
+
+/* ── ROCK RMS VIEW ─────────────────────── */
+.rockrms-overlay { position: relative; }
+.rockrms-overlay::after { content: 'Sample Data — Connect Rock RMS for Live Data'; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(10,13,18,0.55); display: flex; align-items: center; justify-content: center; font-family: 'IBM Plex Mono', monospace; font-size: 13px; color: var(--text-2); letter-spacing: 1px; border-radius: var(--radius-md); pointer-events: none; }
+.connection-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 20px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.connection-status { display: flex; align-items: center; gap: 10px; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; }
+.status-dot.disconnected { background: #ff4444; box-shadow: 0 0 6px rgba(255,68,68,0.4); }
+.status-dot.connected { background: #00e5a0; box-shadow: 0 0 6px rgba(0,229,160,0.4); }
+.btn-connect { background: var(--accent); color: var(--bg); border: none; padding: 8px 20px; border-radius: var(--radius-md); font-family: 'IBM Plex Mono', monospace; font-size: 13px; font-weight: 600; cursor: pointer; letter-spacing: 0.5px; }
+.btn-connect:hover { opacity: 0.85; }
+.data-freshness { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted); margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -742,6 +784,27 @@ body {
       <div class="nav-item" data-view="scorer" onclick="switchView('scorer')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
         Site Scorer
+      </div>
+      <div class="nav-divider"></div>
+      <div class="nav-item" data-view="map" onclick="switchView('map')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        Map
+      </div>
+      <div class="nav-item" data-view="giving" onclick="switchView('giving')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        Giving Potential
+      </div>
+      <div class="nav-item" data-view="trends" onclick="switchView('trends')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        Trends
+      </div>
+      <div class="nav-item" data-view="needs" onclick="switchView('needs')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        Community Needs
+      </div>
+      <div class="nav-item" data-view="rockrms" onclick="switchView('rockrms')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+        Church Data
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -1065,6 +1128,156 @@ body {
         </div>
       </div>
     </div>
+
+    <!-- ═══ VIEW: MAP ═══ -->
+    <div class="view" id="view-map">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Geographic Map</div>
+          <div class="page-subtitle">DFW ZIP codes and Lakepointe campus locations</div>
+        </div>
+      </div>
+      <div class="content" style="padding:0;position:relative;">
+        <div class="map-controls">
+          <select id="map-metric" onchange="updateMapMetric()">
+            <option value="growth">Population Growth</option>
+            <option value="sesScore">SES Score</option>
+            <option value="yfi">Young Family Index</option>
+            <option value="relOpen">Religious Openness</option>
+            <option value="cu12">Children Under 12</option>
+          </select>
+        </div>
+        <div id="mapContainer" class="mapbox-container"></div>
+        <div class="map-legend" id="map-legend"></div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: GIVING POTENTIAL ═══ -->
+    <div class="view" id="view-giving">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Giving Potential Analysis</div>
+          <div class="page-subtitle">Estimated annual giving capacity by ZIP code</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="kpi-row">
+          <div class="kpi-card"><div class="kpi-label">Total Combined Population</div><div class="kpi-value" id="giving-pop">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Estimated Households</div><div class="kpi-value" id="giving-hh">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Giving @ 2%</div><div class="kpi-value" id="giving-2">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Giving @ 3%</div><div class="kpi-value" id="giving-3">—</div></div>
+        </div>
+        <div class="giving-input-row">
+          <label>Custom Giving %:</label>
+          <input type="number" id="giving-custom-pct" value="2.5" min="0.1" max="100" step="0.1">
+          <button class="btn" onclick="recalcGiving()">Recalculate</button>
+          <span class="kpi-label" style="margin-left:12px">Giving @ Custom: <strong id="giving-custom-total" style="color:var(--accent)">—</strong></span>
+        </div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card"><canvas id="chart-giving-bar"></canvas></div>
+          <div class="card" style="overflow:auto;max-height:480px;">
+            <table class="data-table">
+              <thead><tr><th>ZIP</th><th>Area</th><th>Pop</th><th>Est HH</th><th>Median HHI</th><th>@ 2%</th><th>@ 3%</th><th>@ Custom</th></tr></thead>
+              <tbody id="giving-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: TRENDS ═══ -->
+    <div class="view" id="view-trends">
+      <div class="page-header">
+        <div>
+          <div class="page-title">5-Year Trends</div>
+          <div class="page-subtitle">Historical and projected trends for selected ZIP code</div>
+        </div>
+        <div class="header-actions">
+          <select class="zip-search" id="trends-zip" onchange="renderTrends()" style="padding:8px 12px;background:var(--surface);color:var(--text);border:1px solid var(--border);border-radius:var(--radius-md);font-family:'IBM Plex Sans',sans-serif;font-size:13px;min-width:200px;cursor:pointer;"></select>
+        </div>
+      </div>
+      <div class="content">
+        <div class="grid-2">
+          <div class="card"><div class="section-header">Population</div><canvas id="chart-trend-pop"></canvas></div>
+          <div class="card"><div class="section-header">Median Household Income</div><canvas id="chart-trend-hhi"></canvas></div>
+          <div class="card"><div class="section-header">SES Score</div><canvas id="chart-trend-ses"></canvas></div>
+          <div class="card"><div class="section-header">Young Family Index</div><canvas id="chart-trend-yfi"></canvas></div>
+          <div class="card"><div class="section-header">% Children Under 12</div><canvas id="chart-trend-cu12"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: COMMUNITY NEEDS ═══ -->
+    <div class="view" id="view-needs">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Community Needs Assessment</div>
+          <div class="page-subtitle">Poverty, food insecurity, and uninsured rates by ZIP code</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="kpi-row">
+          <div class="kpi-card"><div class="kpi-label">Avg Poverty Rate</div><div class="kpi-value" id="needs-poverty">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Avg Food Insecurity</div><div class="kpi-value" id="needs-food">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Avg Uninsured Rate</div><div class="kpi-value" id="needs-uninsured">—</div></div>
+          <div class="kpi-card"><div class="kpi-label">Highest Need ZIP</div><div class="kpi-value" id="needs-highest">—</div></div>
+        </div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card"><canvas id="chart-needs-bar"></canvas></div>
+          <div class="card" style="overflow:auto;max-height:520px;">
+            <div class="section-header" style="margin-bottom:12px">Needs Assessment Table</div>
+            <table class="data-table">
+              <thead><tr><th>ZIP</th><th>Area</th><th>Poverty</th><th>Food Insecurity</th><th>Uninsured</th><th>Needs Index</th></tr></thead>
+              <tbody id="needs-table"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ VIEW: ROCK RMS ═══ -->
+    <div class="view" id="view-rockrms">
+      <div class="page-header">
+        <div>
+          <div class="page-title">Church Data Integration</div>
+          <div class="page-subtitle">Rock RMS — Attendance, giving, and member penetration</div>
+        </div>
+      </div>
+      <div class="content">
+        <div class="connection-card">
+          <div class="connection-status">
+            <span class="status-dot disconnected"></span>
+            <div>
+              <div style="font-weight:500;">Rock RMS Connection</div>
+              <div class="data-freshness">Last Sync: &mdash;</div>
+            </div>
+          </div>
+          <button class="btn-connect" onclick="alert('Rock RMS integration coming soon. This is a prototype placeholder.')">Connect Rock RMS</button>
+        </div>
+        <div class="grid-2" style="margin-bottom:24px">
+          <div class="card rockrms-overlay"><div class="section-header" style="margin-bottom:12px">Sunday Attendance by Campus</div><canvas id="chart-rock-attendance"></canvas></div>
+          <div class="card rockrms-overlay"><div class="section-header" style="margin-bottom:12px">Giving by ZIP Code (Top 8)</div><canvas id="chart-rock-giving"></canvas></div>
+        </div>
+        <div class="grid-2">
+          <div class="card rockrms-overlay">
+            <div class="section-header" style="margin-bottom:12px">Member Penetration Rate</div>
+            <table class="data-table">
+              <thead><tr><th>ZIP</th><th>Area</th><th>Population</th><th>Est. Members</th><th>Penetration</th></tr></thead>
+              <tbody id="rock-penetration-table"></tbody>
+            </table>
+          </div>
+          <div class="card rockrms-overlay">
+            <div class="section-header" style="margin-bottom:12px">Data Summary</div>
+            <div class="stat-row"><span class="stat-label">Total Weekly Attendance</span><span class="stat-value" id="rock-total-attend">—</span></div>
+            <div class="stat-row"><span class="stat-label">Total Annual Giving (est.)</span><span class="stat-value" id="rock-total-giving">—</span></div>
+            <div class="stat-row"><span class="stat-label">Avg Penetration Rate</span><span class="stat-value" id="rock-avg-pen">—</span></div>
+            <div class="stat-row"><span class="stat-label">Connected Campuses</span><span class="stat-value">8</span></div>
+            <div class="data-freshness" style="margin-top:12px;text-align:center;">Data shown is sample/mock data for demonstration purposes</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -1146,6 +1359,12 @@ function switchView(view) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('view-' + view).classList.add('active');
   document.querySelector(`[data-view="${view}"]`).classList.add('active');
+  if (view === 'map') {
+    setTimeout(() => {
+      initMapView();
+      if (mapInstance) mapInstance.resize();
+    }, 100);
+  }
 }
 
 function handleSearch(e) {
@@ -1296,6 +1515,941 @@ function updateDemoView() {
   // Age distribution
   if (charts.demoAge) charts.demoAge.destroy();
   const ageD = z.yfi > 80 ? [26,22,30,16,6] : z.yfi > 60 ? [22,24,28,19,7] : [18,22,26,24,10];
+  charts.demoAge = new Chart(document.getElementById('chart-demo-age'), {
+    type: 'bar',
+    data: {
+      labels: ['0-17','18-34','35-54','55-74','75+'],
+      datasets: [{ data: ageD, backgroundColor: '#a78bfa88', borderColor: '#a78bfa', borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  // Household type
+  if (charts.hhType) charts.hhType.destroy();
+  const married = z.yfi > 80 ? 58 : z.yfi > 60 ? 48 : 38;
+  charts.hhType = new Chart(document.getElementById('chart-hh-type'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Married w/ Children','Married No Children','Single Parent','Living Alone','Other'],
+      datasets: [{ data: [married, 18, 12, 16, 100-married-18-12-16], backgroundColor: ['#00e5a0','#4da6ff','#ff6b35','#a78bfa','#f59e0b'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+}
+
+
+// ════════════════════════════════════════════
+// SES VIEW
+// ════════════════════════════════════════════
+function initSESView() {
+  const classes = ['Affluent','Upper Middle','Middle','Lower Middle','Working Class'];
+  const counts = classes.map(c => ZIPS.filter(z => z.sesClass === c).length);
+  const avgSES = Math.round(ZIPS.reduce((s,z) => s + z.sesScore, 0) / ZIPS.length);
+
+  document.getElementById('ses-summary-cards').innerHTML = `
+    <div class="card"><div class="card-label">Avg SES Score</div><div class="card-value" style="color:var(--accent3)">${avgSES}</div><div class="card-delta" style="color:var(--text-2)">DFW East Corridor</div></div>
+    <div class="card"><div class="card-label">Upper Middle+</div><div class="card-value" style="color:var(--accent4)">${counts[0]+counts[1]}</div><div class="card-delta" style="color:var(--text-2)">of ${ZIPS.length} ZIPs</div></div>
+    <div class="card"><div class="card-label">Middle Class</div><div class="card-value" style="color:var(--accent)">${counts[2]}</div></div>
+    <div class="card"><div class="card-label">Working / Lower</div><div class="card-value" style="color:var(--accent2)">${counts[3]+counts[4]}</div></div>
+  `;
+
+  charts.sesDist = new Chart(document.getElementById('chart-ses-dist'), {
+    type: 'bar',
+    data: {
+      labels: classes,
+      datasets: [{ data: counts, backgroundColor: classes.map(c => getSESColor(c) + '88'), borderColor: classes.map(c => getSESColor(c)), borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+
+  charts.sesScatter = new Chart(document.getElementById('chart-ses-scatter'), {
+    type: 'scatter',
+    data: {
+      datasets: [{
+        label: 'ZIP Codes',
+        data: ZIPS.map(z => ({ x: z.medHHI / 1000, y: z.sesScore, label: z.zip })),
+        backgroundColor: ZIPS.map(z => getSESColor(z.sesClass) + 'aa'),
+        pointRadius: 8,
+        pointHoverRadius: 12
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => {
+              const z = ZIPS[ctx.dataIndex];
+              return `${z.zip} ${z.area} — Score: ${z.sesScore}, HHI: ${fmtMoney(z.medHHI)}`;
+            }
+          }
+        }
+      },
+      scales: {
+        x: { title: { display: true, text: 'Median HH Income ($K)' } },
+        y: { title: { display: true, text: 'SES Composite Score' }, beginAtZero: true, max: 100 }
+      }
+    }
+  });
+
+  const filterBar = document.getElementById('ses-filters');
+  filterBar.innerHTML = `<div class="filter-chip active" onclick="filterSES('all',this)">All</div>` +
+    classes.map(c => `<div class="filter-chip" onclick="filterSES('${c}',this)">${c}</div>`).join('');
+
+  renderSESTable('all');
+}
+
+function filterSES(cls, el) {
+  document.querySelectorAll('#ses-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  renderSESTable(cls);
+}
+
+function renderSESTable(cls) {
+  const filtered = cls === 'all' ? ZIPS : ZIPS.filter(z => z.sesClass === cls);
+  const sorted = [...filtered].sort((a,b) => b.sesScore - a.sesScore);
+  document.getElementById('ses-table').innerHTML = sorted.map(z => `
+    <tr>
+      <td class="mono">${z.zip}</td><td>${z.area}</td>
+      <td><div class="bar-inline"><div class="bar-track"><div class="bar-fill" style="width:${z.sesScore}%;background:${getSESColor(z.sesClass)}"></div></div><span class="bar-val">${z.sesScore}</span></div></td>
+      <td><span class="badge ${getSESBadge(z.sesClass)}">${z.sesClass}</span></td>
+      <td class="mono">${fmtMoney(z.medHHI)}</td>
+      <td class="mono">${z.pctBach}%</td>
+      <td class="mono">${z.pctMgmt}%</td>
+      <td><span style="color:var(--positive)">↑ Stable</span></td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// RELIGIOUS LANDSCAPE VIEW
+// ════════════════════════════════════════════
+function initReligiousView() {
+  document.getElementById('rel-summary-cards').innerHTML = `
+    <div class="card"><div class="card-label">Evangelical Protestant</div><div class="card-value" style="color:var(--accent)">38%</div><div class="card-delta down">↓ 2.1 pts since 2020</div></div>
+    <div class="card"><div class="card-label">Unaffiliated / None</div><div class="card-value" style="color:var(--accent2)">26%</div><div class="card-delta down" style="color:var(--negative)">↑ 4.3 pts since 2020</div></div>
+    <div class="card"><div class="card-label">Non-Christian Growth</div><div class="card-value" style="color:var(--accent4)">+18%</div><div class="card-delta" style="color:var(--text-2)">Muslim, Hindu, Buddhist (2020–2024)</div></div>
+    <div class="card"><div class="card-label">Congregations / 10K</div><div class="card-value" style="color:var(--accent5)">8.4</div><div class="card-delta" style="color:var(--text-2)">DFW East Corridor avg</div></div>
+  `;
+
+  charts.relAffil = new Chart(document.getElementById('chart-rel-affil'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Evangelical','Catholic','Mainline Prot.','Historically Black Prot.','Mormon','Muslim','Hindu','Buddhist','Jewish','Unaffiliated','Other'],
+      datasets: [{ data: [38,14,8,6,1.5,2.8,1.8,0.8,0.6,26,0.5], backgroundColor: ['#00e5a0','#4da6ff','#a78bfa','#f59e0b','#888','#ff6b35','#ff9999','#99ccff','#ffcc00','#5a6272','#333'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right', labels: { font: { size: 11 } } } } }
+  });
+
+  charts.relGrowth = new Chart(document.getElementById('chart-rel-growth'), {
+    type: 'line',
+    data: {
+      labels: ['2015','2016','2017','2018','2019','2020','2021','2022','2023','2024'],
+      datasets: [
+        { label: 'Muslim', data: [1.8,1.9,2.0,2.1,2.2,2.3,2.4,2.5,2.6,2.8], borderColor: '#ff6b35', backgroundColor: 'rgba(255,107,53,0.1)', fill: true, tension: 0.3 },
+        { label: 'Hindu', data: [1.0,1.1,1.2,1.2,1.3,1.4,1.5,1.5,1.6,1.8], borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.1)', fill: true, tension: 0.3 },
+        { label: 'Buddhist', data: [0.6,0.6,0.6,0.7,0.7,0.7,0.7,0.8,0.8,0.8], borderColor: '#4da6ff', backgroundColor: 'rgba(77,166,255,0.1)', fill: true, tension: 0.3 }
+      ]
+    },
+    options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  const sorted = [...ZIPS].sort((a,b) => b.relOpen - a.relOpen).slice(0, 12);
+  charts.relOpenness = new Chart(document.getElementById('chart-rel-openness'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(z => z.zip),
+      datasets: [{ data: sorted.map(z => z.relOpen), backgroundColor: sorted.map(z => z.relOpen > 70 ? '#00e5a0' : z.relOpen > 60 ? '#4da6ff' : '#f59e0b'), borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, max: 100, title: { display: true, text: 'Openness Score' } } } }
+  });
+
+  const congData = ZIPS.slice(0, 12).map(z => ({ zip: z.zip, cong: (5 + Math.random() * 8).toFixed(1) }));
+  charts.relCong = new Chart(document.getElementById('chart-rel-cong'), {
+    type: 'bar',
+    data: {
+      labels: congData.map(c => c.zip),
+      datasets: [{ data: congData.map(c => parseFloat(c.cong)), backgroundColor: '#a78bfa66', borderColor: '#a78bfa', borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+}
+
+// ════════════════════════════════════════════
+// EMPLOYERS VIEW
+// ════════════════════════════════════════════
+function initEmpView() {
+  const sel = document.getElementById('emp-zip-select');
+  sel.innerHTML = ZIPS.map(z => `<option value="${z.zip}">${z.zip} — ${z.area}</option>`).join('');
+  updateEmpView();
+}
+
+function updateEmpView() {
+  const zip = document.getElementById('emp-zip-select').value;
+  const z = ZIPS.find(x => x.zip === zip);
+  if (!z) return;
+
+  const totalEst = 120 + Math.floor(z.pop / 200);
+  const largeEmp = Math.floor(totalEst * 0.03);
+  const avgPayroll = Math.round(z.medHHI * 0.85);
+
+  document.getElementById('emp-cards').innerHTML = `
+    <div class="card"><div class="card-label">Total Establishments</div><div class="card-value" style="color:var(--text)">${totalEst}</div></div>
+    <div class="card"><div class="card-label">Large Employers (100+)</div><div class="card-value" style="color:var(--accent3)">${largeEmp}</div></div>
+    <div class="card"><div class="card-label">Avg Annual Payroll</div><div class="card-value" style="color:var(--accent5)">${fmtMoney(avgPayroll)}</div></div>
+    <div class="card"><div class="card-label">Top Industry</div><div class="card-value" style="color:var(--accent);font-size:24px">${Object.entries(z.indMix).sort((a,b)=>b[1]-a[1])[0][0].charAt(0).toUpperCase() + Object.entries(z.indMix).sort((a,b)=>b[1]-a[1])[0][0].slice(1)}</div></div>
+  `;
+
+  if (charts.industry) charts.industry.destroy();
+  const indLabels = { health:'Healthcare', retail:'Retail', prof:'Professional Svc', mfg:'Manufacturing', edu:'Education', food:'Food/Accommodation', constr:'Construction', other:'Other' };
+  const indEntries = Object.entries(z.indMix).sort((a,b) => b[1] - a[1]);
+  charts.industry = new Chart(document.getElementById('chart-industry'), {
+    type: 'doughnut',
+    data: {
+      labels: indEntries.map(e => indLabels[e[0]]),
+      datasets: [{ data: indEntries.map(e => e[1]), backgroundColor: ['#00e5a0','#4da6ff','#a78bfa','#ff6b35','#f59e0b','#888','#666','#444'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+
+  if (charts.empSize) charts.empSize.destroy();
+  charts.empSize = new Chart(document.getElementById('chart-emp-size'), {
+    type: 'bar',
+    data: {
+      labels: ['1-4','5-9','10-19','20-49','50-99','100-249','250-499','500+'],
+      datasets: [{ data: [38,22,16,12,6,3,2,1], backgroundColor: '#4da6ff88', borderColor: '#4da6ff', borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  document.getElementById('employer-list').innerHTML = z.employers.map((emp, i) => `
+    <div class="employer-card">
+      <h3>${emp}</h3>
+      <div class="employer-naics">${['NAICS 6221','NAICS 6111','NAICS 4529','NAICS 9211'][i % 4]} · ${z.area}</div>
+      <div class="employer-stat"><span>Est. Employees</span><span>${fmt(50 + Math.floor(Math.random() * 500))}</span></div>
+      <div class="employer-stat"><span>Sector</span><span>${['Healthcare','Education','Retail','Government'][i % 4]}</span></div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// SITE SCORER VIEW
+// ════════════════════════════════════════════
+const WEIGHT_KEYS = ['yfi','wfi','ses','growth','rel'];
+const DEFAULT_WEIGHTS = {yfi:25, wfi:20, ses:20, growth:15, rel:20};
+
+function checkWeightTotal() {
+  const total = getWeightTotal();
+  const totalEl = document.getElementById('weight-total');
+  const btn = document.getElementById('btn-recalc');
+  const isValid = total === 100;
+
+  totalEl.textContent = total + '%';
+  totalEl.className = 'weight-total-value ' + (isValid ? 'valid' : 'invalid');
+  btn.disabled = !isValid;
+
+  document.querySelectorAll('.weight-input').forEach(el => {
+    el.classList.toggle('invalid', !isValid && total > 100);
+  });
+}
+
+function getWeightTotal() {
+  return WEIGHT_KEYS.reduce((s, k) => s + (parseInt(document.getElementById('w-' + k).value) || 0), 0);
+}
+
+function resetWeights() {
+  WEIGHT_KEYS.forEach(k => {
+    document.getElementById('w-' + k).value = DEFAULT_WEIGHTS[k];
+  });
+  checkWeightTotal();
+  recalcScores();
+}
+
+function recalcScores() {
+  const total = getWeightTotal();
+  if (total !== 100) return;
+
+  const w = {};
+  WEIGHT_KEYS.forEach(k => { w[k] = parseInt(document.getElementById('w-' + k).value) || 0; });
+
+  const scored = ZIPS.map(z => {
+    const growthNorm = Math.min(100, z.growth * 2.5);
+    const cu12Norm = Math.min(100, z.cu12 * 3.2);
+    const hhNorm = Math.min(100, (z.hhSize - 2.0) * 55);
+    const score = Math.round(
+      (cu12Norm * w.yfi / total) +
+      (hhNorm * w.wfi / total) +
+      (z.sesScore * w.ses / total) +
+      (growthNorm * w.growth / total) +
+      (z.relOpen * w.rel / total)
+    );
+    return { ...z, score };
+  }).sort((a, b) => b.score - a.score);
+
+  document.getElementById('top-sites').innerHTML = scored.slice(0, 3).map((z, i) => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;${i < 2 ? 'border-bottom:1px solid var(--border)' : ''}">
+      <div style="font-family:'Bebas Neue';font-size:24px;color:${['var(--accent)','var(--accent3)','var(--accent5)'][i]};min-width:28px;flex-shrink:0">#${i+1}</div>
+      <div style="flex:1;min-width:0;overflow:hidden">
+        <div style="font-weight:600;color:var(--text);font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${z.zip} — ${z.area}</div>
+        <div style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">SES ${z.sesScore} · Growth ${fmtPct(z.growth)} · ${z.cu12}% kids</div>
+      </div>
+      <div style="font-family:'Bebas Neue';font-size:28px;color:${['var(--accent)','var(--accent3)','var(--accent5)'][i]};flex-shrink:0">${z.score}</div>
+    </div>
+  `).join('');
+
+  document.getElementById('scorer-table').innerHTML = scored.map((z, i) => `
+    <tr>
+      <td class="mono" style="color:${i < 3 ? 'var(--accent)' : 'var(--text-2)'}">${i + 1}</td>
+      <td class="mono">${z.zip}</td>
+      <td>${z.area}</td>
+      <td><div class="bar-inline"><div class="bar-track"><div class="bar-fill" style="width:${z.score}%;background:${z.score > 75 ? 'var(--accent)' : z.score > 50 ? 'var(--accent3)' : 'var(--accent5)'}"></div></div><span class="bar-val">${z.score}</span></div></td>
+      <td class="mono">${z.sesScore}</td>
+      <td class="mono" style="color:${getGrowthColor(z.growth)}">${fmtPct(z.growth)}</td>
+      <td class="mono">${z.cu12}%</td>
+      <td class="mono">${z.hhSize}</td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// COMPARE VIEW
+// ════════════════════════════════════════════
+let selectedZips = new Set();
+
+function initCompareView() {
+  const picker = document.getElementById('zip-picker');
+  picker.innerHTML = ZIPS.map(z => `
+    <div class="zip-chip" data-zip="${z.zip}" onclick="toggleZip('${z.zip}', this)">
+      <span class="check"></span>
+      <span>${z.zip}</span>
+      <span style="color:var(--muted);font-family:'IBM Plex Sans',sans-serif;font-size:11px">${z.area}</span>
+    </div>
+  `).join('');
+}
+
+function toggleZip(zip, el) {
+  if (selectedZips.has(zip)) {
+    selectedZips.delete(zip);
+    el.classList.remove('selected');
+  } else {
+    selectedZips.add(zip);
+    el.classList.add('selected');
+  }
+  updateCompareView();
+}
+
+function selectAllZips() {
+  selectedZips = new Set(ZIPS.map(z => z.zip));
+  document.querySelectorAll('.zip-chip').forEach(c => c.classList.add('selected'));
+  updateCompareView();
+}
+
+function clearZipSelection() {
+  selectedZips.clear();
+  document.querySelectorAll('.zip-chip').forEach(c => c.classList.remove('selected'));
+  updateCompareView();
+}
+
+function updateCompareView() {
+  const count = selectedZips.size;
+  document.getElementById('compare-count').textContent = count > 0 ? `${count} selected` : '';
+
+  if (count < 1) {
+    document.getElementById('compare-empty').style.display = 'block';
+    document.getElementById('compare-results').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('compare-empty').style.display = 'none';
+  document.getElementById('compare-results').style.display = 'block';
+
+  const sel = ZIPS.filter(z => selectedZips.has(z.zip));
+  const totalPop = sel.reduce((s, z) => s + z.pop, 0);
+
+  const wAvg = (field) => sel.reduce((s, z) => s + z[field] * z.pop, 0) / totalPop;
+  const avgHHI = Math.round(wAvg('medHHI'));
+  const avgGrowth = wAvg('growth');
+  const avgCU12 = wAvg('cu12');
+  const avgHHSize = wAvg('hhSize');
+  const avgBach = wAvg('pctBach');
+  const avgSES = Math.round(wAvg('sesScore'));
+
+  document.getElementById('compare-cards').innerHTML = `
+    <div class="card"><div class="card-label">Combined Population</div><div class="card-value" style="color:var(--text)">${fmt(totalPop)}</div><div class="card-delta" style="color:var(--text-2)">${count} ZIP codes</div></div>
+    <div class="card"><div class="card-label">Wtd Avg Median HHI</div><div class="card-value" style="color:var(--accent5)">${fmtMoney(avgHHI)}</div></div>
+    <div class="card"><div class="card-label">Wtd Avg Growth</div><div class="card-value" style="color:${avgGrowth > 10 ? 'var(--accent)' : 'var(--accent3)'}">${avgGrowth.toFixed(1)}%</div></div>
+    <div class="card"><div class="card-label">HH w/ Children Under 12</div><div class="card-value" style="color:var(--young-family)">${avgCU12.toFixed(1)}%</div><div class="card-delta" style="color:var(--text-2)">Avg HH Size: ${avgHHSize.toFixed(2)}</div></div>
+  `;
+
+  const raceW = sel.reduce((s,z) => s + z.race.w * z.pop, 0) / totalPop;
+  const raceH = sel.reduce((s,z) => s + z.race.h * z.pop, 0) / totalPop;
+  const raceB = sel.reduce((s,z) => s + z.race.b * z.pop, 0) / totalPop;
+  const raceA = sel.reduce((s,z) => s + z.race.a * z.pop, 0) / totalPop;
+  const raceO = sel.reduce((s,z) => s + z.race.o * z.pop, 0) / totalPop;
+
+  if (charts.compareRace) charts.compareRace.destroy();
+  charts.compareRace = new Chart(document.getElementById('chart-compare-race'), {
+    type: 'doughnut',
+    data: {
+      labels: ['White','Hispanic','Black','Asian','Other'],
+      datasets: [{ data: [raceW.toFixed(1), raceH.toFixed(1), raceB.toFixed(1), raceA.toFixed(1), raceO.toFixed(1)], backgroundColor: ['#4da6ff','#ff6b35','#a78bfa','#00e5a0','#f59e0b'], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'right' } } }
+  });
+
+  const incBrackets = ['<$25K','$25-50K','$50-75K','$75-100K','$100-150K','$150K+'];
+  const incData = sel.map(z => {
+    if (z.medHHI < 55000) return [12,22,24,20,14,8];
+    if (z.medHHI < 85000) return [8,16,22,22,20,12];
+    if (z.medHHI < 110000) return [5,10,16,22,28,19];
+    return [3,6,12,18,30,31];
+  });
+  const avgInc = incBrackets.map((_, i) => {
+    const weighted = sel.reduce((s, z, j) => s + incData[j][i] * z.pop, 0) / totalPop;
+    return Math.round(weighted);
+  });
+
+  if (charts.compareIncome) charts.compareIncome.destroy();
+  charts.compareIncome = new Chart(document.getElementById('chart-compare-income'), {
+    type: 'bar',
+    data: {
+      labels: incBrackets,
+      datasets: [{ data: avgInc, backgroundColor: '#4da6ff88', borderColor: '#4da6ff', borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  const classes = ['Affluent','Upper Middle','Middle','Lower Middle','Working Class'];
+  const sesCounts = classes.map(c => sel.filter(z => z.sesClass === c).length);
+
+  if (charts.compareSES) charts.compareSES.destroy();
+  charts.compareSES = new Chart(document.getElementById('chart-compare-ses'), {
+    type: 'bar',
+    data: {
+      labels: classes,
+      datasets: [{ data: sesCounts, backgroundColor: classes.map(c => getSESColor(c) + '88'), borderColor: classes.map(c => getSESColor(c)), borderWidth: 1 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
+  });
+
+  const sortedByGrowth = [...sel].sort((a,b) => b.growth - a.growth);
+  if (charts.compareGrowth) charts.compareGrowth.destroy();
+  charts.compareGrowth = new Chart(document.getElementById('chart-compare-growth'), {
+    type: 'bar',
+    data: {
+      labels: sortedByGrowth.map(z => z.zip),
+      datasets: [{ data: sortedByGrowth.map(z => z.growth), backgroundColor: sortedByGrowth.map(z => getGrowthColor(z.growth) + 'cc'), borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => v + '%' } } } }
+  });
+
+  document.getElementById('compare-detail-left').innerHTML = `
+    <div class="section-header" style="margin-bottom:12px">Population & Families</div>
+    <div class="stat-row"><span class="stat-label">Total Population</span><span class="stat-value">${fmt(totalPop)}</span></div>
+    <div class="stat-row"><span class="stat-label">Number of ZIPs</span><span class="stat-value">${count}</span></div>
+    <div class="stat-row"><span class="stat-label">Avg Population per ZIP</span><span class="stat-value">${fmt(Math.round(totalPop / count))}</span></div>
+    <div class="stat-row"><span class="stat-label">% HH w/ Children Under 12</span><span class="stat-value" style="color:var(--accent)">${avgCU12.toFixed(1)}%</span></div>
+    <div class="stat-row"><span class="stat-label">Avg Household Size</span><span class="stat-value" style="color:var(--accent3)">${avgHHSize.toFixed(2)}</span></div>
+    <div class="stat-row"><span class="stat-label">Wtd Avg Growth Rate</span><span class="stat-value" style="color:var(--positive)">${avgGrowth.toFixed(1)}%</span></div>
+    <div class="stat-row"><span class="stat-label">Fastest Growing ZIP</span><span class="stat-value">${sortedByGrowth[0].zip} (${fmtPct(sortedByGrowth[0].growth)})</span></div>
+  `;
+
+  const topHHI = [...sel].sort((a,b) => b.medHHI - a.medHHI);
+  document.getElementById('compare-detail-right').innerHTML = `
+    <div class="section-header" style="margin-bottom:12px">Economics & Education</div>
+    <div class="stat-row"><span class="stat-label">Wtd Avg Median HHI</span><span class="stat-value" style="color:var(--accent5)">${fmtMoney(avgHHI)}</span></div>
+    <div class="stat-row"><span class="stat-label">Highest HHI ZIP</span><span class="stat-value">${topHHI[0].zip} (${fmtMoney(topHHI[0].medHHI)})</span></div>
+    <div class="stat-row"><span class="stat-label">Lowest HHI ZIP</span><span class="stat-value">${topHHI[topHHI.length-1].zip} (${fmtMoney(topHHI[topHHI.length-1].medHHI)})</span></div>
+    <div class="stat-row"><span class="stat-label">Wtd Avg % Bachelor+</span><span class="stat-value">${avgBach.toFixed(1)}%</span></div>
+    <div class="stat-row"><span class="stat-label">Avg SES Score</span><span class="stat-value" style="color:var(--accent3)">${avgSES}/100</span></div>
+    <div class="stat-row"><span class="stat-label">Dominant SES Class</span><span class="stat-value">${classes[sesCounts.indexOf(Math.max(...sesCounts))]}</span></div>
+    <div class="stat-row"><span class="stat-label">Avg Religious Openness</span><span class="stat-value">${(sel.reduce((s,z) => s + z.relOpen, 0) / count).toFixed(0)}/100</span></div>
+  `;
+
+  const sorted = [...sel].sort((a,b) => b.pop - a.pop);
+  document.getElementById('compare-table').innerHTML = sorted.map(z => `
+    <tr>
+      <td class="mono">${z.zip}</td>
+      <td>${z.area}</td>
+      <td class="mono">${fmt(z.pop)}</td>
+      <td class="mono" style="color:${getGrowthColor(z.growth)}">${fmtPct(z.growth)}</td>
+      <td class="mono">${fmtMoney(z.medHHI)}</td>
+      <td class="mono">${z.cu12}%</td>
+      <td class="mono">${z.hhSize}</td>
+      <td><span class="badge ${getSESBadge(z.sesClass)}">${z.sesClass}</span></td>
+      <td class="mono">${z.pctBach}%</td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// MAP VIEW
+// ════════════════════════════════════════════
+let mapInstance = null;
+let mapInitialized = false;
+
+const ZIP_COORDS = {
+  '75087':[-96.4597,32.9310],'75032':[-96.4130,32.9150],'75098':[-96.5090,32.9720],
+  '75189':[-96.3320,32.9750],'75126':[-96.4450,32.7480],'75088':[-96.5630,32.9030],
+  '75150':[-96.5992,32.7668],'75149':[-96.6100,32.7350],'75043':[-96.5960,32.8560],
+  '75048':[-96.5820,32.9640],'75074':[-96.6690,32.9970],'75002':[-96.6530,33.1030],
+  '75013':[-96.6720,33.0800],'75070':[-96.6860,33.1640],'75071':[-96.6200,33.1750],
+  '75040':[-96.6500,32.8720],'75160':[-96.2750,32.7360],'75114':[-96.4580,32.6310],
+  '75181':[-96.5500,32.7300],'75135':[-96.2100,32.9640]
+};
+
+const CAMPUSES = [
+  {name:'Rockwall', lat:32.9310, lng:-96.4597},
+  {name:'Mesquite', lat:32.7668, lng:-96.5992},
+  {name:'Firewheel', lat:32.9592, lng:-96.6375},
+  {name:'Sunnyvale', lat:32.7965, lng:-96.5600},
+  {name:'Forney', lat:32.7480, lng:-96.4450},
+  {name:'North Dallas', lat:32.9280, lng:-96.7690},
+  {name:'East Dallas', lat:32.8180, lng:-96.7040},
+  {name:'Royse City', lat:32.9750, lng:-96.3320}
+];
+
+function getMetricValue(z, metric) {
+  return z[metric] || 0;
+}
+
+function getMetricRange(metric) {
+  const vals = ZIPS.map(z => getMetricValue(z, metric));
+  return { min: Math.min(...vals), max: Math.max(...vals) };
+}
+
+function metricToColor(val, range) {
+  const t = (val - range.min) / (range.max - range.min || 1);
+  const r = Math.round(255 * (1 - t));
+  const g = Math.round(229 * t);
+  const b = Math.round(160 * t);
+  return `rgb(${r},${g + 50},${b + 50})`;
+}
+
+function getMetricLabel(metric) {
+  const labels = {growth:'Population Growth %', sesScore:'SES Score', yfi:'Young Family Index', relOpen:'Religious Openness', cu12:'Children Under 12 %'};
+  return labels[metric] || metric;
+}
+
+function initMapView() {
+  if (mapInitialized) return;
+  mapInitialized = true;
+  mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+  mapInstance = new mapboxgl.Map({
+    container: 'mapContainer',
+    style: 'mapbox://styles/mapbox/dark-v11',
+    center: [-96.55, 32.88],
+    zoom: 9.5
+  });
+  mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+  mapInstance.on('load', () => {
+    CAMPUSES.forEach(c => {
+      const el = document.createElement('div');
+      el.className = 'campus-marker';
+      el.textContent = 'LP';
+      el.title = c.name;
+      new mapboxgl.Marker({element: el}).setLngLat([c.lng, c.lat])
+        .setPopup(new mapboxgl.Popup({offset:15}).setHTML(`<strong>Lakepointe ${c.name}</strong>`))
+        .addTo(mapInstance);
+    });
+
+    const metric = document.getElementById('map-metric').value;
+    const range = getMetricRange(metric);
+    const features = ZIPS.map(z => {
+      const coords = ZIP_COORDS[z.zip];
+      if (!coords) return null;
+      const val = getMetricValue(z, metric);
+      return {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: coords },
+        properties: { zip: z.zip, area: z.area, pop: z.pop, growth: z.growth, medHHI: z.medHHI, sesScore: z.sesScore, sesClass: z.sesClass, yfi: z.yfi, relOpen: z.relOpen, cu12: z.cu12, val: val, color: metricToColor(val, range) }
+      };
+    }).filter(Boolean);
+
+    mapInstance.addSource('zips', { type: 'geojson', data: { type: 'FeatureCollection', features } });
+    mapInstance.addLayer({
+      id: 'zip-circles',
+      type: 'circle',
+      source: 'zips',
+      paint: {
+        'circle-radius': 14,
+        'circle-color': ['get', 'color'],
+        'circle-opacity': 0.8,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-opacity': 0.3
+      }
+    });
+    mapInstance.addLayer({
+      id: 'zip-labels',
+      type: 'symbol',
+      source: 'zips',
+      layout: {
+        'text-field': ['get', 'zip'],
+        'text-size': 9,
+        'text-font': ['DIN Pro Medium','Arial Unicode MS Regular']
+      },
+      paint: { 'text-color': '#ffffff' }
+    });
+
+    mapInstance.on('click', 'zip-circles', (e) => {
+      const p = e.features[0].properties;
+      new mapboxgl.Popup({offset:10})
+        .setLngLat(e.lngLat)
+        .setHTML(`<strong>${p.zip} — ${p.area}</strong><br>Pop: ${Number(p.pop).toLocaleString()}<br>Growth: ${Number(p.growth).toFixed(1)}%<br>Median HHI: $${Number(p.medHHI).toLocaleString()}<br>SES: ${p.sesClass} (${p.sesScore})<br>YFI: ${p.yfi} · Kids<12: ${p.cu12}%<br>Rel. Openness: ${p.relOpen}`)
+        .addTo(mapInstance);
+    });
+    mapInstance.on('mouseenter', 'zip-circles', () => mapInstance.getCanvas().style.cursor = 'pointer');
+    mapInstance.on('mouseleave', 'zip-circles', () => mapInstance.getCanvas().style.cursor = '');
+
+    updateMapLegend(metric, range);
+  });
+}
+
+function updateMapMetric() {
+  if (!mapInstance || !mapInstance.getSource('zips')) return;
+  const metric = document.getElementById('map-metric').value;
+  const range = getMetricRange(metric);
+  const features = ZIPS.map(z => {
+    const coords = ZIP_COORDS[z.zip];
+    if (!coords) return null;
+    const val = getMetricValue(z, metric);
+    return {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: coords },
+      properties: { zip: z.zip, area: z.area, pop: z.pop, growth: z.growth, medHHI: z.medHHI, sesScore: z.sesScore, sesClass: z.sesClass, yfi: z.yfi, relOpen: z.relOpen, cu12: z.cu12, val: val, color: metricToColor(val, range) }
+    };
+  }).filter(Boolean);
+  mapInstance.getSource('zips').setData({ type: 'FeatureCollection', features });
+  updateMapLegend(metric, range);
+}
+
+function updateMapLegend(metric, range) {
+  const steps = 5;
+  let html = `<div style="font-family:'IBM Plex Mono';font-size:10px;color:var(--muted);letter-spacing:1px;margin-bottom:8px;text-transform:uppercase">${getMetricLabel(metric)}</div>`;
+  for (let i = 0; i < steps; i++) {
+    const t = i / (steps - 1);
+    const val = range.min + t * (range.max - range.min);
+    const color = metricToColor(val, range);
+    html += `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px"><span style="width:12px;height:12px;border-radius:2px;background:${color};display:inline-block"></span><span style="font-family:'IBM Plex Mono';font-size:10px;color:var(--text-2)">${val.toFixed(1)}</span></div>`;
+  }
+  document.getElementById('map-legend').innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+// GIVING POTENTIAL VIEW
+// ════════════════════════════════════════════
+function initGivingView() {
+  recalcGiving();
+}
+
+function recalcGiving() {
+  const customPct = parseFloat(document.getElementById('giving-custom-pct').value) || 2.5;
+  let totalPop = 0, totalHH = 0, total2 = 0, total3 = 0, totalCustom = 0;
+  const rows = ZIPS.map(z => {
+    const hh = Math.round(z.pop / z.hhSize);
+    const g2 = hh * z.medHHI * 0.02;
+    const g3 = hh * z.medHHI * 0.03;
+    const gc = hh * z.medHHI * (customPct / 100);
+    totalPop += z.pop; totalHH += hh; total2 += g2; total3 += g3; totalCustom += gc;
+    return { ...z, hh, g2, g3, gc };
+  }).sort((a, b) => b.gc - a.gc);
+
+  document.getElementById('giving-cards').innerHTML = `
+    <div class="card"><div class="card-label">Total Population</div><div class="card-value" style="color:var(--text)">${fmt(totalPop)}</div></div>
+    <div class="card"><div class="card-label">Est. Households</div><div class="card-value" style="color:var(--accent3)">${fmt(totalHH)}</div></div>
+    <div class="card"><div class="card-label">Giving @ 2%</div><div class="card-value" style="color:var(--accent5)">$${(total2/1e9).toFixed(2)}B</div></div>
+    <div class="card"><div class="card-label">Giving @ 3%</div><div class="card-value" style="color:var(--accent)">$${(total3/1e9).toFixed(2)}B</div></div>
+  `;
+
+  const top10 = rows.slice(0, 10);
+  if (charts['giving-bar']) charts['giving-bar'].destroy();
+  charts['giving-bar'] = new Chart(document.getElementById('chart-giving-bar'), {
+    type: 'bar',
+    data: {
+      labels: top10.map(r => r.zip + ' ' + r.area),
+      datasets: [{
+        label: 'Giving @ ' + customPct + '%',
+        data: top10.map(r => Math.round(r.gc)),
+        backgroundColor: top10.map((_, i) => `rgba(0,229,160,${0.9 - i * 0.06})`),
+        borderRadius: 2
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toLocaleString() } }
+      },
+      scales: {
+        x: { ticks: { color: '#5a6272', callback: v => '$' + (v/1e6).toFixed(0) + 'M' }, grid: { color: '#1e2430' } },
+        y: { ticks: { color: '#b0b8c8', font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  document.getElementById('giving-table').innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono">${r.zip}</td>
+      <td>${r.area}</td>
+      <td class="mono">${fmt(r.pop)}</td>
+      <td class="mono">${fmt(r.hh)}</td>
+      <td class="mono">${fmtMoney(r.medHHI)}</td>
+      <td class="mono">$${(r.g2/1e6).toFixed(1)}M</td>
+      <td class="mono">$${(r.g3/1e6).toFixed(1)}M</td>
+      <td class="mono" style="color:var(--accent)">$${(r.gc/1e6).toFixed(1)}M</td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// TRENDS VIEW
+// ════════════════════════════════════════════
+const trendCharts = {};
+
+function initTrendsView() {
+  const sel = document.getElementById('trends-zip');
+  sel.innerHTML = ZIPS.map(z => `<option value="${z.zip}">${z.zip} — ${z.area}</option>`).join('');
+  renderTrends();
+}
+
+function generateTrendData(currentVal, growthPctPerYear, years) {
+  const data = [];
+  for (let i = years.length - 1; i >= 0; i--) {
+    const yearsBack = years.length - 1 - i;
+    const factor = Math.pow(1 + growthPctPerYear / 100, -yearsBack);
+    data[i] = Math.round(currentVal * factor);
+  }
+  return data;
+}
+
+function renderTrends() {
+  const zip = document.getElementById('trends-zip').value;
+  const z = ZIPS.find(x => x.zip === zip);
+  if (!z) return;
+  const years = ['2021','2022','2023','2024','2025','2026'];
+
+  const configs = [
+    { id: 'chart-trend-pop', data: generateTrendData(z.pop, z.growth / 5, years), label: 'Population', color: '#00e5a0' },
+    { id: 'chart-trend-hhi', data: generateTrendData(z.medHHI, 3.2, years), label: 'Median HHI ($)', color: '#4da6ff' },
+    { id: 'chart-trend-ses', data: generateTrendData(z.sesScore, 1.5, years), label: 'SES Score', color: '#a78bfa' },
+    { id: 'chart-trend-yfi', data: generateTrendData(z.yfi, 2.0, years), label: 'YFI', color: '#f59e0b' },
+    { id: 'chart-trend-cu12', data: generateTrendData(z.cu12, 1.0, years), label: '% Children <12', color: '#ff6b35' }
+  ];
+
+  configs.forEach(cfg => {
+    if (trendCharts[cfg.id]) trendCharts[cfg.id].destroy();
+    trendCharts[cfg.id] = new Chart(document.getElementById(cfg.id), {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [{
+          label: cfg.label,
+          data: cfg.data,
+          borderColor: cfg.color,
+          backgroundColor: cfg.color + '18',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4,
+          pointBackgroundColor: cfg.color
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false }, title: { display: true, text: cfg.label, color: '#b0b8c8', font: { family: 'IBM Plex Mono', size: 11 } } },
+        scales: {
+          x: { ticks: { color: '#5a6272' }, grid: { color: '#1e2430' } },
+          y: { ticks: { color: '#5a6272' }, grid: { color: '#1e2430' } }
+        }
+      }
+    });
+  });
+}
+
+// ════════════════════════════════════════════
+// COMMUNITY NEEDS VIEW
+// ════════════════════════════════════════════
+function generateNeedsData() {
+  return ZIPS.map(z => {
+    const invSES = 100 - z.sesScore;
+    const poverty = Math.max(3, Math.min(35, invSES * 0.38 + (Math.random() * 4 - 2)));
+    const food = Math.max(2, Math.min(28, poverty * 0.7 + (Math.random() * 3 - 1.5)));
+    const uninsured = Math.max(4, Math.min(30, invSES * 0.32 + (Math.random() * 3 - 1.5)));
+    const needsIndex = Math.round((poverty + food + uninsured) / 3);
+    return { ...z, poverty: +poverty.toFixed(1), food: +food.toFixed(1), uninsured: +uninsured.toFixed(1), needsIndex };
+  });
+}
+
+function getSeverityClass(val) {
+  if (val >= 20) return 'color:var(--negative);font-weight:600';
+  if (val >= 12) return 'color:var(--accent5)';
+  return 'color:var(--accent)';
+}
+
+function initNeedsView() {
+  const needs = generateNeedsData();
+  const avgPov = (needs.reduce((s,n) => s + n.poverty, 0) / needs.length).toFixed(1);
+  const avgFood = (needs.reduce((s,n) => s + n.food, 0) / needs.length).toFixed(1);
+  const avgUni = (needs.reduce((s,n) => s + n.uninsured, 0) / needs.length).toFixed(1);
+  const highest = [...needs].sort((a,b) => b.needsIndex - a.needsIndex)[0];
+
+  document.getElementById('needs-cards').innerHTML = `
+    <div class="card"><div class="card-label">Avg Poverty Rate</div><div class="card-value" style="color:var(--accent2)">${avgPov}%</div></div>
+    <div class="card"><div class="card-label">Avg Food Insecurity</div><div class="card-value" style="color:var(--accent5)">${avgFood}%</div></div>
+    <div class="card"><div class="card-label">Avg Uninsured</div><div class="card-value" style="color:var(--accent4)">${avgUni}%</div></div>
+    <div class="card"><div class="card-label">Highest Need ZIP</div><div class="card-value" style="color:var(--negative);font-size:24px">${highest.zip}</div><div class="card-delta" style="color:var(--text-2)">${highest.area} — Index: ${highest.needsIndex}</div></div>
+  `;
+
+  const sorted = [...needs].sort((a,b) => b.needsIndex - a.needsIndex);
+  if (charts['needs-bar']) charts['needs-bar'].destroy();
+  charts['needs-bar'] = new Chart(document.getElementById('chart-needs-bar'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(n => n.zip),
+      datasets: [
+        { label: 'Poverty %', data: sorted.map(n => n.poverty), backgroundColor: '#ff6b3588', borderColor: '#ff6b35', borderWidth: 1 },
+        { label: 'Food Insecurity %', data: sorted.map(n => n.food), backgroundColor: '#f59e0b88', borderColor: '#f59e0b', borderWidth: 1 },
+        { label: 'Uninsured %', data: sorted.map(n => n.uninsured), backgroundColor: '#a78bfa88', borderColor: '#a78bfa', borderWidth: 1 }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top' } },
+      scales: {
+        x: { ticks: { color: '#5a6272' }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: '#5a6272', callback: v => v + '%' }, grid: { color: '#1e2430' } }
+      }
+    }
+  });
+
+  document.getElementById('needs-table').innerHTML = sorted.map(n => `
+    <tr>
+      <td class="mono">${n.zip}</td>
+      <td>${n.area}</td>
+      <td class="mono" style="${getSeverityClass(n.poverty)}">${n.poverty}%</td>
+      <td class="mono" style="${getSeverityClass(n.food)}">${n.food}%</td>
+      <td class="mono" style="${getSeverityClass(n.uninsured)}">${n.uninsured}%</td>
+      <td class="mono" style="color:${n.needsIndex >= 15 ? 'var(--negative)' : n.needsIndex >= 10 ? 'var(--accent5)' : 'var(--accent)'}">${n.needsIndex}</td>
+      <td><span class="badge ${n.sesClass === 'Working Class' || n.sesClass === 'Struggling' ? 'badge-orange' : n.sesClass === 'Lower Middle' ? 'badge-gold' : 'badge-green'}">${n.sesClass}</span></td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// ROCK RMS INTEGRATION VIEW
+// ════════════════════════════════════════════
+function initRockRMSView() {
+  const campusAttendance = [
+    {name:'Rockwall', sun:2800, trend:'+3.2%'},
+    {name:'Mesquite', sun:850, trend:'+1.8%'},
+    {name:'Firewheel', sun:1200, trend:'+5.1%'},
+    {name:'Sunnyvale', sun:680, trend:'+2.4%'},
+    {name:'Forney', sun:1400, trend:'+8.6%'},
+    {name:'North Dallas', sun:950, trend:'+4.2%'},
+    {name:'East Dallas', sun:720, trend:'+6.8%'},
+    {name:'Royse City', sun:580, trend:'+12.1%'}
+  ];
+
+  if (charts['rockrms-attend']) charts['rockrms-attend'].destroy();
+  charts['rockrms-attend'] = new Chart(document.getElementById('chart-rockrms-attend'), {
+    type: 'bar',
+    data: {
+      labels: campusAttendance.map(c => c.name),
+      datasets: [{
+        label: 'Avg Sunday Attendance',
+        data: campusAttendance.map(c => c.sun),
+        backgroundColor: campusAttendance.map((_, i) => `rgba(0,229,160,${0.9 - i * 0.08})`),
+        borderRadius: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, title: { display: true, text: 'Avg Sunday Attendance by Campus', color: '#b0b8c8', font: { family: 'IBM Plex Mono', size: 11 } } },
+      scales: {
+        x: { ticks: { color: '#b0b8c8' }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: '#5a6272' }, grid: { color: '#1e2430' } }
+      }
+    }
+  });
+
+  const givingZips = ZIPS.slice(0, 8).map(z => ({
+    zip: z.zip, area: z.area,
+    annualGiving: Math.round(z.pop * (z.sesScore / 100) * 42 + Math.random() * 50000),
+    members: Math.round(z.pop * (0.01 + Math.random() * 0.04))
+  }));
+
+  if (charts['rockrms-giving']) charts['rockrms-giving'].destroy();
+  charts['rockrms-giving'] = new Chart(document.getElementById('chart-rockrms-giving'), {
+    type: 'bar',
+    data: {
+      labels: givingZips.map(g => g.zip),
+      datasets: [{
+        label: 'Annual Giving ($)',
+        data: givingZips.map(g => g.annualGiving),
+        backgroundColor: '#4da6ff88',
+        borderColor: '#4da6ff',
+        borderWidth: 1,
+        borderRadius: 2
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false }, title: { display: true, text: 'Annual Giving by ZIP Code', color: '#b0b8c8', font: { family: 'IBM Plex Mono', size: 11 } } },
+      scales: {
+        x: { ticks: { color: '#b0b8c8' }, grid: { display: false } },
+        y: { beginAtZero: true, ticks: { color: '#5a6272', callback: v => '$' + (v/1000).toFixed(0) + 'K' }, grid: { color: '#1e2430' } }
+      }
+    }
+  });
+
+  document.getElementById('rockrms-penetration').innerHTML = givingZips.map(g => {
+    const rate = (g.members / ZIPS.find(z => z.zip === g.zip).pop * 100).toFixed(1);
+    return `
+    <tr>
+      <td class="mono">${g.zip}</td>
+      <td>${g.area}</td>
+      <td class="mono">${fmt(ZIPS.find(z => z.zip === g.zip).pop)}</td>
+      <td class="mono">${fmt(g.members)}</td>
+      <td class="mono" style="color:${parseFloat(rate) > 3 ? 'var(--accent)' : parseFloat(rate) > 1.5 ? 'var(--accent3)' : 'var(--accent5)'}">${rate}%</td>
+      <td class="mono">${fmtMoney(g.annualGiving)}</td>
+    </tr>`;
+  }).join('');
+
+  const totalMembers = givingZips.reduce((s,g) => s + g.members, 0);
+  const totalGiving = givingZips.reduce((s,g) => s + g.annualGiving, 0);
+  document.getElementById('rockrms-stats').innerHTML = `
+    <div class="stat-row"><span class="stat-label">Total Known Members</span><span class="stat-value">${fmt(totalMembers)}</span></div>
+    <div class="stat-row"><span class="stat-label">Total Annual Giving</span><span class="stat-value" style="color:var(--accent5)">${fmtMoney(totalGiving)}</span></div>
+    <div class="stat-row"><span class="stat-label">Avg Giving per Member</span><span class="stat-value">${fmtMoney(Math.round(totalGiving / totalMembers))}</span></div>
+    <div class="stat-row"><span class="stat-label">Active Campuses</span><span class="stat-value">8</span></div>
+    <div class="stat-row"><span class="stat-label">Data Freshness</span><span class="stat-value" style="color:var(--muted)">Sample Data</span></div>
+  `;
+}
+
+// ════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  initOverview();
+  initDemoView();
+  initCompareView();
+  initSESView();
+  initReligiousView();
+  initEmpView();
+  recalcScores();
+  initGivingView();
+  initTrendsView();
+  initNeedsView();
+  initRockRMSView();
+});
+</script>
+</body>
+</html>
   charts.demoAge = new Chart(document.getElementById('chart-demo-age'), {
     type: 'bar',
     data: {
@@ -1785,6 +2939,461 @@ function updateCompareView() {
 }
 
 // ════════════════════════════════════════════
+// MAP VIEW
+// ════════════════════════════════════════════
+const ZIP_COORDS = {
+  '75087':[-96.4597,32.9310],'75032':[-96.4130,32.9150],'75098':[-96.5090,32.9720],
+  '75189':[-96.3320,32.9750],'75126':[-96.4450,32.7480],'75088':[-96.5630,32.9030],
+  '75150':[-96.5992,32.7668],'75149':[-96.6100,32.7350],'75043':[-96.5960,32.8560],
+  '75048':[-96.5820,32.9640],'75074':[-96.6690,32.9970],'75002':[-96.6530,33.1030],
+  '75013':[-96.6720,33.0800],'75070':[-96.6860,33.1640],'75071':[-96.6200,33.1750],
+  '75040':[-96.6500,32.8720],'75160':[-96.2750,32.7360],'75114':[-96.4580,32.6310],
+  '75181':[-96.5500,32.7300],'75135':[-96.2100,32.9640]
+};
+
+const CAMPUSES = [
+  {name:'Rockwall',      lat:32.9310,lng:-96.4597},
+  {name:'Mesquite',      lat:32.7668,lng:-96.5992},
+  {name:'Firewheel',     lat:32.9592,lng:-96.6375},
+  {name:'Sunnyvale',     lat:32.7965,lng:-96.5600},
+  {name:'Forney',        lat:32.7480,lng:-96.4450},
+  {name:'North Dallas',  lat:32.9280,lng:-96.7690},
+  {name:'East Dallas',   lat:32.8180,lng:-96.7040},
+  {name:'Royse City',    lat:32.9750,lng:-96.3320}
+];
+
+let mapInstance = null;
+let mapInitialized = false;
+
+function getMetricValue(z, metric) {
+  if (metric === 'growth') return z.growth;
+  if (metric === 'sesScore') return z.sesScore;
+  if (metric === 'yfi') return z.yfi;
+  if (metric === 'relOpen') return z.relOpen;
+  if (metric === 'cu12') return z.cu12;
+  return 0;
+}
+
+function getMetricRange(metric) {
+  const vals = ZIPS.map(z => getMetricValue(z, metric));
+  return { min: Math.min(...vals), max: Math.max(...vals) };
+}
+
+function metricToColor(val, range) {
+  const t = range.max === range.min ? 0.5 : (val - range.min) / (range.max - range.min);
+  const r = Math.round(255 * (1 - t) * 0.6 + 77 * t);
+  const g = Math.round(107 * (1 - t) + 229 * t);
+  const b = Math.round(53 * (1 - t) * 0.8 + 160 * t);
+  return `rgb(${r},${g},${b})`;
+}
+
+function getMetricLabel(metric) {
+  const labels = {growth:'Population Growth %', sesScore:'SES Score', yfi:'Young Family Index', relOpen:'Religious Openness', cu12:'Children Under 12 %'};
+  return labels[metric] || metric;
+}
+
+function initMapView() {
+  if (mapInitialized) return;
+  mapInitialized = true;
+  mapboxgl.accessToken = 'pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4NXVycTA2emYycXBndHRqcmZ3N3gifQ.rJcFIG214AriISLbB6B5aw';
+  mapInstance = new mapboxgl.Map({
+    container: 'mapContainer',
+    style: 'mapbox://styles/mapbox/dark-v11',
+    center: [-96.55, 32.88],
+    zoom: 9.5
+  });
+  mapInstance.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+  mapInstance.on('load', () => {
+    // Campus markers
+    CAMPUSES.forEach(c => {
+      const el = document.createElement('div');
+      el.className = 'campus-marker';
+      el.textContent = 'LP';
+      el.title = c.name;
+      new mapboxgl.Marker({element: el}).setLngLat([c.lng, c.lat])
+        .setPopup(new mapboxgl.Popup({offset:15}).setHTML(`<strong>Lakepointe ${c.name}</strong>`))
+        .addTo(mapInstance);
+    });
+
+    // ZIP points as a GeoJSON source
+    const metric = document.getElementById('map-metric').value;
+    const range = getMetricRange(metric);
+    const features = ZIPS.map(z => {
+      const coords = ZIP_COORDS[z.zip];
+      if (!coords) return null;
+      const val = getMetricValue(z, metric);
+      return {
+        type: 'Feature',
+        geometry: { type: 'Point', coordinates: coords },
+        properties: { zip: z.zip, area: z.area, pop: z.pop, growth: z.growth, medHHI: z.medHHI, sesScore: z.sesScore, sesClass: z.sesClass, yfi: z.yfi, relOpen: z.relOpen, cu12: z.cu12, val: val, color: metricToColor(val, range) }
+      };
+    }).filter(Boolean);
+
+    mapInstance.addSource('zips', { type: 'geojson', data: { type: 'FeatureCollection', features } });
+    mapInstance.addLayer({
+      id: 'zip-circles',
+      type: 'circle',
+      source: 'zips',
+      paint: {
+        'circle-radius': 14,
+        'circle-color': ['get', 'color'],
+        'circle-opacity': 0.8,
+        'circle-stroke-width': 1.5,
+        'circle-stroke-color': '#ffffff',
+        'circle-stroke-opacity': 0.3
+      }
+    });
+    mapInstance.addLayer({
+      id: 'zip-labels',
+      type: 'symbol',
+      source: 'zips',
+      layout: {
+        'text-field': ['get', 'zip'],
+        'text-size': 9,
+        'text-font': ['DIN Pro Medium','Arial Unicode MS Regular']
+      },
+      paint: { 'text-color': '#ffffff' }
+    });
+
+    // Click popup
+    mapInstance.on('click', 'zip-circles', (e) => {
+      const p = e.features[0].properties;
+      new mapboxgl.Popup({offset:10})
+        .setLngLat(e.lngLat)
+        .setHTML(`<strong>${p.zip} — ${p.area}</strong><br>Pop: ${Number(p.pop).toLocaleString()}<br>Growth: ${Number(p.growth).toFixed(1)}%<br>Median HHI: $${Number(p.medHHI).toLocaleString()}<br>SES: ${p.sesClass} (${p.sesScore})<br>YFI: ${p.yfi} · Kids<12: ${p.cu12}%<br>Rel. Openness: ${p.relOpen}`)
+        .addTo(mapInstance);
+    });
+    mapInstance.on('mouseenter', 'zip-circles', () => mapInstance.getCanvas().style.cursor = 'pointer');
+    mapInstance.on('mouseleave', 'zip-circles', () => mapInstance.getCanvas().style.cursor = '');
+
+    updateMapLegend(metric, range);
+  });
+}
+
+function updateMapMetric() {
+  if (!mapInstance || !mapInstance.getSource('zips')) return;
+  const metric = document.getElementById('map-metric').value;
+  const range = getMetricRange(metric);
+  const features = ZIPS.map(z => {
+    const coords = ZIP_COORDS[z.zip];
+    if (!coords) return null;
+    const val = getMetricValue(z, metric);
+    return {
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: coords },
+      properties: { zip: z.zip, area: z.area, pop: z.pop, growth: z.growth, medHHI: z.medHHI, sesScore: z.sesScore, sesClass: z.sesClass, yfi: z.yfi, relOpen: z.relOpen, cu12: z.cu12, val: val, color: metricToColor(val, range) }
+    };
+  }).filter(Boolean);
+  mapInstance.getSource('zips').setData({ type: 'FeatureCollection', features });
+  updateMapLegend(metric, range);
+}
+
+function updateMapLegend(metric, range) {
+  const steps = 5;
+  let html = `<h4>${getMetricLabel(metric)}</h4>`;
+  for (let i = 0; i < steps; i++) {
+    const t = i / (steps - 1);
+    const val = range.min + t * (range.max - range.min);
+    const color = metricToColor(val, range);
+    html += `<div class="map-legend-item"><span class="map-legend-swatch" style="background:${color}"></span>${val.toFixed(1)}</div>`;
+  }
+  document.getElementById('map-legend').innerHTML = html;
+}
+
+// ════════════════════════════════════════════
+// GIVING POTENTIAL VIEW
+// ════════════════════════════════════════════
+function initGivingView() {
+  recalcGiving();
+}
+
+function recalcGiving() {
+  const customPct = parseFloat(document.getElementById('giving-custom-pct').value) || 2.5;
+  let totalPop = 0, totalHH = 0, total2 = 0, total3 = 0, totalCustom = 0;
+  const rows = ZIPS.map(z => {
+    const hh = Math.round(z.pop / z.hhSize);
+    const g2 = hh * z.medHHI * 0.02;
+    const g3 = hh * z.medHHI * 0.03;
+    const gc = hh * z.medHHI * (customPct / 100);
+    totalPop += z.pop; totalHH += hh; total2 += g2; total3 += g3; totalCustom += gc;
+    return { ...z, hh, g2, g3, gc };
+  }).sort((a, b) => b.gc - a.gc);
+
+  document.getElementById('giving-pop').textContent = fmt(totalPop);
+  document.getElementById('giving-hh').textContent = fmt(totalHH);
+  document.getElementById('giving-2').textContent = '$' + (total2 / 1e9).toFixed(2) + 'B';
+  document.getElementById('giving-3').textContent = '$' + (total3 / 1e9).toFixed(2) + 'B';
+  document.getElementById('giving-custom-total').textContent = '$' + (totalCustom / 1e9).toFixed(2) + 'B';
+
+  // Bar chart top 10
+  const top10 = rows.slice(0, 10);
+  if (charts['giving-bar']) charts['giving-bar'].destroy();
+  charts['giving-bar'] = new Chart(document.getElementById('chart-giving-bar'), {
+    type: 'bar',
+    data: {
+      labels: top10.map(r => r.zip + ' ' + r.area),
+      datasets: [{
+        label: `Giving @ ${customPct}%`,
+        data: top10.map(r => Math.round(r.gc)),
+        backgroundColor: top10.map((_, i) => `rgba(0,229,160,${0.9 - i * 0.06})`),
+        borderRadius: 2
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        title: { display: true, text: `Top 10 ZIPs by Giving Potential @ ${customPct}%`, color: '#b0b8c8', font: { family: 'Bebas Neue', size: 16 } },
+        tooltip: { callbacks: { label: ctx => '$' + ctx.raw.toLocaleString() } }
+      },
+      scales: {
+        x: { ticks: { color: '#5a6272', callback: v => '$' + (v/1e6).toFixed(0) + 'M' }, grid: { color: '#1e2430' } },
+        y: { ticks: { color: '#b0b8c8', font: { size: 11 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Table
+  document.getElementById('giving-table').innerHTML = rows.map(r => `
+    <tr>
+      <td class="mono">${r.zip}</td>
+      <td>${r.area}</td>
+      <td class="mono">${fmt(r.pop)}</td>
+      <td class="mono">${fmt(r.hh)}</td>
+      <td class="mono">${fmtMoney(r.medHHI)}</td>
+      <td class="mono">$${(r.g2/1e6).toFixed(1)}M</td>
+      <td class="mono">$${(r.g3/1e6).toFixed(1)}M</td>
+      <td class="mono" style="color:var(--accent)">$${(r.gc/1e6).toFixed(1)}M</td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// TRENDS VIEW
+// ════════════════════════════════════════════
+const trendCharts = {};
+
+function initTrendsView() {
+  const sel = document.getElementById('trends-zip');
+  sel.innerHTML = ZIPS.map(z => `<option value="${z.zip}">${z.zip} — ${z.area}</option>`).join('');
+  renderTrends();
+}
+
+function generateTrendData(currentVal, growthPctPerYear, years) {
+  // Work backwards from current value (2026) to 2021
+  const data = [];
+  for (let i = years.length - 1; i >= 0; i--) {
+    const yearsBack = years.length - 1 - i;
+    const factor = Math.pow(1 + growthPctPerYear / 100, -yearsBack);
+    data[i] = Math.round(currentVal * factor);
+  }
+  return data;
+}
+
+function renderTrends() {
+  const zip = document.getElementById('trends-zip').value;
+  const z = ZIPS.find(x => x.zip === zip);
+  if (!z) return;
+  const years = ['2021', '2022', '2023', '2024', '2025', '2026'];
+
+  const configs = [
+    { id: 'chart-trend-pop', data: generateTrendData(z.pop, z.growth / 5, years), label: 'Population', color: '#00e5a0' },
+    { id: 'chart-trend-hhi', data: generateTrendData(z.medHHI, 3.2, years), label: 'Median HHI ($)', color: '#4da6ff' },
+    { id: 'chart-trend-ses', data: generateTrendData(z.sesScore, 1.5, years), label: 'SES Score', color: '#a78bfa' },
+    { id: 'chart-trend-yfi', data: generateTrendData(z.yfi, 2.0, years), label: 'YFI', color: '#f59e0b' },
+    { id: 'chart-trend-cu12', data: generateTrendData(z.cu12, 1.0, years), label: '% Children <12', color: '#ff6b35' }
+  ];
+
+  configs.forEach(cfg => {
+    if (trendCharts[cfg.id]) trendCharts[cfg.id].destroy();
+    trendCharts[cfg.id] = new Chart(document.getElementById(cfg.id), {
+      type: 'line',
+      data: {
+        labels: years,
+        datasets: [{
+          label: cfg.label,
+          data: cfg.data,
+          borderColor: cfg.color,
+          backgroundColor: cfg.color + '18',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 4,
+          pointBackgroundColor: cfg.color
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { color: '#5a6272' }, grid: { color: '#1e2430' } },
+          y: { ticks: { color: '#5a6272' }, grid: { color: '#1e2430' } }
+        }
+      }
+    });
+  });
+}
+
+// ════════════════════════════════════════════
+// COMMUNITY NEEDS VIEW
+// ════════════════════════════════════════════
+function generateNeedsData() {
+  return ZIPS.map(z => {
+    // Inverse SES correlation: lower SES = higher need
+    const invSES = 100 - z.sesScore;
+    const jitter = () => (Math.random() - 0.5) * 4;
+    const povertyRate = Math.max(2, Math.min(32, invSES * 0.32 + jitter()));
+    const foodInsecurity = Math.max(1.5, Math.min(28, povertyRate * 0.78 + jitter()));
+    const uninsuredRate = Math.max(3, Math.min(30, invSES * 0.28 + jitter() + 2));
+    const needsIndex = Math.round((povertyRate + foodInsecurity + uninsuredRate) / 3 * 10) / 10;
+    return { ...z, povertyRate: Math.round(povertyRate * 10) / 10, foodInsecurity: Math.round(foodInsecurity * 10) / 10, uninsuredRate: Math.round(uninsuredRate * 10) / 10, needsIndex };
+  });
+}
+
+let needsData = null;
+
+function initNeedsView() {
+  needsData = generateNeedsData();
+  const avgPov = (needsData.reduce((s, d) => s + d.povertyRate, 0) / needsData.length).toFixed(1);
+  const avgFood = (needsData.reduce((s, d) => s + d.foodInsecurity, 0) / needsData.length).toFixed(1);
+  const avgUni = (needsData.reduce((s, d) => s + d.uninsuredRate, 0) / needsData.length).toFixed(1);
+  const highest = needsData.reduce((a, b) => a.needsIndex > b.needsIndex ? a : b);
+
+  document.getElementById('needs-poverty').textContent = avgPov + '%';
+  document.getElementById('needs-food').textContent = avgFood + '%';
+  document.getElementById('needs-uninsured').textContent = avgUni + '%';
+  document.getElementById('needs-highest').textContent = highest.zip + ' ' + highest.area;
+
+  // Grouped bar chart
+  const sorted = [...needsData].sort((a, b) => b.needsIndex - a.needsIndex);
+  if (charts['needs-bar']) charts['needs-bar'].destroy();
+  charts['needs-bar'] = new Chart(document.getElementById('chart-needs-bar'), {
+    type: 'bar',
+    data: {
+      labels: sorted.map(d => d.zip),
+      datasets: [
+        { label: 'Poverty %', data: sorted.map(d => d.povertyRate), backgroundColor: '#ff6b35cc', borderRadius: 2 },
+        { label: 'Food Insecurity %', data: sorted.map(d => d.foodInsecurity), backgroundColor: '#f59e0bcc', borderRadius: 2 },
+        { label: 'Uninsured %', data: sorted.map(d => d.uninsuredRate), backgroundColor: '#4da6ffcc', borderRadius: 2 }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        title: { display: true, text: 'Community Needs by ZIP Code', color: '#b0b8c8', font: { family: 'Bebas Neue', size: 16 } },
+        legend: { labels: { color: '#b0b8c8', font: { size: 11 } } }
+      },
+      scales: {
+        x: { ticks: { color: '#5a6272', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#5a6272', callback: v => v + '%' }, grid: { color: '#1e2430' } }
+      }
+    }
+  });
+
+  // Table
+  function severityClass(val) {
+    if (val > 15) return 'needs-cell needs-cell-high';
+    if (val > 10) return 'needs-cell needs-cell-med';
+    return 'needs-cell needs-cell-low';
+  }
+  document.getElementById('needs-table').innerHTML = sorted.map(d => `
+    <tr>
+      <td class="mono">${d.zip}</td>
+      <td>${d.area}</td>
+      <td><span class="${severityClass(d.povertyRate)}">${d.povertyRate}%</span></td>
+      <td><span class="${severityClass(d.foodInsecurity)}">${d.foodInsecurity}%</span></td>
+      <td><span class="${severityClass(d.uninsuredRate)}">${d.uninsuredRate}%</span></td>
+      <td class="mono" style="font-weight:600;color:${d.needsIndex > 15 ? '#ff4444' : d.needsIndex > 10 ? '#f59e0b' : '#00e5a0'}">${d.needsIndex}</td>
+    </tr>
+  `).join('');
+}
+
+// ════════════════════════════════════════════
+// ROCK RMS VIEW (Mockup)
+// ════════════════════════════════════════════
+function initRockRMSView() {
+  const campusNames = CAMPUSES.map(c => c.name);
+  const mockAttendance = [2850, 1420, 1680, 920, 1150, 2100, 890, 680];
+  const totalAttend = mockAttendance.reduce((s, v) => s + v, 0);
+
+  // Attendance chart
+  if (charts['rock-attendance']) charts['rock-attendance'].destroy();
+  charts['rock-attendance'] = new Chart(document.getElementById('chart-rock-attendance'), {
+    type: 'bar',
+    data: {
+      labels: campusNames,
+      datasets: [{
+        label: 'Avg Sunday Attendance',
+        data: mockAttendance,
+        backgroundColor: campusNames.map((_, i) => `rgba(0,229,160,${0.4 + i * 0.07})`),
+        borderRadius: 2
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#5a6272', font: { size: 10 } }, grid: { display: false } },
+        y: { ticks: { color: '#5a6272' }, grid: { color: '#1e2430' } }
+      }
+    }
+  });
+
+  // Giving by ZIP chart (top 8)
+  const givingZips = ZIPS.slice(0, 8).map(z => {
+    const hh = Math.round(z.pop / z.hhSize);
+    return { zip: z.zip, area: z.area, giving: Math.round(hh * z.medHHI * 0.018 / 1000) * 1000 };
+  }).sort((a, b) => b.giving - a.giving);
+
+  if (charts['rock-giving']) charts['rock-giving'].destroy();
+  charts['rock-giving'] = new Chart(document.getElementById('chart-rock-giving'), {
+    type: 'bar',
+    data: {
+      labels: givingZips.map(g => g.zip + ' ' + g.area),
+      datasets: [{
+        label: 'Annual Giving ($)',
+        data: givingZips.map(g => g.giving),
+        backgroundColor: 'rgba(77,166,255,0.6)',
+        borderRadius: 2
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { ticks: { color: '#5a6272', callback: v => '$' + (v/1e6).toFixed(1) + 'M' }, grid: { color: '#1e2430' } },
+        y: { ticks: { color: '#b0b8c8', font: { size: 10 } }, grid: { display: false } }
+      }
+    }
+  });
+
+  // Penetration table
+  const penData = ZIPS.slice(0, 10).map(z => {
+    const members = Math.round(z.pop * (0.005 + Math.random() * 0.025));
+    const pen = (members / z.pop * 100).toFixed(2);
+    return { zip: z.zip, area: z.area, pop: z.pop, members, pen };
+  });
+
+  document.getElementById('rock-penetration-table').innerHTML = penData.map(d => `
+    <tr>
+      <td class="mono">${d.zip}</td>
+      <td>${d.area}</td>
+      <td class="mono">${fmt(d.pop)}</td>
+      <td class="mono">${fmt(d.members)}</td>
+      <td class="mono" style="color:var(--accent)">${d.pen}%</td>
+    </tr>
+  `).join('');
+
+  const totalGiving = givingZips.reduce((s, g) => s + g.giving, 0);
+  const avgPen = (penData.reduce((s, d) => s + parseFloat(d.pen), 0) / penData.length).toFixed(2);
+  document.getElementById('rock-total-attend').textContent = fmt(totalAttend);
+  document.getElementById('rock-total-giving').textContent = '$' + (totalGiving / 1e6).toFixed(1) + 'M';
+  document.getElementById('rock-avg-pen').textContent = avgPen + '%';
+}
+
+// ════════════════════════════════════════════
 // INIT
 // ════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
@@ -1795,6 +3404,10 @@ document.addEventListener('DOMContentLoaded', () => {
   initReligiousView();
   initEmpView();
   recalcScores();
+  initGivingView();
+  initTrendsView();
+  initNeedsView();
+  initRockRMSView();
 });
 </script>
 </body>
