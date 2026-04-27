@@ -427,43 +427,65 @@ body {
   grid-template-columns: 360px minmax(0, 1fr);
   gap: 24px;
 }
-.weight-slider {
+.weight-row {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 14px;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
 }
-.weight-slider label {
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 11px;
-  color: var(--text-2);
-  min-width: 110px;
-  flex-shrink: 0;
-}
-.weight-slider input[type="range"] {
-  flex: 1;
-  min-width: 60px;
-  -webkit-appearance: none;
-  height: 4px;
-  background: var(--surface-2);
-  border-radius: 2px;
-  outline: none;
-}
-.weight-slider input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  width: 14px;
-  height: 14px;
-  background: var(--accent);
-  border-radius: 2px;
-  cursor: pointer;
-}
-.weight-val {
+.weight-row:last-of-type { border-bottom: none; }
+.weight-label {
   font-family: 'IBM Plex Mono', monospace;
   font-size: 12px;
-  color: var(--accent);
-  min-width: 40px;
-  text-align: right;
-  flex-shrink: 0;
+  color: var(--text-2);
+}
+.weight-input {
+  width: 64px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  padding: 6px 4px;
+  border-radius: var(--radius-sm);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.weight-input:focus { border-color: var(--accent); }
+.weight-input.invalid { border-color: var(--negative); color: var(--negative); }
+.weight-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0 0;
+  margin-top: 4px;
+  border-top: 2px solid var(--border);
+}
+.weight-total-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+}
+.weight-total-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 24px;
+  transition: color 0.15s;
+}
+.weight-total-value.valid { color: var(--accent); }
+.weight-total-value.invalid { color: var(--negative); }
+.btn-recalc {
+  width: 100%;
+  margin-top: 12px;
+  padding: 10px;
+  font-size: 13px;
+}
+.btn-recalc:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
 }
 
 /* ── SECTION HEADERS ────────────── */
@@ -953,39 +975,39 @@ body {
           <div class="page-subtitle">Weighted Multi-Factor Campus Evaluation</div>
         </div>
         <div class="header-actions">
-          <button class="btn" onclick="recalcScores()">Recalculate</button>
+          <button class="btn-outline btn" onclick="resetWeights()">Reset Weights</button>
         </div>
       </div>
       <div class="content">
         <div class="scorer-grid">
           <div>
             <div class="card" style="margin-bottom:16px">
-              <div class="section-header" style="margin-bottom:12px">Weight Configuration</div>
-              <div class="weight-slider">
-                <label>Children &lt;12</label>
-                <input type="range" min="0" max="100" value="25" id="w-yfi" oninput="updateWeightDisplay()">
-                <span class="weight-val" id="wv-yfi">25%</span>
+              <div class="section-header" style="margin-bottom:4px">Weight Configuration</div>
+              <div class="weight-row">
+                <span class="weight-label">Children &lt;12</span>
+                <input type="number" min="0" max="100" value="25" class="weight-input" id="w-yfi" oninput="checkWeightTotal()">
               </div>
-              <div class="weight-slider">
-                <label>Household Size</label>
-                <input type="range" min="0" max="100" value="20" id="w-wfi" oninput="updateWeightDisplay()">
-                <span class="weight-val" id="wv-wfi">20%</span>
+              <div class="weight-row">
+                <span class="weight-label">Household Size</span>
+                <input type="number" min="0" max="100" value="20" class="weight-input" id="w-wfi" oninput="checkWeightTotal()">
               </div>
-              <div class="weight-slider">
-                <label>SES Alignment</label>
-                <input type="range" min="0" max="100" value="20" id="w-ses" oninput="updateWeightDisplay()">
-                <span class="weight-val" id="wv-ses">20%</span>
+              <div class="weight-row">
+                <span class="weight-label">SES Alignment</span>
+                <input type="number" min="0" max="100" value="20" class="weight-input" id="w-ses" oninput="checkWeightTotal()">
               </div>
-              <div class="weight-slider">
-                <label>Growth Rate</label>
-                <input type="range" min="0" max="100" value="15" id="w-growth" oninput="updateWeightDisplay()">
-                <span class="weight-val" id="wv-growth">15%</span>
+              <div class="weight-row">
+                <span class="weight-label">Growth Rate</span>
+                <input type="number" min="0" max="100" value="15" class="weight-input" id="w-growth" oninput="checkWeightTotal()">
               </div>
-              <div class="weight-slider">
-                <label>Rel. Openness</label>
-                <input type="range" min="0" max="100" value="20" id="w-rel" oninput="updateWeightDisplay()">
-                <span class="weight-val" id="wv-rel">20%</span>
+              <div class="weight-row" style="border-bottom:none">
+                <span class="weight-label">Rel. Openness</span>
+                <input type="number" min="0" max="100" value="20" class="weight-input" id="w-rel" oninput="checkWeightTotal()">
               </div>
+              <div class="weight-total-row">
+                <span class="weight-total-label">TOTAL</span>
+                <span class="weight-total-value valid" id="weight-total">100%</span>
+              </div>
+              <button class="btn btn-recalc" id="btn-recalc" onclick="recalcScores()">Apply Weights</button>
             </div>
             <div class="card">
               <div class="section-header" style="margin-bottom:12px">Top 3 Sites</div>
@@ -1467,21 +1489,42 @@ function updateEmpView() {
 // ════════════════════════════════════════════
 // SITE SCORER VIEW
 // ════════════════════════════════════════════
-function updateWeightDisplay() {
-  ['yfi','wfi','ses','growth','rel'].forEach(k => {
-    document.getElementById('wv-' + k).textContent = document.getElementById('w-' + k).value + '%';
+const WEIGHT_KEYS = ['yfi','wfi','ses','growth','rel'];
+const DEFAULT_WEIGHTS = {yfi:25, wfi:20, ses:20, growth:15, rel:20};
+
+function checkWeightTotal() {
+  const total = getWeightTotal();
+  const totalEl = document.getElementById('weight-total');
+  const btn = document.getElementById('btn-recalc');
+  const isValid = total === 100;
+
+  totalEl.textContent = total + '%';
+  totalEl.className = 'weight-total-value ' + (isValid ? 'valid' : 'invalid');
+  btn.disabled = !isValid;
+
+  document.querySelectorAll('.weight-input').forEach(el => {
+    el.classList.toggle('invalid', !isValid && total > 100);
   });
 }
 
+function getWeightTotal() {
+  return WEIGHT_KEYS.reduce((s, k) => s + (parseInt(document.getElementById('w-' + k).value) || 0), 0);
+}
+
+function resetWeights() {
+  WEIGHT_KEYS.forEach(k => {
+    document.getElementById('w-' + k).value = DEFAULT_WEIGHTS[k];
+  });
+  checkWeightTotal();
+  recalcScores();
+}
+
 function recalcScores() {
-  const w = {
-    yfi: parseInt(document.getElementById('w-yfi').value),
-    wfi: parseInt(document.getElementById('w-wfi').value),
-    ses: parseInt(document.getElementById('w-ses').value),
-    growth: parseInt(document.getElementById('w-growth').value),
-    rel: parseInt(document.getElementById('w-rel').value)
-  };
-  const total = w.yfi + w.wfi + w.ses + w.growth + w.rel;
+  const total = getWeightTotal();
+  if (total !== 100) return;
+
+  const w = {};
+  WEIGHT_KEYS.forEach(k => { w[k] = parseInt(document.getElementById('w-' + k).value) || 0; });
 
   const scored = ZIPS.map(z => {
     const growthNorm = Math.min(100, z.growth * 2.5);
