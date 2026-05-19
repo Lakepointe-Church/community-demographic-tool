@@ -7,7 +7,6 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const area = searchParams.get('area') || 'DFW'
 
-  // DFW Metro series IDs
   const seriesIds = [
     'LAUMT481910000000003', // DFW unemployment rate
     'LAUMT481910000000004', // DFW unemployed persons
@@ -33,23 +32,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'BLS request failed', details: data.message }, { status: 500 })
     }
 
-    const results: Record<string, { year: string; period: string; value: string }[]> = {}
+    const series: Record<string, { latest: string; period: string; year: string; history: unknown[] }> = {}
 
-    for (const series of data.Results.series) {
-      const latest = series.data[0] // Most recent period first
-      results[series.seriesID] = {
-        latest: latest ? { year: latest.year, period: latest.periodName, value: latest.value } : null,
-        history: series.data.slice(0, 12), // Last 12 periods
+    for (const s of data.Results.series) {
+      const latest = s.data[0]
+      series[s.seriesID] = {
+        latest: latest?.value ?? null,
+        period: latest?.periodName ?? null,
+        year: latest?.year ?? null,
+        history: s.data.slice(0, 12),
       }
     }
 
     return NextResponse.json({
       area,
-      unemploymentRate: results['LAUMT481910000000003']?.latest,
-      unemployedPersons: results['LAUMT481910000000004']?.latest,
-      employedPersons: results['LAUMT481910000000006']?.latest,
-      laborForce: results['LAUMT481910000000007']?.latest,
-      history: results['LAUMT481910000000003']?.history,
+      unemploymentRate: series['LAUMT481910000000003'],
+      unemployedPersons: series['LAUMT481910000000004'],
+      employedPersons: series['LAUMT481910000000006'],
+      laborForce: series['LAUMT481910000000007'],
     })
   } catch (error) {
     console.error('BLS API error:', error)
