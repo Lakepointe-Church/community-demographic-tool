@@ -15,7 +15,7 @@ export async function GET() {
     const [population, unemployment, housingPermits] = await Promise.all([
       fetchSeries('DFWPOP'),       // DFW population
       fetchSeries('DALL348URN'),   // DFW unemployment rate
-      fetchSeries('DALLBPPRIVSA'), // Dallas area housing permits
+      fetchSeries('DALPOP'), // Dallas area housing permits
     ])
 
     return NextResponse.json({
