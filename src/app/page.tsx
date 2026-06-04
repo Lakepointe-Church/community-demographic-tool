@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { DFW_ZIPS } from '@/lib/zips'
+import { useState, useEffect, lazy, Suspense } from 'react'
+
+const MapboxChoropleth = lazy(() => import('@/components/MapboxChoropleth'))
 
 interface ZipRow {
   zip: string
@@ -45,13 +46,6 @@ function growthColor(g: number | null) {
   if (g >= 0)    return '#3a4561'
   return '#FF6B6B'
 }
-function growthTextColor(g: number | null) {
-  if (g == null) return '#6B7689'
-  if (g >= 8)    return 'rgba(0,0,0,0.5)'
-  if (g >= 0)    return 'rgba(255,255,255,0.4)'
-  return 'rgba(255,255,255,0.6)'
-}
-
 // ── Stat Card ────────────────────────────────────────────────────
 function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
   label: string; value: string; sub?: string
@@ -84,80 +78,6 @@ function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
     <div style={{ borderLeft: '3px solid #E8B84B', paddingLeft: '16px', marginBottom: '20px' }}>
       <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '5px' }}>{eyebrow}</div>
       <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', letterSpacing: '0.04em', lineHeight: 1, color: '#F0F2F7' }}>{title}</div>
-    </div>
-  )
-}
-
-// ── ZIP Growth Heat Map ──────────────────────────────────────────
-function HeatMap({ zips, loading }: { zips: ZipRow[]; loading: boolean }) {
-  const [hovered, setHovered] = useState<ZipRow | null>(null)
-  const [pos, setPos]         = useState({ x: 0, y: 0 })
-  const zipMap = Object.fromEntries(zips.map(z => [z.zip, z]))
-
-  return (
-    <div style={{ position: 'relative' }}>
-      {hovered && (
-        <div style={{
-          position: 'fixed', left: pos.x + 14, top: pos.y - 68,
-          background: '#1e2433', border: '1px solid #2a3044',
-          padding: '10px 14px', pointerEvents: 'none', zIndex: 200,
-          fontFamily: "'IBM Plex Mono', monospace",
-        }}>
-          <div style={{ fontSize: '12px', color: '#F0F2F7', fontWeight: 600, marginBottom: '4px' }}>
-            {hovered.zip} {hovered.label}
-          </div>
-          <div style={{ fontSize: '10px', color: '#9BA5B7' }}>
-            Pop: {hovered.population.toLocaleString()} · Growth: {hovered.populationGrowth != null ? `${hovered.populationGrowth}%` : '—'}
-          </div>
-        </div>
-      )}
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
-        {DFW_ZIPS.map(({ zip }) => {
-          const z = zipMap[zip]
-          const bg = loading ? '#1e2433' : growthColor(z?.populationGrowth ?? null)
-          const isHov = hovered?.zip === zip
-          return (
-            <div
-              key={zip}
-              onMouseEnter={e => { setHovered(z ?? null); setPos({ x: e.clientX, y: e.clientY }) }}
-              onMouseMove={e => setPos({ x: e.clientX, y: e.clientY })}
-              onMouseLeave={() => setHovered(null)}
-              style={{
-                background: bg, height: '76px',
-                display: 'flex', flexDirection: 'column',
-                alignItems: 'center', justifyContent: 'center',
-                cursor: 'pointer', gap: '3px',
-                transition: 'filter 0.15s',
-                filter: isHov ? 'brightness(1.25)' : 'brightness(1)',
-              }}
-            >
-              <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '0.05em', color: growthTextColor(z?.populationGrowth ?? null), lineHeight: 1 }}>
-                {zip.slice(2)}
-              </span>
-              {!loading && z?.populationGrowth != null && (
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '8px', color: growthTextColor(z.populationGrowth), letterSpacing: '0.04em' }}>
-                  ↑{z.populationGrowth}%
-                </span>
-              )}
-            </div>
-          )
-        })}
-      </div>
-
-      <div style={{ display: 'flex', gap: '20px', justifyContent: 'flex-end', marginTop: '14px' }}>
-        {[
-          { label: 'Declining',    color: '#FF6B6B' },
-          { label: 'Stable',       color: '#3a4561' },
-          { label: 'Growing',      color: '#4EAEFF' },
-          { label: 'Rapid Growth', color: '#2DD4BF' },
-        ].map(({ label, color }) => (
-          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <div style={{ width: 10, height: 10, background: color }} />
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{label}</span>
-          </div>
-        ))}
-      </div>
     </div>
   )
 }
@@ -287,7 +207,7 @@ export default function OverviewPage() {
             <StatCard
               label="ZIP Codes Tracked"
               value={data ? String(data.totals.zipCount) : '—'}
-              sub="DFW East Corridor"
+              sub="DFW Metro Area"
               accent="blue" loading={loading}
             />
             <StatCard
@@ -304,22 +224,28 @@ export default function OverviewPage() {
             />
           </div>
 
-          {/* Heat Map */}
+          {/* Mapbox Choropleth Map */}
           <div className="fade-up-3" style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px', marginBottom: '20px' }}>
-            <SectionHeader eyebrow="Population Growth · 2020 to 2023" title="ZIP Code Heat Map" />
-            <HeatMap zips={data?.zips ?? []} loading={loading} />
+            <SectionHeader eyebrow="Population Growth · 2020 to 2023 · Hover for Details" title="ZIP Code Growth Map" />
+            <Suspense fallback={
+              <div style={{ height: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6B7689', letterSpacing: '0.12em' }}>LOADING MAP...</span>
+              </div>
+            }>
+              <MapboxChoropleth zipData={data?.zips ?? []} loading={loading} />
+            </Suspense>
           </div>
 
           {/* Age Band + Income Distribution */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
             <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
-              <SectionHeader eyebrow="All 20 ZIPs · Pop-Weighted Average" title="Population by Age Band" />
+              <SectionHeader eyebrow="All ZIPs · Pop-Weighted Average" title="Population by Age Band" />
               <div style={{ overflowX: 'auto' }}>
                 <BarChart data={ageBands} loading={loading} />
               </div>
             </div>
             <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
-              <SectionHeader eyebrow="All 20 ZIPs · HH-Weighted Average" title="Household Income Distribution" />
+              <SectionHeader eyebrow="All ZIPs · HH-Weighted Average" title="Household Income Distribution" />
               <div style={{ overflowX: 'auto' }}>
                 <BarChart data={data?.incomeDistribution ?? []} loading={loading} />
               </div>
