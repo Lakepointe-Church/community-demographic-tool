@@ -18,6 +18,8 @@ interface CensusData {
   sesClass: { label: string; score: number }
   race: { white: number; hispanic: number; black: number; asian: number; other: number }
   education: { noHSDiploma: number; hsDiploma: number; someCollege: number; bachelorsPlus: number }
+  ageDistribution: { age0_17: number; age18_34: number; age35_54: number; age55_74: number; age75plus: number } | null
+  householdTypes: { marriedWithChildren: number; marriedNoChildren: number; singleParent: number; livingAlone: number; other: number } | null
   incomeBrackets: { label: string; pct: number }[]
   updatedAt: string
 }
@@ -146,6 +148,109 @@ function EducationChart({ education, loading }: { education: CensusData['educati
         )
       })}
     </div>
+  )
+}
+
+// ── Age Distribution Chart (vertical bars) ───────────────────────
+const AGE_SEGS = [
+  { key: 'age0_17'   as const, label: '0–17',  color: '#4EAEFF' },
+  { key: 'age18_34'  as const, label: '18–34', color: '#2DD4BF' },
+  { key: 'age35_54'  as const, label: '35–54', color: '#E8B84B' },
+  { key: 'age55_74'  as const, label: '55–74', color: '#A78BFA' },
+  { key: 'age75plus' as const, label: '75+',   color: '#FF6B6B' },
+]
+
+function AgeChart({ ageDistribution, loading }: {
+  ageDistribution: CensusData['ageDistribution']
+  loading: boolean
+}) {
+  const values = ageDistribution
+    ? AGE_SEGS.map(s => ageDistribution[s.key] ?? 0)
+    : AGE_SEGS.map(() => 0)
+  const maxPct   = Math.max(...values, 5)
+  const barW = 58, gap = 14, chartH = 140, padL = 28
+  const totalW = AGE_SEGS.length * (barW + gap) - gap
+
+  return (
+    <svg width={totalW + padL + 8} height={chartH + 36} style={{ overflow: 'visible' }}>
+      {[0, Math.round(maxPct / 2), Math.round(maxPct)].map(v => {
+        const y = chartH - (v / maxPct) * chartH
+        return (
+          <g key={v}>
+            <text x={padL - 5} y={y + 4} textAnchor="end" fill="#6B7689" fontFamily="IBM Plex Mono" fontSize="9">{v}%</text>
+            <line x1={padL} y1={y} x2={padL + totalW} y2={y} stroke="#1e2433" strokeWidth={1} strokeDasharray="3 3" />
+          </g>
+        )
+      })}
+      {AGE_SEGS.map((seg, idx) => {
+        const val  = loading ? 0 : (values[idx] ?? 0)
+        const barH = (val / maxPct) * chartH
+        const x    = padL + idx * (barW + gap)
+        return (
+          <g key={seg.key}>
+            <rect x={x} y={chartH - barH} width={barW} height={barH}
+              fill={seg.color} opacity={0.75}
+              style={{ transition: 'all 0.6s ease' }}
+            />
+            <rect x={x} y={chartH - barH} width={barW} height={2} fill={seg.color} />
+            {!loading && val > 0 && (
+              <text x={x + barW / 2} y={chartH - barH - 5} textAnchor="middle"
+                fill="#F0F2F7" fontFamily="IBM Plex Mono" fontSize="9">{val.toFixed(1)}%
+              </text>
+            )}
+            <text x={x + barW / 2} y={chartH + 16} textAnchor="middle"
+              fill="#9BA5B7" fontFamily="IBM Plex Mono" fontSize="9">{seg.label}
+            </text>
+          </g>
+        )
+      })}
+      <line x1={padL} y1={chartH} x2={padL + totalW} y2={chartH} stroke="#2a3044" strokeWidth={1} />
+    </svg>
+  )
+}
+
+// ── Household Type Donut ─────────────────────────────────────────
+const HH_SEGS = [
+  { key: 'marriedWithChildren' as const, label: 'Married w/ Children', color: '#2DD4BF' },
+  { key: 'marriedNoChildren'   as const, label: 'Married No Children', color: '#4EAEFF' },
+  { key: 'singleParent'        as const, label: 'Single Parent',       color: '#FF6B6B' },
+  { key: 'livingAlone'         as const, label: 'Living Alone',        color: '#A78BFA' },
+  { key: 'other'               as const, label: 'Other',               color: '#E8B84B' },
+]
+
+function HouseholdTypeChart({ householdTypes, loading }: {
+  householdTypes: CensusData['householdTypes']
+  loading: boolean
+}) {
+  const cx = 100, cy = 100, r = 70, sw = 30
+  const circ = 2 * Math.PI * r
+
+  if (loading || !householdTypes) {
+    return <div style={{ width: 200, height: 200, borderRadius: '50%', background: '#1e2433', animation: 'pulse 1.5s ease-in-out infinite' }} />
+  }
+
+  let cumPct = 0
+  return (
+    <svg width="200" height="200" viewBox="0 0 200 200" style={{ flexShrink: 0 }}>
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e2433" strokeWidth={sw} />
+      {HH_SEGS.filter(s => (householdTypes[s.key] ?? 0) > 0.3).map(seg => {
+        const pct = (householdTypes[seg.key] ?? 0) / 100
+        const rotation = cumPct * 360 - 90
+        cumPct += pct
+        return (
+          <circle key={seg.key} cx={cx} cy={cy} r={r} fill="none"
+            stroke={seg.color} strokeWidth={sw}
+            strokeDasharray={`${pct * circ} ${circ}`}
+            transform={`rotate(${rotation} ${cx} ${cy})`}
+          />
+        )
+      })}
+      <circle cx={cx} cy={cy} r={54} fill="#13161f" />
+      <text x={cx} y={cy + 4} textAnchor="middle" fill="#6B7689"
+        fontFamily="'IBM Plex Mono', monospace" fontSize="9" letterSpacing="1.5">
+        HH TYPE
+      </text>
+    </svg>
   )
 }
 
@@ -299,6 +404,35 @@ export default function DemographicsPage() {
             <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
               <SectionHeader eyebrow="Adults 25+ · ACS 5-Year" title="Educational Attainment" />
               <EducationChart education={data?.education ?? null} loading={loading} />
+            </div>
+          </div>
+
+          {/* Age Distribution + Household Type */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+
+            <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
+              <SectionHeader eyebrow="U.S. Census Bureau · ACS 2023" title="Age Distribution" />
+              <div style={{ overflowX: 'auto' }}>
+                <AgeChart ageDistribution={data?.ageDistribution ?? null} loading={loading} />
+              </div>
+            </div>
+
+            <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
+              <SectionHeader eyebrow="U.S. Census Bureau · ACS 2023" title="Household Type" />
+              <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }}>
+                <HouseholdTypeChart householdTypes={data?.householdTypes ?? null} loading={loading} />
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                  {HH_SEGS.map(seg => (
+                    <div key={seg.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ width: 10, height: 10, borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', flex: 1 }}>{seg.label}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#F0F2F7', fontWeight: 600 }}>
+                        {loading || !data?.householdTypes ? '—' : `${(data.householdTypes[seg.key] ?? 0).toFixed(1)}%`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
 

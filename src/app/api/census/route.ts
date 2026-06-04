@@ -55,6 +55,20 @@ export async function GET(request: NextRequest) {
         { label: '$100-150K', pct: d.income_100_150k  != null ? parseFloat(d.income_100_150k)  : 0 },
         { label: '$150K+',    pct: d.income_150k_plus != null ? parseFloat(d.income_150k_plus) : 0 },
       ],
+      ageDistribution: {
+        age0_17:   d.age_0_17   != null ? parseFloat(d.age_0_17)   : null,
+        age18_34:  d.age_18_34  != null ? parseFloat(d.age_18_34)  : null,
+        age35_54:  d.age_35_54  != null ? parseFloat(d.age_35_54)  : null,
+        age55_74:  d.age_55_74  != null ? parseFloat(d.age_55_74)  : null,
+        age75plus: d.age_75_plus != null ? parseFloat(d.age_75_plus) : null,
+      },
+      householdTypes: {
+        marriedWithChildren: d.hh_married_with_children != null ? parseFloat(d.hh_married_with_children) : null,
+        marriedNoChildren:   d.hh_married_no_children   != null ? parseFloat(d.hh_married_no_children)   : null,
+        singleParent:        d.hh_single_parent         != null ? parseFloat(d.hh_single_parent)         : null,
+        livingAlone:         d.hh_living_alone          != null ? parseFloat(d.hh_living_alone)          : null,
+        other:               d.hh_other_type            != null ? parseFloat(d.hh_other_type)            : null,
+      },
       updatedAt: d.updated_at,
     })
   } catch (error) {
