@@ -251,6 +251,10 @@ export default function ComparePage() {
           transition: all 0.15s ease;
         }
         .zip-toggle.active .check { background: #2DD4BF; border-color: #2DD4BF; }
+        .zip-scroll::-webkit-scrollbar { width: 4px; }
+        .zip-scroll::-webkit-scrollbar-track { background: #0d0f14; }
+        .zip-scroll::-webkit-scrollbar-thumb { background: #2a3044; border-radius: 2px; }
+        .zip-scroll::-webkit-scrollbar-thumb:hover { background: #3a4154; }
         .action-btn {
           background: transparent; border: 1px solid #1e2433; color: #9BA5B7;
           padding: 7px 16px; font-family: 'IBM Plex Mono', monospace; font-size: 10px;
@@ -294,6 +298,7 @@ export default function ComparePage() {
                 </span>
               )}
             </div>
+            <div className="zip-scroll" style={{ maxHeight: '228px', overflowY: 'auto', paddingRight: '4px' }}>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '6px' }}>
               {DFW_ZIPS.map(({ zip, label }) => (
                 <button
@@ -314,6 +319,7 @@ export default function ComparePage() {
                   </span>
                 </button>
               ))}
+            </div>
             </div>
           </div>
 
