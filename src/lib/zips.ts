@@ -88,6 +88,28 @@ export const DFW_ZIPS = [
   // ── Greenville / Hunt County ──────────────────────────────────
   { zip: '75401', label: 'Greenville' },
   { zip: '75402', label: 'Greenville S' },
+  // ── Grand Prairie (Dallas–Fort Worth corridor) ────────────────
+  { zip: '75050', label: 'Grand Prairie N' },
+  { zip: '75051', label: 'Grand Prairie' },
+  { zip: '75052', label: 'Grand Prairie S' },
+  // ── Inner Garland (fill gaps) ─────────────────────────────────
+  { zip: '75041', label: 'Garland' },
+  { zip: '75042', label: 'Garland NW' },
+  { zip: '75044', label: 'Garland N' },
+  // ── Dallas City ───────────────────────────────────────────────
+  { zip: '75206', label: 'Dallas NE' },
+  { zip: '75214', label: 'Lakewood' },
+  { zip: '75216', label: 'Oak Cliff' },
+  { zip: '75217', label: 'Dallas SE' },
+  { zip: '75228', label: 'Dallas E' },
+  { zip: '75238', label: 'Dallas NE' },
+  // ── South Dallas Suburbs ──────────────────────────────────────
+  { zip: '75104', label: 'Cedar Hill' },
+  { zip: '75115', label: 'DeSoto' },
+  { zip: '75116', label: 'Duncanville' },
+  { zip: '75137', label: 'Duncanville S' },
+  { zip: '75146', label: 'Lancaster' },
+  { zip: '75165', label: 'Waxahachie' },
 ] as const
 
 export type ZipEntry = typeof DFW_ZIPS[number]
