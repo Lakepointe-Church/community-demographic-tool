@@ -3,383 +3,381 @@
 import { useState, useEffect } from 'react'
 import { DFW_ZIPS } from '@/lib/zips'
 
-interface CensusData {
+interface ZipRow {
   zip: string
-  name: string
+  label: string
   population: number
+  populationGrowth: number | null
   medianHouseholdIncome: number
-  medianHomeValue: number
-  unemploymentRate: string
-  bachelorsRate: string
-  totalHouseholds: number
+  hhWithChildrenPct: number | null
+  avgHouseholdSize: number | null
+  sesLabel: string
+  sesScore: number
 }
 
-interface BLSData {
-  area: string
-  unemploymentRate: { latest: string; period: string; year: string }
-  employedPersons: { latest: string }
-  laborForce: { latest: string }
-}
-
-interface FREDData {
-  population: { latest: { value: string; date: string } }
-  housingPermits: { latest: { value: string; date: string } }
-}
-
-function fmt(n: number, style: 'currency' | 'decimal' = 'decimal') {
-  if (!n || n < 0) return '—'
-  if (style === 'currency') return '$' + n.toLocaleString()
-  return n.toLocaleString()
+interface OverviewData {
+  totals: {
+    population: number
+    zipCount: number
+    avgGrowth: number | null
+    wtdAvgHHI: number
+    avgHHWithChildren: number | null
+    avgHHSize: number | null
+  }
+  ageDistribution: { age0_17: number; age18_34: number; age35_54: number; age55_74: number; age75plus: number } | null
+  incomeDistribution: { label: string; pct: number }[]
+  zips: ZipRow[]
+  updatedAt: string
 }
 
 function fmtK(n: number) {
   if (!n || n < 0) return '—'
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
   if (n >= 1_000) return (n / 1_000).toFixed(1) + 'K'
-  return n.toString()
+  return n.toLocaleString()
 }
 
-function StatCard({
-  label, value, sub, accent = 'gold', loading = false,
-}: {
+// ── Growth helpers ───────────────────────────────────────────────
+function growthColor(g: number | null) {
+  if (g == null) return '#2a3044'
+  if (g >= 20)   return '#2DD4BF'
+  if (g >= 8)    return '#4EAEFF'
+  if (g >= 0)    return '#3a4561'
+  return '#FF6B6B'
+}
+function growthTextColor(g: number | null) {
+  if (g == null) return '#6B7689'
+  if (g >= 8)    return 'rgba(0,0,0,0.5)'
+  if (g >= 0)    return 'rgba(255,255,255,0.4)'
+  return 'rgba(255,255,255,0.6)'
+}
+
+// ── Stat Card ────────────────────────────────────────────────────
+function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
   label: string; value: string; sub?: string
-  accent?: 'gold' | 'blue' | 'coral' | 'teal' | 'purple'
+  accent?: 'gold' | 'blue' | 'teal' | 'purple'
   loading?: boolean
 }) {
-  const colors = { gold: '#E8B84B', blue: '#4EAEFF', coral: '#FF6B6B', teal: '#2DD4BF', purple: '#A78BFA' }
+  const colors = { gold: '#E8B84B', blue: '#4EAEFF', teal: '#2DD4BF', purple: '#A78BFA' }
   const color = colors[accent]
   return (
-    <div style={{
-      background: '#13161f', border: '1px solid #1e2433',
-      padding: '22px', position: 'relative', overflow: 'hidden',
-    }}>
+    <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color }} />
-      <div style={{
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
-        letterSpacing: '0.12em', textTransform: 'uppercase' as const,
-        color: '#9BA5B7', marginBottom: '10px',
-      }}>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#9BA5B7', marginBottom: '10px' }}>
         {label}
       </div>
       {loading ? (
-        <div style={{ height: '40px', background: '#1e2433', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: '44px', background: '#1e2433', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
       ) : (
         <>
-          <div style={{
-            fontFamily: "'Bebas Neue', sans-serif",
-            fontSize: '36px', lineHeight: 1, letterSpacing: '0.03em', color: '#F0F2F7',
-          }}>
-            {value}
-          </div>
-          {sub && (
-            <div style={{
-              fontFamily: "'IBM Plex Mono', monospace",
-              fontSize: '10px', color: '#6B7689', marginTop: '8px', letterSpacing: '0.04em',
-            }}>
-              {sub}
-            </div>
-          )}
+          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', lineHeight: 1, letterSpacing: '0.03em', color: '#F0F2F7' }}>{value}</div>
+          {sub && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: color, marginTop: '8px', letterSpacing: '0.04em' }}>{sub}</div>}
         </>
       )}
     </div>
   )
 }
 
+// ── Section Header ───────────────────────────────────────────────
 function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
     <div style={{ borderLeft: '3px solid #E8B84B', paddingLeft: '16px', marginBottom: '20px' }}>
-      <div style={{
-        fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
-        letterSpacing: '0.18em', color: '#E8B84B',
-        textTransform: 'uppercase' as const, marginBottom: '5px',
-      }}>
-        {eyebrow}
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '5px' }}>{eyebrow}</div>
+      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', letterSpacing: '0.04em', lineHeight: 1, color: '#F0F2F7' }}>{title}</div>
+    </div>
+  )
+}
+
+// ── ZIP Growth Heat Map ──────────────────────────────────────────
+function HeatMap({ zips, loading }: { zips: ZipRow[]; loading: boolean }) {
+  const [hovered, setHovered] = useState<ZipRow | null>(null)
+  const [pos, setPos]         = useState({ x: 0, y: 0 })
+  const zipMap = Object.fromEntries(zips.map(z => [z.zip, z]))
+
+  return (
+    <div style={{ position: 'relative' }}>
+      {hovered && (
+        <div style={{
+          position: 'fixed', left: pos.x + 14, top: pos.y - 68,
+          background: '#1e2433', border: '1px solid #2a3044',
+          padding: '10px 14px', pointerEvents: 'none', zIndex: 200,
+          fontFamily: "'IBM Plex Mono', monospace",
+        }}>
+          <div style={{ fontSize: '12px', color: '#F0F2F7', fontWeight: 600, marginBottom: '4px' }}>
+            {hovered.zip} {hovered.label}
+          </div>
+          <div style={{ fontSize: '10px', color: '#9BA5B7' }}>
+            Pop: {hovered.population.toLocaleString()} · Growth: {hovered.populationGrowth != null ? `${hovered.populationGrowth}%` : '—'}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '6px' }}>
+        {DFW_ZIPS.map(({ zip }) => {
+          const z = zipMap[zip]
+          const bg = loading ? '#1e2433' : growthColor(z?.populationGrowth ?? null)
+          const isHov = hovered?.zip === zip
+          return (
+            <div
+              key={zip}
+              onMouseEnter={e => { setHovered(z ?? null); setPos({ x: e.clientX, y: e.clientY }) }}
+              onMouseMove={e => setPos({ x: e.clientX, y: e.clientY })}
+              onMouseLeave={() => setHovered(null)}
+              style={{
+                background: bg, height: '76px',
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                cursor: 'pointer', gap: '3px',
+                transition: 'filter 0.15s',
+                filter: isHov ? 'brightness(1.25)' : 'brightness(1)',
+              }}
+            >
+              <span style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '0.05em', color: growthTextColor(z?.populationGrowth ?? null), lineHeight: 1 }}>
+                {zip.slice(2)}
+              </span>
+              {!loading && z?.populationGrowth != null && (
+                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '8px', color: growthTextColor(z.populationGrowth), letterSpacing: '0.04em' }}>
+                  ↑{z.populationGrowth}%
+                </span>
+              )}
+            </div>
+          )
+        })}
       </div>
-      <div style={{
-        fontFamily: "'Bebas Neue', sans-serif",
-        fontSize: '26px', letterSpacing: '0.04em', lineHeight: 1, color: '#F0F2F7',
-      }}>
-        {title}
+
+      <div style={{ display: 'flex', gap: '20px', justifyContent: 'flex-end', marginTop: '14px' }}>
+        {[
+          { label: 'Declining',    color: '#FF6B6B' },
+          { label: 'Stable',       color: '#3a4561' },
+          { label: 'Growing',      color: '#4EAEFF' },
+          { label: 'Rapid Growth', color: '#2DD4BF' },
+        ].map(({ label, color }) => (
+          <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: 10, height: 10, background: color }} />
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{label}</span>
+          </div>
+        ))}
       </div>
     </div>
   )
 }
 
+// ── Generic Vertical Bar Chart ───────────────────────────────────
+function BarChart({ data, loading }: { data: { label: string; pct: number }[]; loading: boolean }) {
+  const maxPct = Math.max(...data.map(d => d.pct), 5)
+  const barW = 56, gap = 12, chartH = 160, padL = 34
+  const totalW = data.length * (barW + gap) - gap
+
+  return (
+    <svg width={totalW + padL + 8} height={chartH + 36} style={{ overflow: 'visible' }}>
+      {[0, Math.round(maxPct / 2), Math.round(maxPct)].map(v => {
+        const y = chartH - (v / maxPct) * chartH
+        return (
+          <g key={v}>
+            <text x={padL - 5} y={y + 4} textAnchor="end" fill="#6B7689" fontFamily="IBM Plex Mono" fontSize="9">{v}%</text>
+            <line x1={padL} y1={y} x2={padL + totalW} y2={y} stroke="#1e2433" strokeWidth={1} strokeDasharray="3 3" />
+          </g>
+        )
+      })}
+      {data.map((d, i) => {
+        const barH = loading ? 0 : (d.pct / maxPct) * chartH
+        const x = padL + i * (barW + gap)
+        return (
+          <g key={d.label}>
+            <rect x={x} y={chartH - barH} width={barW} height={barH} fill="#4EAEFF" opacity={0.75} style={{ transition: 'all 0.6s ease' }} />
+            <rect x={x} y={chartH - barH} width={barW} height={2} fill="#4EAEFF" />
+            {!loading && d.pct > 0 && (
+              <text x={x + barW / 2} y={chartH - barH - 5} textAnchor="middle" fill="#F0F2F7" fontFamily="IBM Plex Mono" fontSize="9">{d.pct.toFixed(1)}%</text>
+            )}
+            <text x={x + barW / 2} y={chartH + 16} textAnchor="middle" fill="#9BA5B7" fontFamily="IBM Plex Mono" fontSize="8">{d.label}</text>
+          </g>
+        )
+      })}
+      <line x1={padL} y1={chartH} x2={padL + totalW} y2={chartH} stroke="#2a3044" strokeWidth={1} />
+    </svg>
+  )
+}
+
+// ── SES Badge ────────────────────────────────────────────────────
+function SEsBadge({ label }: { label: string }) {
+  const styles: Record<string, { bg: string; color: string }> = {
+    'Upper':        { bg: 'rgba(232,184,75,0.15)',  color: '#E8B84B' },
+    'Upper Middle': { bg: 'rgba(78,174,255,0.15)',  color: '#4EAEFF' },
+    'Middle':       { bg: 'rgba(45,212,191,0.15)',  color: '#2DD4BF' },
+    'Lower Middle': { bg: 'rgba(255,107,107,0.15)', color: '#FF6B6B' },
+    'Lower Income': { bg: 'rgba(155,165,183,0.15)', color: '#9BA5B7' },
+  }
+  const s = styles[label] ?? styles['Lower Income']
+  return (
+    <span style={{
+      background: s.bg, color: s.color,
+      border: `1px solid ${s.color}`,
+      padding: '3px 8px',
+      fontFamily: "'IBM Plex Mono', monospace",
+      fontSize: '9px', letterSpacing: '0.08em',
+      textTransform: 'uppercase' as const,
+      whiteSpace: 'nowrap' as const,
+    }}>
+      {label}
+    </span>
+  )
+}
+
+// ── Page ─────────────────────────────────────────────────────────
 export default function OverviewPage() {
-  const [selectedZip, setSelectedZip] = useState('75087')
-  const [census, setCensus] = useState<CensusData | null>(null)
-  const [bls, setBls] = useState<BLSData | null>(null)
-  const [fred, setFred] = useState<FREDData | null>(null)
-  const [loadingCensus, setLoadingCensus] = useState(true)
-  const [loadingBls, setLoadingBls] = useState(true)
-  const [loadingFred, setLoadingFred] = useState(true)
-  const [lastUpdated] = useState(new Date().toLocaleDateString('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric',
-  }))
+  const [data, setData]     = useState<OverviewData | null>(null)
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    setLoadingCensus(true)
-    setCensus(null)
-    fetch(`/api/census?zip=${selectedZip}`)
+    fetch('/api/overview')
       .then(r => r.json())
-      .then(d => { setCensus(d); setLoadingCensus(false) })
-      .catch(() => setLoadingCensus(false))
-  }, [selectedZip])
-
-  useEffect(() => {
-    fetch('/api/bls')
-      .then(r => r.json())
-      .then(d => { setBls(d); setLoadingBls(false) })
-      .catch(() => setLoadingBls(false))
+      .then(d => { setData(d); setLoading(false) })
+      .catch(() => setLoading(false))
   }, [])
 
-  useEffect(() => {
-    fetch('/api/fred')
-      .then(r => r.json())
-      .then(d => { setFred(d); setLoadingFred(false) })
-      .catch(() => setLoadingFred(false))
-  }, [])
-
-  const selectedLabel = DFW_ZIPS.find(z => z.zip === selectedZip)?.label || selectedZip
+  const ageBands = data?.ageDistribution ? [
+    { label: '0–17',  pct: data.ageDistribution.age0_17 },
+    { label: '18–34', pct: data.ageDistribution.age18_34 },
+    { label: '35–54', pct: data.ageDistribution.age35_54 },
+    { label: '55–74', pct: data.ageDistribution.age55_74 },
+    { label: '75+',   pct: data.ageDistribution.age75plus },
+  ] : [
+    { label: '0–17', pct: 0 }, { label: '18–34', pct: 0 }, { label: '35–54', pct: 0 },
+    { label: '55–74', pct: 0 }, { label: '75+', pct: 0 },
+  ]
 
   return (
     <>
       <style>{`
-        .zip-btn {
-          background: transparent; border: 1px solid #1e2433;
-          color: #9BA5B7; padding: 7px 14px;
-          font-family: 'IBM Plex Mono', monospace; font-size: 11px;
-          cursor: pointer; transition: all 0.15s ease;
-          letter-spacing: 0.06em; white-space: nowrap;
-        }
-        .zip-btn:hover { border-color: #E8B84B; color: #E8B84B; background: rgba(232,184,75,0.06); }
-        .zip-btn.active { background: rgba(232,184,75,0.12); border-color: #E8B84B; color: #E8B84B; }
-        .data-row { display: flex; justify-content: space-between; align-items: center; padding: 11px 0; border-bottom: 1px solid #1a1f2e; }
-        .data-row:last-child { border-bottom: none; }
-        .data-label { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: #9BA5B7; letter-spacing: 0.04em; }
-        .data-value { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: #F0F2F7; font-weight: 600; letter-spacing: 0.02em; }
-        .panel { background: #13161f; border: 1px solid #1e2433; padding: 24px; }
-        .source-badge { display: inline-flex; align-items: center; gap: 5px; font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: #6B7689; letter-spacing: 0.06em; }
-        .source-dot { width: 5px; height: 5px; border-radius: 50%; }
+        .grow-pct { transition: color 0.2s; }
+        .tbl-row:hover td { background: rgba(78,174,255,0.04); }
       `}</style>
 
-      <div style={{ position: 'relative', zIndex: 1, minHeight: 'calc(100vh - 54px)' }}>
+      <div style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ padding: '36px 32px', maxWidth: '1440px', margin: '0 auto' }}>
 
-          {/* Page Header */}
-          <div className="fade-up" style={{
-            marginBottom: '36px', display: 'flex',
-            justifyContent: 'space-between', alignItems: 'flex-end',
-          }}>
+          {/* Header */}
+          <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '32px' }}>
             <div>
-              <div style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
-                letterSpacing: '0.22em', color: '#E8B84B',
-                textTransform: 'uppercase' as const, marginBottom: '10px',
-              }}>
-                Dashboard · Overview
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.22em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '10px' }}>
+                Community Intelligence Platform — Lakepointe Church
               </div>
-              <h1 style={{
-                fontFamily: "'Bebas Neue', sans-serif",
-                fontSize: 'clamp(40px, 5vw, 62px)',
-                letterSpacing: '0.05em', lineHeight: 0.92, color: '#F0F2F7',
-              }}>
-                DFW Community<br />Intelligence
+              <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px, 5vw, 58px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#F0F2F7' }}>
+                DFW Metroplex<br />Overview
               </h1>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
-                color: '#6B7689', letterSpacing: '0.1em',
-                textTransform: 'uppercase' as const, marginBottom: '4px',
-              }}>
-                Data Refreshed
-              </div>
-              <div style={{
-                fontFamily: "'IBM Plex Sans', sans-serif",
-                fontSize: '13px', fontWeight: 500, color: '#C8D0DC',
-              }}>
-                {lastUpdated}
-              </div>
-              <div style={{
-                marginTop: '10px', display: 'flex', alignItems: 'center',
-                gap: '7px', justifyContent: 'flex-end',
-              }}>
-                <div style={{
-                  width: '7px', height: '7px', borderRadius: '50%',
-                  background: '#2DD4BF', boxShadow: '0 0 6px rgba(45,212,191,0.6)',
-                }} />
-                <span style={{
-                  fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px',
-                  color: '#2DD4BF', letterSpacing: '0.12em', textTransform: 'uppercase' as const,
-                }}>
-                  Live Data
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* DFW Metro KPIs */}
-          <div className="fade-up-2" style={{ marginBottom: '36px' }}>
-            <SectionHeader eyebrow="DFW Metro · Real-Time Feeds" title="Regional Snapshot" />
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-              <StatCard
-                label="Metro Population"
-                value={fred?.population?.latest?.value
-                  ? fmtK(parseFloat(fred.population.latest.value) * 1000)
-                  : '—'}
-                sub={fred?.population?.latest?.date
-                  ? `Est. ${fred.population.latest.date.substring(0, 4)} · FRED`
-                  : 'Source: FRED'}
-                accent="gold" loading={loadingFred}
-              />
-              <StatCard
-                label="DFW Unemployment"
-                value={bls?.unemploymentRate?.latest ? `${bls.unemploymentRate.latest}%` : '—'}
-                sub={bls?.unemploymentRate
-                  ? `${bls.unemploymentRate.period} ${bls.unemploymentRate.year} · BLS`
-                  : 'Source: BLS LAUS'}
-                accent="blue" loading={loadingBls}
-              />
-              <StatCard
-                label="Employed Persons"
-                value={bls?.employedPersons?.latest ? fmtK(parseInt(bls.employedPersons.latest)) : '—'}
-                sub="DFW Metro · Bureau of Labor Statistics"
-                accent="teal" loading={loadingBls}
-              />
-              <StatCard
-                label="Housing Permits"
-                value={fred?.housingPermits?.latest?.value ?? '—'}
-                sub="Dallas Area · Federal Reserve (FRED)"
-                accent="purple" loading={loadingFred}
-              />
-            </div>
-          </div>
-
-          {/* ZIP Selector + Profile */}
-          <div className="fade-up-3" style={{ marginBottom: '36px' }}>
-            <SectionHeader eyebrow="ZIP Code · ACS 5-Year Estimates" title="ZIP Profile" />
-            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '20px' }}>
-              {DFW_ZIPS.map(({ zip, label }) => (
-                <button
-                  key={zip}
-                  className={`zip-btn${selectedZip === zip ? ' active' : ''}`}
-                  onClick={() => setSelectedZip(zip)}
-                >
-                  {zip} · {label}
-                </button>
-              ))}
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                <StatCard label="Population" value={census ? fmtK(census.population) : '—'}
-                  sub={`ZIP ${selectedZip} · ${selectedLabel}`} accent="gold" loading={loadingCensus} />
-                <StatCard label="Median HH Income"
-                  value={census ? `$${fmtK(census.medianHouseholdIncome)}` : '—'}
-                  sub="ACS 5-Year Estimate" accent="teal" loading={loadingCensus} />
-                <StatCard label="Median Home Value"
-                  value={census ? `$${fmtK(census.medianHomeValue)}` : '—'}
-                  sub="ACS 5-Year Estimate" accent="blue" loading={loadingCensus} />
-                <StatCard label="Unemployment Rate"
-                  value={census?.unemploymentRate ? `${census.unemploymentRate}%` : '—'}
-                  sub="Labor force basis · ACS"
-                  accent={parseFloat(census?.unemploymentRate || '0') > 5 ? 'coral' : 'teal'}
-                  loading={loadingCensus} />
-              </div>
-
-              <div className="panel">
-                <div style={{
-                  fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
-                  letterSpacing: '0.12em', textTransform: 'uppercase' as const,
-                  color: '#9BA5B7', marginBottom: '16px', paddingBottom: '12px',
-                  borderBottom: '1px solid #1a1f2e',
-                }}>
-                  ZIP {selectedZip} · Full Profile · U.S. Census Bureau ACS 2023
+            {data?.updatedAt && (
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#6B7689', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '4px' }}>Data Refreshed</div>
+                <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', fontWeight: 500, color: '#C8D0DC' }}>
+                  {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </div>
+              </div>
+            )}
+          </div>
 
-                {loadingCensus ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    {[1,2,3,4,5,6,7].map(i => (
-                      <div key={i} style={{
-                        height: '18px', background: '#1e2433', borderRadius: '2px',
-                        animation: 'pulse 1.5s ease-in-out infinite',
-                        animationDelay: `${i * 0.08}s`,
-                        width: i % 2 === 0 ? '70%' : '100%',
-                        alignSelf: i % 2 === 0 ? 'flex-end' as const : 'auto' as const,
-                      }} />
-                    ))}
-                  </div>
-                ) : census ? (
-                  <>
-                    <div className="data-row"><span className="data-label">Geography</span><span className="data-value">{census.name}</span></div>
-                    <div className="data-row"><span className="data-label">Total Population</span><span className="data-value">{fmt(census.population)}</span></div>
-                    <div className="data-row"><span className="data-label">Total Households</span><span className="data-value">{fmt(census.totalHouseholds)}</span></div>
-                    <div className="data-row">
-                      <span className="data-label">Median HH Income</span>
-                      <span className="data-value" style={{ color: '#E8B84B' }}>{fmt(census.medianHouseholdIncome, 'currency')}</span>
-                    </div>
-                    <div className="data-row">
-                      <span className="data-label">Median Home Value</span>
-                      <span className="data-value" style={{ color: '#4EAEFF' }}>{fmt(census.medianHomeValue, 'currency')}</span>
-                    </div>
-                    <div className="data-row"><span className="data-label">Bachelor&apos;s Degree+</span><span className="data-value">{census.bachelorsRate}%</span></div>
-                    <div className="data-row">
-                      <span className="data-label">Unemployment Rate</span>
-                      <span className="data-value" style={{ color: parseFloat(census.unemploymentRate) > 5 ? '#FF6B6B' : '#2DD4BF' }}>
-                        {census.unemploymentRate}%
-                      </span>
-                    </div>
-                    <div style={{
-                      marginTop: '18px', paddingTop: '14px', borderTop: '1px solid #1a1f2e',
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                    }}>
-                      <span className="source-badge">
-                        <span className="source-dot" style={{ background: '#E8B84B' }} />
-                        U.S. Census Bureau · ACS 5-Year (2023)
-                      </span>
-                      <span className="source-badge">api.census.gov</span>
-                    </div>
-                  </>
-                ) : (
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#6B7689', padding: '16px 0' }}>
-                    No data available for ZIP {selectedZip}.
-                  </div>
-                )}
+          {/* Aggregate Stat Cards */}
+          <div className="fade-up-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '28px' }}>
+            <StatCard
+              label="Total Population"
+              value={data ? fmtK(data.totals.population) : '—'}
+              sub={data?.totals.avgGrowth != null ? `↑ ${data.totals.avgGrowth}% avg growth` : undefined}
+              accent="gold" loading={loading}
+            />
+            <StatCard
+              label="ZIP Codes Tracked"
+              value={data ? String(data.totals.zipCount) : '—'}
+              sub="DFW East Corridor"
+              accent="blue" loading={loading}
+            />
+            <StatCard
+              label="Avg Median HHI"
+              value={data ? `$${fmtK(data.totals.wtdAvgHHI)}` : '—'}
+              sub="Population-weighted"
+              accent="teal" loading={loading}
+            />
+            <StatCard
+              label="HH w/ Children (18-)"
+              value={data?.totals.avgHHWithChildren != null ? `${data.totals.avgHHWithChildren}%` : '—'}
+              sub={data?.totals.avgHHSize != null ? `Avg HH Size: ${data.totals.avgHHSize}` : undefined}
+              accent="purple" loading={loading}
+            />
+          </div>
+
+          {/* Heat Map */}
+          <div className="fade-up-3" style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px', marginBottom: '20px' }}>
+            <SectionHeader eyebrow="Population Growth · 2020 to 2023" title="ZIP Code Heat Map" />
+            <HeatMap zips={data?.zips ?? []} loading={loading} />
+          </div>
+
+          {/* Age Band + Income Distribution */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
+            <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
+              <SectionHeader eyebrow="All 20 ZIPs · Pop-Weighted Average" title="Population by Age Band" />
+              <div style={{ overflowX: 'auto' }}>
+                <BarChart data={ageBands} loading={loading} />
               </div>
             </div>
+            <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
+              <SectionHeader eyebrow="All 20 ZIPs · HH-Weighted Average" title="Household Income Distribution" />
+              <div style={{ overflowX: 'auto' }}>
+                <BarChart data={data?.incomeDistribution ?? []} loading={loading} />
+              </div>
+            </div>
+          </div>
+
+          {/* Top Growth Table */}
+          <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px', marginBottom: '36px' }}>
+            <SectionHeader eyebrow="Sorted by Population Growth" title="Top Growth ZIP Codes" />
+            <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  {['ZIP', 'Area', 'Population', 'Growth %', 'Median HHI', '% w/ Children', 'Avg HH Size', 'SES Class'].map(h => (
+                    <th key={h} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#6B7689', letterSpacing: '0.1em', textTransform: 'uppercase' as const, textAlign: 'left', padding: '8px 12px 12px 0', borderBottom: '1px solid #1e2433', fontWeight: 400 }}>
+                      {h}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <tr key={i}>
+                      {Array.from({ length: 8 }).map((_, j) => (
+                        <td key={j} style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e' }}>
+                          <div style={{ height: '14px', background: '#1e2433', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${(i + j) * 0.04}s` }} />
+                        </td>
+                      ))}
+                    </tr>
+                  ))
+                ) : (
+                  (data?.zips ?? []).map(z => (
+                    <tr key={z.zip} className="tbl-row">
+                      <td style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#2DD4BF' }}>{z.zip}</td>
+                      <td style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e', fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#F0F2F7' }}>{z.label}</td>
+                      <td style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#C8D0DC' }}>{z.population.toLocaleString()}</td>
+                      <td style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: growthColor(z.populationGrowth) === '#3a4561' ? '#9BA5B7' : growthColor(z.populationGrowth), fontWeight: 600 }}>
+                        {z.populationGrowth != null ? `${z.populationGrowth}%` : '—'}
+                      </td>
+                      <td style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#E8B84B' }}>${z.medianHouseholdIncome.toLocaleString()}</td>
+                      <td style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#C8D0DC' }}>{z.hhWithChildrenPct != null ? `${z.hhWithChildrenPct}%` : '—'}</td>
+                      <td style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#C8D0DC' }}>{z.avgHouseholdSize ?? '—'}</td>
+                      <td style={{ padding: '12px 12px 12px 0', borderBottom: '1px solid #1a1f2e' }}><SEsBadge label={z.sesLabel} /></td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
 
           {/* Footer */}
-          <div style={{
-            borderTop: '1px solid #1a1f2e', paddingTop: '20px',
-            display: 'flex', gap: '28px', flexWrap: 'wrap',
-            alignItems: 'center', justifyContent: 'space-between',
-          }}>
-            <div style={{ display: 'flex', gap: '24px', alignItems: 'center' }}>
-              <span style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px',
-                letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#6B7689',
-              }}>
-                Active Sources
-              </span>
-              {[
-                { label: 'Census ACS', ok: !loadingCensus && !!census },
-                { label: 'BLS LAUS',   ok: !loadingBls && !!bls },
-                { label: 'FRED',       ok: !loadingFred && !!fred },
-              ].map(({ label, ok }) => (
-                <div key={label} className="source-badge">
-                  <span className="source-dot" style={{ background: ok ? '#2DD4BF' : '#6B7689' }} />
-                  {label}
-                </div>
-              ))}
-            </div>
-            <div style={{
-              fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px',
-              color: '#3a4154', letterSpacing: '0.08em',
-            }}>
+          <div style={{ borderTop: '1px solid #1a1f2e', paddingTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3a4154', letterSpacing: '0.08em' }}>
+              Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · BLS LAUS · FRED
+            </span>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3a4154', letterSpacing: '0.08em' }}>
               Lakepointe Church · Community Intelligence Platform · Internal Use Only
-            </div>
+            </span>
           </div>
 
         </div>
