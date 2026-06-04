@@ -57,13 +57,37 @@ export const DFW_ZIPS = [
   { zip: '76021', label: 'Bedford' },
   { zip: '76034', label: 'Colleyville' },
   { zip: '76006', label: 'Arlington NE' },
-  { zip: '76018', label: 'Arlington S' },
+  { zip: '76010', label: 'Arlington E' },
+  { zip: '76011', label: 'Arlington' },
+  { zip: '76012', label: 'Arlington W' },
+  { zip: '76013', label: 'Arlington C' },
+  { zip: '76014', label: 'Arlington SE' },
+  { zip: '76015', label: 'Arlington S' },
+  { zip: '76016', label: 'Arlington SW' },
+  { zip: '76017', label: 'Arlington S' },
+  { zip: '76018', label: 'Arlington SE' },
   { zip: '76063', label: 'Mansfield' },
   { zip: '76244', label: 'Keller' },
   { zip: '76248', label: 'Keller N' },
+  // ── Fort Worth ────────────────────────────────────────────────
+  { zip: '76104', label: 'Fort Worth SE' },
+  { zip: '76108', label: 'Fort Worth W' },
+  { zip: '76109', label: 'Fort Worth SW' },
+  { zip: '76116', label: 'Fort Worth W' },
+  { zip: '76118', label: 'Fort Worth E' },
+  { zip: '76123', label: 'Fort Worth S' },
   { zip: '76131', label: 'Fort Worth NE' },
+  { zip: '76133', label: 'Fort Worth S' },
+  { zip: '76134', label: 'Fort Worth SW' },
   { zip: '76137', label: 'Fort Worth N' },
   { zip: '76179', label: 'Fort Worth NW' },
+  // ── North Dallas / Little Elm corridor ───────────────────────
+  { zip: '75056', label: 'The Colony' },
+  { zip: '75068', label: 'Little Elm S' },
+  { zip: '76227', label: 'Aubrey' },
+  // ── Greenville / Hunt County ──────────────────────────────────
+  { zip: '75401', label: 'Greenville' },
+  { zip: '75402', label: 'Greenville S' },
 ] as const
 
 export type ZipEntry = typeof DFW_ZIPS[number]
