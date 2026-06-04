@@ -3,24 +3,19 @@ import { sql } from '@/lib/db'
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
-  const zip = searchParams.get('zip')
+  const zipsParam = searchParams.get('zips')
 
-  if (!zip) {
-    return NextResponse.json({ error: 'zip parameter is required' }, { status: 400 })
+  if (!zipsParam) {
+    return NextResponse.json({ error: 'zips parameter required' }, { status: 400 })
   }
 
+  const zips = zipsParam.split(',').map(z => z.trim()).filter(Boolean).slice(0, 20)
+  if (!zips.length) return NextResponse.json({ results: [] })
+
   try {
-    const rows = await sql`SELECT * FROM zip_demographics WHERE zip = ${zip}`
+    const rows = await sql`SELECT * FROM zip_demographics WHERE zip = ANY(${zips})`
 
-    if (!rows.length) {
-      return NextResponse.json(
-        { error: 'No data for this ZIP. Run POST /api/refresh to populate the database.' },
-        { status: 404 }
-      )
-    }
-
-    const d = rows[0]
-    return NextResponse.json({
+    const results = rows.map(d => ({
       zip: d.zip,
       name: d.name,
       population: d.population,
@@ -32,7 +27,6 @@ export async function GET(request: NextRequest) {
       avgHouseholdSize: d.avg_household_size != null ? parseFloat(d.avg_household_size) : null,
       hhWithChildrenPct: d.hh_with_children_pct != null ? parseFloat(d.hh_with_children_pct) : null,
       unemploymentRate: d.unemployment_rate,
-      bachelorsRate: d.bachelors_rate,
       sesClass: { label: d.ses_label, score: d.ses_score },
       race: {
         white:    d.race_white    != null ? parseFloat(d.race_white)    : 0,
@@ -40,12 +34,6 @@ export async function GET(request: NextRequest) {
         black:    d.race_black    != null ? parseFloat(d.race_black)    : 0,
         asian:    d.race_asian    != null ? parseFloat(d.race_asian)    : 0,
         other:    d.race_other    != null ? parseFloat(d.race_other)    : 0,
-      },
-      education: {
-        noHSDiploma:   d.edu_no_hs           != null ? parseFloat(d.edu_no_hs)           : 0,
-        hsDiploma:     d.edu_hs_diploma      != null ? parseFloat(d.edu_hs_diploma)      : 0,
-        someCollege:   d.edu_some_college    != null ? parseFloat(d.edu_some_college)    : 0,
-        bachelorsPlus: d.edu_bachelors_plus  != null ? parseFloat(d.edu_bachelors_plus)  : 0,
       },
       incomeBrackets: [
         { label: '<$25K',     pct: d.income_lt25k     != null ? parseFloat(d.income_lt25k)     : 0 },
@@ -55,10 +43,11 @@ export async function GET(request: NextRequest) {
         { label: '$100-150K', pct: d.income_100_150k  != null ? parseFloat(d.income_100_150k)  : 0 },
         { label: '$150K+',    pct: d.income_150k_plus != null ? parseFloat(d.income_150k_plus) : 0 },
       ],
-      updatedAt: d.updated_at,
-    })
+    }))
+
+    return NextResponse.json({ results })
   } catch (error) {
-    console.error('Census DB error:', error)
+    console.error('Census batch error:', error)
     return NextResponse.json({ error: 'Failed to fetch data', details: String(error) }, { status: 500 })
   }
 }
