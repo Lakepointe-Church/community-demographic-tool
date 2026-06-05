@@ -61,9 +61,9 @@ function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: hovered
-          ? `linear-gradient(145deg, rgba(${rgb},0.09) 0%, rgba(255,255,255,0.01) 100%)`
-          : CARD_SURFACE,
-        border: `1px solid ${hovered ? `rgba(${rgb},0.35)` : '#232940'}`,
+          ? `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.22) 0%, transparent 60%), linear-gradient(145deg, rgba(${rgb},0.08) 0%, rgba(255,255,255,0.01) 100%)`
+          : `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.1) 0%, transparent 55%), linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)`,
+        border: `1px solid ${hovered ? `rgba(${rgb},0.4)` : '#232940'}`,
         padding: '24px',
         position: 'relative' as const,
         overflow: 'hidden',
@@ -193,11 +193,11 @@ function AgeChart({ ageDistribution, loading }: {
     ? AGE_SEGS.map(s => ageDistribution[s.key] ?? 0)
     : AGE_SEGS.map(() => 0)
   const maxPct   = Math.max(...values, 5)
-  const barW = 58, gap = 14, chartH = 140, padL = 28
+  const barW = 58, gap = 14, chartH = 140, padL = 28, padTop = 22
   const totalW = AGE_SEGS.length * (barW + gap) - gap
 
   return (
-    <svg width={totalW + padL + 8} height={chartH + 40} style={{ overflow: 'visible' }}>
+    <svg width={totalW + padL + 8} height={padTop + chartH + 40} style={{ overflow: 'visible' }}>
       <defs>
         {AGE_SEGS.map(seg => (
           <linearGradient key={seg.key} id={`ageGrad-${seg.key}`} x1="0" y1="0" x2="0" y2="1">
@@ -207,7 +207,7 @@ function AgeChart({ ageDistribution, loading }: {
         ))}
       </defs>
       {[0, Math.round(maxPct / 2), Math.round(maxPct)].map(v => {
-        const y = chartH - (v / maxPct) * chartH
+        const y = padTop + chartH - (v / maxPct) * chartH
         return (
           <g key={v}>
             <text x={padL - 5} y={y + 4} textAnchor="end" fill="#8A98AE" fontFamily="IBM Plex Mono" fontSize="10">{v}%</text>
@@ -221,23 +221,23 @@ function AgeChart({ ageDistribution, loading }: {
         const x    = padL + idx * (barW + gap)
         return (
           <g key={seg.key}>
-            <rect x={x} y={chartH - barH} width={barW} height={barH}
+            <rect x={x} y={padTop + chartH - barH} width={barW} height={barH}
               fill={`url(#ageGrad-${seg.key})`}
               style={{ transition: 'all 0.6s ease' }}
             />
-            <rect x={x} y={chartH - barH} width={barW} height={3} fill={seg.color} />
+            <rect x={x} y={padTop + chartH - barH} width={barW} height={3} fill={seg.color} />
             {!loading && val > 0 && (
-              <text x={x + barW / 2} y={chartH - barH - 7} textAnchor="middle"
+              <text x={x + barW / 2} y={padTop + chartH - barH - 7} textAnchor="middle"
                 fill="#C8D4E4" fontFamily="IBM Plex Mono" fontSize="10">{val.toFixed(1)}%
               </text>
             )}
-            <text x={x + barW / 2} y={chartH + 18} textAnchor="middle"
+            <text x={x + barW / 2} y={padTop + chartH + 18} textAnchor="middle"
               fill="#A8B4C5" fontFamily="IBM Plex Mono" fontSize="10">{seg.label}
             </text>
           </g>
         )
       })}
-      <line x1={padL} y1={chartH} x2={padL + totalW} y2={chartH} stroke="#232940" strokeWidth={1} />
+      <line x1={padL} y1={padTop + chartH} x2={padL + totalW} y2={padTop + chartH} stroke="#232940" strokeWidth={1} />
     </svg>
   )
 }

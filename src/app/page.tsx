@@ -67,9 +67,9 @@ function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
       onMouseLeave={() => setHovered(false)}
       style={{
         background: hovered
-          ? `linear-gradient(145deg, rgba(${rgb},0.09) 0%, rgba(255,255,255,0.01) 100%)`
-          : 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)',
-        border: `1px solid ${hovered ? `rgba(${rgb},0.35)` : '#232940'}`,
+          ? `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.22) 0%, transparent 60%), linear-gradient(145deg, rgba(${rgb},0.08) 0%, rgba(255,255,255,0.01) 100%)`
+          : `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.1) 0%, transparent 55%), linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)`,
+        border: `1px solid ${hovered ? `rgba(${rgb},0.4)` : '#232940'}`,
         padding: '24px',
         position: 'relative' as const,
         overflow: 'hidden',
@@ -103,22 +103,31 @@ function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   )
 }
 
+const AGE_COLORS   = ['#4EAEFF', '#2DD4BF', '#E8B84B', '#A78BFA', '#FF6B6B']
+const INCOME_COLORS = ['#8A98AE', '#FF6B6B', '#4EAEFF', '#2DD4BF', '#A78BFA', '#E8B84B']
+
 // ── Generic Vertical Bar Chart ───────────────────────────────────
-function BarChart({ data, loading }: { data: { label: string; pct: number }[]; loading: boolean }) {
+function BarChart({ data, loading, barColors }: {
+  data: { label: string; pct: number }[]
+  loading: boolean
+  barColors?: string[]
+}) {
   const maxPct = Math.max(...data.map(d => d.pct), 5)
-  const barW = 56, gap = 12, chartH = 160, padL = 34
+  const barW = 56, gap = 12, chartH = 160, padL = 34, padTop = 22
   const totalW = data.length * (barW + gap) - gap
 
   return (
-    <svg width={totalW + padL + 8} height={chartH + 40} style={{ overflow: 'visible' }}>
+    <svg width={totalW + padL + 8} height={padTop + chartH + 40} style={{ overflow: 'visible' }}>
       <defs>
-        <linearGradient id="blueBarGrad" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#4EAEFF" stopOpacity="0.9" />
-          <stop offset="100%" stopColor="#4EAEFF" stopOpacity="0.2" />
-        </linearGradient>
+        {(barColors ?? ['#4EAEFF']).map((c, i) => (
+          <linearGradient key={i} id={`bGrad-${i}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={c} stopOpacity="0.9" />
+            <stop offset="100%" stopColor={c} stopOpacity="0.2" />
+          </linearGradient>
+        ))}
       </defs>
       {[0, Math.round(maxPct / 2), Math.round(maxPct)].map(v => {
-        const y = chartH - (v / maxPct) * chartH
+        const y = padTop + chartH - (v / maxPct) * chartH
         return (
           <g key={v}>
             <text x={padL - 5} y={y + 4} textAnchor="end" fill="#8A98AE" fontFamily="IBM Plex Mono" fontSize="10">{v}%</text>
@@ -129,18 +138,20 @@ function BarChart({ data, loading }: { data: { label: string; pct: number }[]; l
       {data.map((d, i) => {
         const barH = loading ? 0 : (d.pct / maxPct) * chartH
         const x = padL + i * (barW + gap)
+        const barColor = barColors?.[i] ?? '#4EAEFF'
+        const gradIdx = barColors ? i : 0
         return (
           <g key={d.label}>
-            <rect x={x} y={chartH - barH} width={barW} height={barH} fill="url(#blueBarGrad)" style={{ transition: 'all 0.6s ease' }} />
-            <rect x={x} y={chartH - barH} width={barW} height={3} fill="#4EAEFF" />
+            <rect x={x} y={padTop + chartH - barH} width={barW} height={barH} fill={`url(#bGrad-${gradIdx})`} style={{ transition: 'all 0.6s ease' }} />
+            <rect x={x} y={padTop + chartH - barH} width={barW} height={3} fill={barColor} />
             {!loading && d.pct > 0 && (
-              <text x={x + barW / 2} y={chartH - barH - 7} textAnchor="middle" fill="#C8D4E4" fontFamily="IBM Plex Mono" fontSize="10">{d.pct.toFixed(1)}%</text>
+              <text x={x + barW / 2} y={padTop + chartH - barH - 7} textAnchor="middle" fill="#C8D4E4" fontFamily="IBM Plex Mono" fontSize="10">{d.pct.toFixed(1)}%</text>
             )}
-            <text x={x + barW / 2} y={chartH + 18} textAnchor="middle" fill="#A8B4C5" fontFamily="IBM Plex Mono" fontSize="10">{d.label}</text>
+            <text x={x + barW / 2} y={padTop + chartH + 18} textAnchor="middle" fill="#A8B4C5" fontFamily="IBM Plex Mono" fontSize="10">{d.label}</text>
           </g>
         )
       })}
-      <line x1={padL} y1={chartH} x2={padL + totalW} y2={chartH} stroke="#232940" strokeWidth={1} />
+      <line x1={padL} y1={padTop + chartH} x2={padL + totalW} y2={padTop + chartH} stroke="#232940" strokeWidth={1} />
     </svg>
   )
 }
@@ -265,13 +276,13 @@ export default function OverviewPage() {
           <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
             <SectionHeader eyebrow="All ZIPs · Pop-Weighted Average" title="Population by Age Band" />
             <div style={{ overflowX: 'auto' }}>
-              <BarChart data={ageBands} loading={loading} />
+              <BarChart data={ageBands} loading={loading} barColors={AGE_COLORS} />
             </div>
           </div>
           <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
             <SectionHeader eyebrow="All ZIPs · HH-Weighted Average" title="Household Income Distribution" />
             <div style={{ overflowX: 'auto' }}>
-              <BarChart data={data?.incomeDistribution ?? []} loading={loading} />
+              <BarChart data={data?.incomeDistribution ?? []} loading={loading} barColors={INCOME_COLORS} />
             </div>
           </div>
         </div>
