@@ -37,28 +37,52 @@ function fmt(n: number, style: 'currency' | 'decimal' = 'decimal') {
   return n.toLocaleString()
 }
 
+const ACCENT_RGB: Record<string, string> = {
+  gold: '232,184,75', blue: '78,174,255', coral: '255,107,107',
+  teal: '45,212,191', purple: '167,139,250',
+}
+
+const CARD_SURFACE = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
+
 // ── Stat Card ────────────────────────────────────────────────────
 function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
   label: string; value: string; sub?: string
   accent?: 'gold' | 'blue' | 'coral' | 'teal' | 'purple'
   loading?: boolean
 }) {
+  const [hovered, setHovered] = useState(false)
   const colors = { gold: '#E8B84B', blue: '#4EAEFF', coral: '#FF6B6B', teal: '#2DD4BF', purple: '#A78BFA' }
   const color = colors[accent]
+  const rgb = ACCENT_RGB[accent]
+
   return (
-    <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '22px', position: 'relative', overflow: 'hidden' }}>
+    <div
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        background: hovered
+          ? `linear-gradient(145deg, rgba(${rgb},0.09) 0%, rgba(255,255,255,0.01) 100%)`
+          : CARD_SURFACE,
+        border: `1px solid ${hovered ? `rgba(${rgb},0.35)` : '#232940'}`,
+        padding: '24px',
+        position: 'relative' as const,
+        overflow: 'hidden',
+        transition: 'background 0.2s ease, border-color 0.2s ease',
+        cursor: 'default',
+      }}
+    >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color }} />
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#9BA5B7', marginBottom: '10px' }}>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px' }}>
         {label}
       </div>
       {loading ? (
-        <div style={{ height: '40px', background: '#1e2433', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
+        <div style={{ height: '40px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
       ) : (
         <>
-          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '36px', lineHeight: 1, letterSpacing: '0.03em', color: color === '#E8B84B' ? '#F0F2F7' : '#F0F2F7' }}>
+          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '44px', lineHeight: 1, letterSpacing: '0.03em', color: '#F0F2F7' }}>
             {value}
           </div>
-          {sub && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6B7689', marginTop: '8px', letterSpacing: '0.04em' }}>{sub}</div>}
+          {sub && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', marginTop: '8px', letterSpacing: '0.04em' }}>{sub}</div>}
         </>
       )}
     </div>
@@ -68,9 +92,9 @@ function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
 // ── Section Header ───────────────────────────────────────────────
 function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
   return (
-    <div style={{ borderLeft: '3px solid #E8B84B', paddingLeft: '16px', marginBottom: '20px' }}>
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '5px' }}>{eyebrow}</div>
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', letterSpacing: '0.04em', lineHeight: 1, color: '#F0F2F7' }}>{title}</div>
+    <div style={{ borderLeft: '3px solid #E8B84B', paddingLeft: '16px', marginBottom: '24px' }}>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.15em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '6px' }}>{eyebrow}</div>
+      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '28px', letterSpacing: '0.04em', lineHeight: 1, color: '#F0F2F7' }}>{title}</div>
     </div>
   )
 }
@@ -89,13 +113,13 @@ function DonutChart({ race, loading }: { race: CensusData['race'] | null; loadin
   const circ = 2 * Math.PI * r
 
   if (loading || !race) {
-    return <div style={{ width: 200, height: 200, borderRadius: '50%', background: '#1e2433', animation: 'pulse 1.5s ease-in-out infinite' }} />
+    return <div style={{ width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s ease-in-out infinite' }} />
   }
 
   let cumPct = 0
   return (
     <svg width="200" height="200" viewBox="0 0 200 200" style={{ flexShrink: 0 }}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e2433" strokeWidth={sw} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e2b3c" strokeWidth={sw} />
       {RACE_SEGS.filter(s => (race[s.key] ?? 0) > 0.3).map(seg => {
         const pct = (race[seg.key] ?? 0) / 100
         const rotation = cumPct * 360 - 90
@@ -108,9 +132,9 @@ function DonutChart({ race, loading }: { race: CensusData['race'] | null; loadin
           />
         )
       })}
-      <circle cx={cx} cy={cy} r={54} fill="#13161f" />
-      <text x={cx} y={cy + 4} textAnchor="middle" fill="#6B7689"
-        fontFamily="'IBM Plex Mono', monospace" fontSize="9" letterSpacing="1.5">
+      <circle cx={cx} cy={cy} r={54} fill="#0f1219" />
+      <text x={cx} y={cy + 5} textAnchor="middle" fill="#8A98AE"
+        fontFamily="'IBM Plex Mono', monospace" fontSize="11" letterSpacing="1.5">
         RACE
       </text>
     </svg>
@@ -119,9 +143,9 @@ function DonutChart({ race, loading }: { race: CensusData['race'] | null; loadin
 
 // ── Education Bar Chart ──────────────────────────────────────────
 const EDU_SEGS = [
-  { key: 'bachelorsPlus' as const, label: "Bachelor's+",  color: '#4EAEFF' },
-  { key: 'someCollege'   as const, label: 'Some College', color: '#2DD4BF' },
-  { key: 'hsDiploma'     as const, label: 'HS Diploma',   color: '#E8B84B' },
+  { key: 'bachelorsPlus' as const, label: "Bachelor's+",   color: '#4EAEFF' },
+  { key: 'someCollege'   as const, label: 'Some College',  color: '#2DD4BF' },
+  { key: 'hsDiploma'     as const, label: 'HS Diploma',    color: '#E8B84B' },
   { key: 'noHSDiploma'   as const, label: 'No HS Diploma', color: '#FF6B6B' },
 ]
 
@@ -132,16 +156,17 @@ function EducationChart({ education, loading }: { education: CensusData['educati
         const value = education?.[key] ?? 0
         return (
           <div key={key}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '7px' }}>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>{label}</span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#F0F2F7', fontWeight: 600 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#A8B4C5', letterSpacing: '0.04em', textTransform: 'uppercase' as const }}>{label}</span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', fontWeight: 600 }}>
                 {loading ? '—' : `${value.toFixed(1)}%`}
               </span>
             </div>
-            <div style={{ height: '6px', background: '#1e2433', borderRadius: '3px', overflow: 'hidden' }}>
+            <div style={{ height: '7px', background: '#1e2b3c', borderRadius: '4px', overflow: 'hidden' }}>
               <div style={{
                 height: '100%', width: loading ? '0%' : `${Math.min(value, 100)}%`,
-                background: color, borderRadius: '3px', transition: 'width 0.7s ease',
+                background: `linear-gradient(90deg, ${color}, ${color}80)`,
+                borderRadius: '4px', transition: 'width 0.7s ease',
               }} />
             </div>
           </div>
@@ -172,13 +197,21 @@ function AgeChart({ ageDistribution, loading }: {
   const totalW = AGE_SEGS.length * (barW + gap) - gap
 
   return (
-    <svg width={totalW + padL + 8} height={chartH + 36} style={{ overflow: 'visible' }}>
+    <svg width={totalW + padL + 8} height={chartH + 40} style={{ overflow: 'visible' }}>
+      <defs>
+        {AGE_SEGS.map(seg => (
+          <linearGradient key={seg.key} id={`ageGrad-${seg.key}`} x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stopColor={seg.color} stopOpacity="0.85" />
+            <stop offset="100%" stopColor={seg.color} stopOpacity="0.2" />
+          </linearGradient>
+        ))}
+      </defs>
       {[0, Math.round(maxPct / 2), Math.round(maxPct)].map(v => {
         const y = chartH - (v / maxPct) * chartH
         return (
           <g key={v}>
-            <text x={padL - 5} y={y + 4} textAnchor="end" fill="#6B7689" fontFamily="IBM Plex Mono" fontSize="9">{v}%</text>
-            <line x1={padL} y1={y} x2={padL + totalW} y2={y} stroke="#1e2433" strokeWidth={1} strokeDasharray="3 3" />
+            <text x={padL - 5} y={y + 4} textAnchor="end" fill="#8A98AE" fontFamily="IBM Plex Mono" fontSize="10">{v}%</text>
+            <line x1={padL} y1={y} x2={padL + totalW} y2={y} stroke="#1e2b3c" strokeWidth={1} strokeDasharray="3 3" />
           </g>
         )
       })}
@@ -189,22 +222,22 @@ function AgeChart({ ageDistribution, loading }: {
         return (
           <g key={seg.key}>
             <rect x={x} y={chartH - barH} width={barW} height={barH}
-              fill={seg.color} opacity={0.75}
+              fill={`url(#ageGrad-${seg.key})`}
               style={{ transition: 'all 0.6s ease' }}
             />
-            <rect x={x} y={chartH - barH} width={barW} height={2} fill={seg.color} />
+            <rect x={x} y={chartH - barH} width={barW} height={3} fill={seg.color} />
             {!loading && val > 0 && (
-              <text x={x + barW / 2} y={chartH - barH - 5} textAnchor="middle"
-                fill="#F0F2F7" fontFamily="IBM Plex Mono" fontSize="9">{val.toFixed(1)}%
+              <text x={x + barW / 2} y={chartH - barH - 7} textAnchor="middle"
+                fill="#C8D4E4" fontFamily="IBM Plex Mono" fontSize="10">{val.toFixed(1)}%
               </text>
             )}
-            <text x={x + barW / 2} y={chartH + 16} textAnchor="middle"
-              fill="#9BA5B7" fontFamily="IBM Plex Mono" fontSize="9">{seg.label}
+            <text x={x + barW / 2} y={chartH + 18} textAnchor="middle"
+              fill="#A8B4C5" fontFamily="IBM Plex Mono" fontSize="10">{seg.label}
             </text>
           </g>
         )
       })}
-      <line x1={padL} y1={chartH} x2={padL + totalW} y2={chartH} stroke="#2a3044" strokeWidth={1} />
+      <line x1={padL} y1={chartH} x2={padL + totalW} y2={chartH} stroke="#232940" strokeWidth={1} />
     </svg>
   )
 }
@@ -226,13 +259,13 @@ function HouseholdTypeChart({ householdTypes, loading }: {
   const circ = 2 * Math.PI * r
 
   if (loading || !householdTypes) {
-    return <div style={{ width: 200, height: 200, borderRadius: '50%', background: '#1e2433', animation: 'pulse 1.5s ease-in-out infinite' }} />
+    return <div style={{ width: 200, height: 200, borderRadius: '50%', background: 'rgba(255,255,255,0.05)', animation: 'pulse 1.5s ease-in-out infinite' }} />
   }
 
   let cumPct = 0
   return (
     <svg width="200" height="200" viewBox="0 0 200 200" style={{ flexShrink: 0 }}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e2433" strokeWidth={sw} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e2b3c" strokeWidth={sw} />
       {HH_SEGS.filter(s => (householdTypes[s.key] ?? 0) > 0.3).map(seg => {
         const pct = (householdTypes[seg.key] ?? 0) / 100
         const rotation = cumPct * 360 - 90
@@ -245,9 +278,9 @@ function HouseholdTypeChart({ householdTypes, loading }: {
           />
         )
       })}
-      <circle cx={cx} cy={cy} r={54} fill="#13161f" />
-      <text x={cx} y={cy + 4} textAnchor="middle" fill="#6B7689"
-        fontFamily="'IBM Plex Mono', monospace" fontSize="9" letterSpacing="1.5">
+      <circle cx={cx} cy={cy} r={54} fill="#0f1219" />
+      <text x={cx} y={cy + 5} textAnchor="middle" fill="#8A98AE"
+        fontFamily="'IBM Plex Mono', monospace" fontSize="11" letterSpacing="1.5">
         HH TYPE
       </text>
     </svg>
@@ -275,35 +308,46 @@ export default function DemographicsPage() {
     <>
       <style>{`
         .zip-select {
-          background: #13161f; border: 1px solid #1e2433; color: #F0F2F7;
-          padding: 8px 32px 8px 14px; font-family: 'IBM Plex Mono', monospace;
-          font-size: 12px; letter-spacing: 0.04em; cursor: pointer; outline: none;
-          appearance: none; -webkit-appearance: none; min-width: 220px;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid #232940;
+          color: #F0F2F7;
+          padding: 9px 36px 9px 14px;
+          font-family: 'IBM Plex Mono', monospace;
+          font-size: 13px;
+          letter-spacing: 0.04em;
+          cursor: pointer;
+          outline: none;
+          appearance: none;
+          -webkit-appearance: none;
+          min-width: 240px;
           background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23E8B84B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-          background-repeat: no-repeat; background-position: right 12px center;
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+          transition: border-color 0.15s ease;
         }
         .zip-select:hover, .zip-select:focus { border-color: #E8B84B; }
         .zip-select option { background: #13161f; color: #F0F2F7; }
       `}</style>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
-        <div style={{ padding: '36px 32px', maxWidth: '1440px', margin: '0 auto' }}>
+        <div style={{ padding: '40px 32px', maxWidth: '1440px', margin: '0 auto' }}>
 
           {/* Header */}
           <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '36px' }}>
             <div>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.22em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '10px' }}>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '12px' }}>
                 Dashboard · Demographics
               </div>
               <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px, 4vw, 52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#F0F2F7' }}>
                 Demographic<br />Profile
               </h1>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6B7689', letterSpacing: '0.1em', marginTop: '10px', textTransform: 'uppercase' as const }}>
+              <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #E8B84B, rgba(232,184,75,0))', marginTop: '16px' }} />
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.08em', marginTop: '12px', textTransform: 'uppercase' as const }}>
                 ZIP-Level Demographic Breakdown
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#6B7689', letterSpacing: '0.12em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>
                 Select ZIP Code
               </div>
               <select className="zip-select" value={selectedZip} onChange={e => setSelectedZip(e.target.value)}>
@@ -312,7 +356,7 @@ export default function DemographicsPage() {
                 ))}
               </select>
               {data && (
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#6B7689', letterSpacing: '0.08em', marginTop: '6px' }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.06em', marginTop: '7px' }}>
                   Updated {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </div>
               )}
@@ -353,7 +397,7 @@ export default function DemographicsPage() {
           </div>
 
           {/* Second stat row */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '36px' }}>
+          <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '36px' }}>
             <StatCard
               label="Avg Household Size"
               value={data ? `${data.avgHouseholdSize}` : '—'}
@@ -378,20 +422,19 @@ export default function DemographicsPage() {
             />
           </div>
 
-          {/* Charts */}
-          <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '36px' }}>
+          {/* Charts — Race / Ethnicity + Education */}
+          <div className="fade-up-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '36px' }}>
 
-            {/* Race / Ethnicity */}
-            <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
+            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
               <SectionHeader eyebrow="U.S. Census Bureau · ACS 2023" title="Race / Ethnicity" />
               <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }}>
                 <DonutChart race={data?.race ?? null} loading={loading} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
                   {RACE_SEGS.map(seg => (
                     <div key={seg.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{ width: 10, height: 10, borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#9BA5B7', flex: 1 }}>{seg.label}</span>
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', fontWeight: 600 }}>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#A8B4C5', flex: 1 }}>{seg.label}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '13px', color: '#F0F2F7', fontWeight: 600 }}>
                         {loading ? '—' : `${(data?.race?.[seg.key] ?? 0).toFixed(1)}%`}
                       </span>
                     </div>
@@ -400,8 +443,7 @@ export default function DemographicsPage() {
               </div>
             </div>
 
-            {/* Educational Attainment */}
-            <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
+            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
               <SectionHeader eyebrow="Adults 25+ · ACS 5-Year" title="Educational Attainment" />
               <EducationChart education={data?.education ?? null} loading={loading} />
             </div>
@@ -410,23 +452,23 @@ export default function DemographicsPage() {
           {/* Age Distribution + Household Type */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
 
-            <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
+            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
               <SectionHeader eyebrow="U.S. Census Bureau · ACS 2023" title="Age Distribution" />
               <div style={{ overflowX: 'auto' }}>
                 <AgeChart ageDistribution={data?.ageDistribution ?? null} loading={loading} />
               </div>
             </div>
 
-            <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px' }}>
+            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
               <SectionHeader eyebrow="U.S. Census Bureau · ACS 2023" title="Household Type" />
               <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }}>
                 <HouseholdTypeChart householdTypes={data?.householdTypes ?? null} loading={loading} />
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
                   {HH_SEGS.map(seg => (
                     <div key={seg.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{ width: 10, height: 10, borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', flex: 1 }}>{seg.label}</span>
-                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#F0F2F7', fontWeight: 600 }}>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#A8B4C5', flex: 1 }}>{seg.label}</span>
+                      <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '13px', color: '#F0F2F7', fontWeight: 600 }}>
                         {loading || !data?.householdTypes ? '—' : `${(data.householdTypes[seg.key] ?? 0).toFixed(1)}%`}
                       </span>
                     </div>
@@ -437,14 +479,14 @@ export default function DemographicsPage() {
           </div>
 
           {/* Detail row */}
-          <div style={{ background: '#13161f', border: '1px solid #1e2433', padding: '24px', marginBottom: '36px' }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#9BA5B7', marginBottom: '16px', paddingBottom: '12px', borderBottom: '1px solid #1a1f2e' }}>
+          <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px', marginBottom: '40px' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '16px', paddingBottom: '14px', borderBottom: '1px solid #1e2b3c' }}>
               ZIP {selectedZip} · Full Profile · U.S. Census Bureau ACS 2023
             </div>
             {loading ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                 {Array.from({ length: 6 }).map((_, i) => (
-                  <div key={i} style={{ height: '18px', background: '#1e2433', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${i * 0.08}s` }} />
+                  <div key={i} style={{ height: '18px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${i * 0.08}s` }} />
                 ))}
               </div>
             ) : data ? (
@@ -457,9 +499,9 @@ export default function DemographicsPage() {
                   ['Median Home Value', fmt(data.medianHomeValue, 'currency')],
                   ['Unemployment Rate', `${data.unemploymentRate}%`],
                 ].map(([label, value]) => (
-                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '11px 16px 11px 0', borderBottom: '1px solid #1a1f2e' }}>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#9BA5B7' }}>{label}</span>
-                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', fontWeight: 600 }}>{value}</span>
+                  <div key={label} style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 16px 12px 0', borderBottom: '1px solid #1e2b3c' }}>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#A8B4C5' }}>{label}</span>
+                    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '13px', color: '#F0F2F7', fontWeight: 600 }}>{value}</span>
                   </div>
                 ))}
               </div>
@@ -467,11 +509,11 @@ export default function DemographicsPage() {
           </div>
 
           {/* Footer */}
-          <div style={{ borderTop: '1px solid #1a1f2e', paddingTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3a4154', letterSpacing: '0.08em' }}>
+          <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
               Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · api.census.gov
             </span>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3a4154', letterSpacing: '0.08em' }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
               Lakepointe Church · Community Intelligence Platform · Internal Use Only
             </span>
           </div>

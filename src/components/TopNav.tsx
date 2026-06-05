@@ -17,31 +17,31 @@ export default function TopNav() {
 
   return (
     <div style={{
-      borderBottom: '1px solid #1a1f2e',
+      borderBottom: '1px solid #1e2b3c',
       padding: '0 32px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
-      height: '54px',
-      background: 'rgba(13,15,20,0.96)',
+      height: '60px',
+      background: 'rgba(13,15,20,0.97)',
       position: 'sticky',
       top: 0,
       zIndex: 100,
-      backdropFilter: 'blur(12px)',
+      backdropFilter: 'blur(16px)',
       gap: '16px',
     }}>
       {/* Brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
         <div style={{
           fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: '20px', letterSpacing: '0.1em', color: '#E8B84B',
+          fontSize: '21px', letterSpacing: '0.1em', color: '#E8B84B',
         }}>
           LAKEPOINTE
         </div>
-        <div style={{ width: '1px', height: '18px', background: '#1e2433' }} />
+        <div style={{ width: '1px', height: '18px', background: '#232940' }} />
         <div style={{
           fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: '9px', letterSpacing: '0.18em', color: '#6B7689',
+          fontSize: '10px', letterSpacing: '0.16em', color: '#8A98AE',
           textTransform: 'uppercase' as const,
         }}>
           Community Intelligence
@@ -49,23 +49,37 @@ export default function TopNav() {
       </div>
 
       {/* Nav links */}
-      <nav style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+      <nav style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
         {NAV_ITEMS.map(({ label, href }) => {
           const active = pathname === href
           return (
             <Link
               key={href}
               href={href}
-              style={{
+              className={active ? '' : 'nav-link-item'}
+              style={active ? {
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: '10px', letterSpacing: '0.12em',
+                fontSize: '11px',
+                letterSpacing: '0.1em',
                 textTransform: 'uppercase' as const,
-                color: active ? '#E8B84B' : '#6B7689',
-                padding: '6px 2px',
-                borderBottom: active ? '2px solid #E8B84B' : '2px solid transparent',
-                transition: 'all 0.15s ease',
-                whiteSpace: 'nowrap' as const,
                 textDecoration: 'none',
+                whiteSpace: 'nowrap' as const,
+                color: '#E8B84B',
+                background: 'rgba(232,184,75,0.12)',
+                padding: '5px 10px',
+                borderRadius: '4px',
+                border: '1px solid rgba(232,184,75,0.2)',
+                transition: 'all 0.15s ease',
+              } : {
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '11px',
+                letterSpacing: '0.1em',
+                textTransform: 'uppercase' as const,
+                textDecoration: 'none',
+                whiteSpace: 'nowrap' as const,
+                color: '#8A98AE',
+                padding: '5px 10px',
+                transition: 'all 0.15s ease',
               }}
             >
               {label}
@@ -77,7 +91,7 @@ export default function TopNav() {
       {/* Right badge */}
       <div style={{
         fontFamily: "'IBM Plex Mono', monospace",
-        fontSize: '9px', color: '#6B7689', letterSpacing: '0.1em', flexShrink: 0,
+        fontSize: '10px', color: '#5a6478', letterSpacing: '0.1em', flexShrink: 0,
       }}>
         DFW · 2026
       </div>
