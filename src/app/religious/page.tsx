@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState, useRef } from 'react'
-import TopNav from '@/components/TopNav'
 import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -137,11 +136,13 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (z: string)
 function FaithBar({ counts, total }: { counts: { ntee_category: string; count: number }[]; total: number }) {
   const padTop = 22
   const W = 500, barH = 22, gap = 10
+  const BAR_MAX = 250   // max bar pixel width; label column starts at 375
+  const LABEL_X = 375
   const maxCount = Math.max(...counts.map(c => c.count), 1)
   const H = padTop + counts.length * (barH + gap)
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} style={{ overflow: 'visible' }}>
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`}>
       <defs>
         {counts.map((c, i) => {
           const color = FAITH_COLORS[c.ntee_category] ?? '#8A98AE'
@@ -155,7 +156,7 @@ function FaithBar({ counts, total }: { counts: { ntee_category: string; count: n
       </defs>
       {counts.map((c, i) => {
         const y     = padTop + i * (barH + gap)
-        const barW  = total > 0 ? Math.max(2, (c.count / maxCount) * (W - 140)) : 0
+        const barW  = total > 0 ? Math.max(2, (c.count / maxCount) * BAR_MAX) : 0
         const color = FAITH_COLORS[c.ntee_category] ?? '#8A98AE'
         const pct   = total > 0 ? ((c.count / total) * 100).toFixed(1) : '0.0'
         return (
@@ -164,7 +165,7 @@ function FaithBar({ counts, total }: { counts: { ntee_category: string; count: n
               fontFamily="'IBM Plex Mono', monospace" fill="#A8B4C5">{c.ntee_category}</text>
             <rect x={110} y={y} width={Math.max(barW, 1)} height={barH}
               rx={3} fill={`url(#fg-${i})`} />
-            <text x={115 + barW} y={y + barH - 6} fontSize={11}
+            <text x={LABEL_X} y={y + barH - 6} fontSize={11}
               fontFamily="'IBM Plex Mono', monospace" fill={color}>
               {c.count} <tspan fill="#5a6478">({pct}%)</tspan>
             </text>
@@ -248,8 +249,6 @@ export default function ReligiousPage() {
         .org-row:hover { background: rgba(255,255,255,0.03) !important; }
       `}</style>
 
-      <TopNav />
-
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
 
         {/* Header */}
@@ -280,7 +279,7 @@ export default function ReligiousPage() {
           </div>
         )}
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 40 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 32, marginBottom: 40, alignItems: 'start' }}>
 
           {/* DFW Faith Distribution */}
           {overview && (
@@ -306,20 +305,24 @@ export default function ReligiousPage() {
                     ))}
                   </tr>
                 </thead>
-                <tbody>
-                  {overview.topIslamicZips.map((row, i) => {
-                    const area = ZIP_GROUPS.flatMap(g => g.zips).find(z => z.zip === row.zip)?.label ?? '—'
-                    return (
-                      <tr key={row.zip} className="org-row" style={{ cursor: 'pointer', borderBottom: '1px solid #1a1f2e' }}
-                        onClick={() => setZip(row.zip)}>
-                        <td style={{ padding: '8px 8px', color: '#E8B84B' }}>{row.zip}</td>
-                        <td style={{ padding: '8px 8px', color: '#A8B4C5' }}>{area}</td>
-                        <td style={{ padding: '8px 8px', textAlign: 'right', color: '#2DD4BF' }}>{row.count}</td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
               </table>
+              <div className="zip-scroll" style={{ maxHeight: 280, overflowY: 'auto' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'IBM Plex Mono', monospace", fontSize: 12 }}>
+                  <tbody>
+                    {overview.topIslamicZips.map((row) => {
+                      const area = ZIP_GROUPS.flatMap(g => g.zips).find(z => z.zip === row.zip)?.label ?? '—'
+                      return (
+                        <tr key={row.zip} className="org-row" style={{ cursor: 'pointer', borderBottom: '1px solid #1a1f2e' }}
+                          onClick={() => setZip(row.zip)}>
+                          <td style={{ padding: '8px 8px', color: '#E8B84B' }}>{row.zip}</td>
+                          <td style={{ padding: '8px 8px', color: '#A8B4C5' }}>{area}</td>
+                          <td style={{ padding: '8px 8px', textAlign: 'right', color: '#2DD4BF' }}>{row.count}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+              </div>
               <div style={{ fontSize: 10, color: '#5a6478', marginTop: 12, fontFamily: "'IBM Plex Mono', monospace" }}>Click a ZIP to explore</div>
             </div>
           )}
