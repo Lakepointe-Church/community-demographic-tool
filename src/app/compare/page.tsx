@@ -264,6 +264,7 @@ export default function ComparePage() {
   const [selected, setSelected] = useState<Set<string>>(new Set(INITIAL))
   const [zipData, setZipData] = useState<ZipData[]>([])
   const [loading, setLoading] = useState(true)
+  const [zipExpanded, setZipExpanded] = useState(false)
 
   const fetchData = useCallback((zips: string[]) => {
     if (!zips.length) { setZipData([]); setLoading(false); return }
@@ -381,56 +382,104 @@ export default function ComparePage() {
                 </div>
               </div>
             </div>
-            <div className="zip-scroll" style={{ maxHeight: '360px', overflowY: 'auto', paddingRight: '4px' }}>
-              {ZIP_GROUPS.map(group => (
-                <div key={group.label} style={{ marginBottom: '14px' }}>
-                  <div style={{
-                    fontFamily: "'IBM Plex Mono', monospace",
-                    fontSize: '9px',
-                    color: '#5a6478',
-                    letterSpacing: '0.15em',
-                    textTransform: 'uppercase' as const,
-                    padding: '0 0 5px 2px',
-                    borderBottom: '1px solid #1e2b3c',
-                    marginBottom: '6px',
-                  }}>
-                    {group.label}
+            <div style={{ position: 'relative' }}>
+              <div
+                className="zip-scroll"
+                style={{
+                  maxHeight: zipExpanded ? '360px' : '120px',
+                  overflowY: zipExpanded ? 'auto' : 'hidden',
+                  paddingRight: '4px',
+                  transition: 'max-height 0.25s ease',
+                }}
+              >
+                {ZIP_GROUPS.map(group => (
+                  <div key={group.label} style={{ marginBottom: '14px' }}>
+                    <div style={{
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: '9px',
+                      color: '#5a6478',
+                      letterSpacing: '0.15em',
+                      textTransform: 'uppercase' as const,
+                      padding: '0 0 5px 2px',
+                      borderBottom: '1px solid #1e2b3c',
+                      marginBottom: '6px',
+                    }}>
+                      {group.label}
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '5px' }}>
+                      {group.zips.map(({ zip, label }) => {
+                        const campus = CAMPUS_ZIPS[zip]
+                        return (
+                          <button
+                            key={zip}
+                            className={`zip-toggle${selected.has(zip) ? ' active' : ''}`}
+                            onClick={() => toggle(zip)}
+                          >
+                            <span className="check">
+                              {selected.has(zip) && (
+                                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                                  <path d="M1 4l3 3 5-6" stroke="#0d0f14" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                </svg>
+                              )}
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              {campus && (
+                                <span style={{
+                                  width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                                  background: campus === 'existing' ? '#E8B84B' : 'transparent',
+                                  border: campus === 'soon' ? '1.5px solid #E8B84B' : 'none',
+                                  boxShadow: campus === 'existing' ? '0 0 4px rgba(232,184,75,0.4)' : 'none',
+                                }} />
+                              )}
+                              <span style={{ color: selected.has(zip) ? '#2DD4BF' : '#A8B4C5', marginRight: '4px' }}>{zip}</span>
+                              <span style={{ color: selected.has(zip) ? '#C8D4E4' : '#8A98AE', fontSize: '10px' }}>{label}</span>
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', gap: '5px' }}>
-                    {group.zips.map(({ zip, label }) => {
-                      const campus = CAMPUS_ZIPS[zip]
-                      return (
-                        <button
-                          key={zip}
-                          className={`zip-toggle${selected.has(zip) ? ' active' : ''}`}
-                          onClick={() => toggle(zip)}
-                        >
-                          <span className="check">
-                            {selected.has(zip) && (
-                              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                <path d="M1 4l3 3 5-6" stroke="#0d0f14" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                              </svg>
-                            )}
-                          </span>
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            {campus && (
-                              <span style={{
-                                width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                                background: campus === 'existing' ? '#E8B84B' : 'transparent',
-                                border: campus === 'soon' ? '1.5px solid #E8B84B' : 'none',
-                                boxShadow: campus === 'existing' ? '0 0 4px rgba(232,184,75,0.4)' : 'none',
-                              }} />
-                            )}
-                            <span style={{ color: selected.has(zip) ? '#2DD4BF' : '#A8B4C5', marginRight: '4px' }}>{zip}</span>
-                            <span style={{ color: selected.has(zip) ? '#C8D4E4' : '#8A98AE', fontSize: '10px' }}>{label}</span>
-                          </span>
-                        </button>
-                      )
-                    })}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
+              {/* Gradient fade when collapsed */}
+              {!zipExpanded && (
+                <div style={{
+                  position: 'absolute', bottom: 0, left: 0, right: 0, height: '52px',
+                  background: 'linear-gradient(to bottom, transparent, rgba(13,15,20,0.97))',
+                  pointerEvents: 'none',
+                }} />
+              )}
             </div>
+            {/* Expand / collapse toggle */}
+            <button
+              onClick={() => setZipExpanded(v => !v)}
+              style={{
+                width: '100%',
+                background: 'transparent',
+                border: 'none',
+                borderTop: '1px solid #1e2b3c',
+                color: '#5a6478',
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '10px',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase' as const,
+                padding: '10px',
+                cursor: 'pointer',
+                marginTop: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'color 0.15s ease',
+              }}
+              onMouseEnter={e => (e.currentTarget.style.color = '#A8B4C5')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#5a6478')}
+            >
+              {zipExpanded
+                ? <>&#9650; Collapse</>
+                : <>{`Show all ${DFW_ZIPS.length} ZIPs`} &#9660;</>
+              }
+            </button>
           </div>
 
           {/* Combined Stats */}
