@@ -26,11 +26,12 @@ export function InfoTooltip({ text, placement = 'above-center' }: {
         <div style={{
           ...popoverStyle,
           width: '230px',
-          background: '#0d0f14',
-          border: '1px solid #232940',
+          background: '#13161f',
+          border: '1px solid #2a3450',
+          borderRadius: '6px',
           padding: '10px 12px',
-          zIndex: 999,
-          boxShadow: '0 4px 24px rgba(0,0,0,0.75)',
+          zIndex: 1000,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.85)',
           pointerEvents: 'none',
         }}>
           <p style={{

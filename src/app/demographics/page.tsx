@@ -93,7 +93,7 @@ function StatCard({ label, value, sub, accent = 'gold', loading = false, tooltip
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color }} />
       {tooltip && (
-        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1 }}>
+        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 50 }}>
           <InfoTooltip text={tooltip} placement="below-right" />
         </div>
       )}
@@ -159,7 +159,7 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
       <button
         onClick={() => setOpen(v => !v)}
         style={{
-          background: open ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.03)',
+          background: '#13161f',
           border: `1px solid ${open ? '#E8B84B' : '#232940'}`,
           color: '#F0F2F7',
           padding: '9px 36px 9px 14px',
@@ -175,6 +175,7 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
           position: 'relative',
           textAlign: 'left',
           transition: 'border-color 0.15s ease',
+          borderRadius: '4px',
         }}
       >
         {selectedCampus && <CampusDot status={selectedCampus} size={7} />}
@@ -714,8 +715,9 @@ export default function DemographicsPage() {
                 </div>
               </div>
             )}
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.06em', marginTop: '16px' }}>
-              Source: U.S. Dept. of Education College Scorecard · collegescorecard.ed.gov
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.06em', marginTop: '16px', lineHeight: 1.7 }}>
+              Source: U.S. Dept. of Education College Scorecard · collegescorecard.ed.gov<br />
+              — indicates data not reported: applies to vocational/trade schools (no 4-yr program) or institutions below Scorecard disclosure threshold
             </div>
           </div>
 
