@@ -497,7 +497,7 @@ export default function DemographicsPage() {
         <div style={{ padding: '40px 32px', maxWidth: '1440px', margin: '0 auto' }}>
 
           {/* Header */}
-          <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '36px' }}>
+          <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '36px', position: 'relative', zIndex: 20 }}>
             <div>
               <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '12px' }}>
                 Dashboard · Demographics
