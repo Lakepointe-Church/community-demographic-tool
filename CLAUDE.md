@@ -15,7 +15,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/demographics` | ✅ | Per-ZIP: 8 stat cards, race donut, education bars, age bars, household type donut |
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | 🔲 | Not built |
-| `/religious` | 🔲 | Not built |
+| `/religious` | ✅ | DFW religious landscape: stat cards, faith distribution bar chart, top Islamic ZIPs table, per-ZIP org breakdown, Islamic org panel with ruling year + NEW badge |
 | `/employers` | 🔲 | Not built |
 | `/site-scorer` | 🔲 | Not built |
 
@@ -25,6 +25,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 - **FRED** — DFW metro population + housing permits
 - **College Scorecard** — `/api/scorecard?zip=&radius=` direct API call (not cached)
 - **Census TIGERweb** — ZCTA polygon boundaries for Mapbox map (24hr server cache)
+- **IRS BMF (NTEE X)** — DFW religious orgs from `eo_tx.csv`; 7,040 orgs loaded via `scripts/import-bmf.ts`. Refresh: re-run script (IRS publishes monthly)
 
 ## Architecture
 
@@ -40,6 +41,7 @@ External APIs (Census, BLS, FRED)
   /api/bls                    ← metro stats
   /api/fred                   ← metro stats
   /api/overview               ← aggregates all ZIPs + computes weighted averages
+  /api/religious              ← DFW overview stats + per-ZIP orgs (reads religious_orgs table)
         ↓
   Next.js pages (client components fetch on load)
 ```
@@ -47,9 +49,13 @@ External APIs (Census, BLS, FRED)
 ## Database schema
 
 **`zip_demographics`** — one row per ZIP, upserted on refresh
-Key columns: `zip`, `population`, `population_2020`, `population_growth`, `median_household_income`, `median_home_value`, `total_households`, `avg_household_size`, `hh_with_children_pct`, `unemployment_rate`, `bachelors_rate`, `ses_label`, `ses_score`, `race_*`, `edu_*`, `age_*`, `hh_married_with_children`, `hh_married_no_children`, `hh_single_parent`, `hh_living_alone`, `hh_other_type`, `income_lt25k` through `income_150k_plus`, `updated_at`
+Key columns: `zip`, `population`, `population_2020`, `population_growth` (NUMERIC(8,1) — widened to handle extreme rural growth rates), `median_household_income`, `median_home_value`, `total_households`, `avg_household_size`, `hh_with_children_pct`, `unemployment_rate`, `bachelors_rate`, `ses_label`, `ses_score`, `race_*`, `edu_*`, `age_*`, `hh_married_with_children`, `hh_married_no_children`, `hh_single_parent`, `hh_living_alone`, `hh_other_type`, `income_lt25k` through `income_150k_plus`, `updated_at`
 
 **`metro_stats`** — single row (id=1), BLS + FRED metro data
+
+**`religious_orgs`** — one row per EIN, loaded via `scripts/import-bmf.ts`
+Columns: `ein` (PK), `name`, `street`, `city`, `state`, `zip`, `ntee_cd`, `ntee_category` (Christian/Islamic/Jewish/Hindu/Buddhist/Unitarian/Other), `ntee_label`, `ruling_year`, `status`, `subsection`, `updated_at`
+Indexes: `idx_religious_orgs_zip`, `idx_religious_orgs_ntee`
 
 ## SES class scoring
 Composite 0–100 score: income (50%) + bachelor's rate (30%) + home value (20%)
@@ -89,8 +95,8 @@ border: '1px solid rgba(232,184,75,0.2)'
 Inactive links use `#8A98AE` with `.nav-link-item` CSS class (hover → `#C8D4E4`).
 
 ## ZIP coverage
-**169 ZIPs** across the full DFW metro as of last session. Defined in `src/lib/zips.ts`.
-Organized into: East Corridor · North DFW · Central · Denton County · Tarrant/Mid-Cities · Fort Worth Core · Arlington · Grand Prairie · Inner Garland · Dallas City · South Dallas Suburbs · Greenville/Hunt County · Suburban Fill
+**370 ZIPs** across the full DFW metro (75-mile radius from Dallas center). Defined in `src/lib/zips.ts`.
+30 groups: East Corridor · North Dallas · Central/Richardson · Irving/Las Colinas · Denton County · Tarrant/Mid-Cities · Fort Worth Suburbs · Fort Worth City Core · Grand Prairie · Garland · Dallas City · Dallas City Core · South Dallas Suburbs · Ellis County · Johnson County · Parker County · Wise County · Hood County · Cooke/Montague County · Collin County North · Grayson County · Fanin County · Hunt County · Kaufman County · Van Zandt/Rains County · Henderson County · Navarro County · Hill County · Hopkins/Wood County · Suburban Fill
 
 To add ZIPs: append to `src/lib/zips.ts`, then run `POST /api/refresh` from the dev server or production URL.
 
@@ -104,7 +110,7 @@ vercel env pull       # sync Neon + API keys from Vercel
 
 ## Refreshing data
 ```bash
-# Run from dev server (takes ~90s for 169 ZIPs)
+# Run from dev server (takes ~4–5 min for 370 ZIPs)
 curl -X POST http://localhost:3000/api/refresh
 
 # Or from production
@@ -130,18 +136,23 @@ DATABASE_URL=$(grep '^DATABASE_URL=' .env.local | cut -d'"' -f2) node -e "
 ## Key files
 ```
 src/lib/zips.ts              — ZIP list (edit here to add/remove ZIPs)
-src/lib/census.ts            — Census ACS fetch logic (all variables)
+src/lib/census.ts            — Census ACS fetch logic (all variables); handles sentinel values (-666666666 etc)
 src/lib/db.ts                — Neon client
-src/components/TopNav.tsx    — Shared nav with active-link routing
+src/components/TopNav.tsx    — Shared nav with active-link routing (do NOT also render in page files)
 src/components/MapboxChoropleth.tsx  — Mapbox choropleth map component
 src/app/page.tsx             — Overview page
 src/app/demographics/page.tsx
 src/app/compare/page.tsx
+src/app/religious/page.tsx   — Religious landscape page (IRS BMF data)
 src/app/api/refresh/route.ts — Populates all ZIP data in DB
 src/app/api/overview/route.ts — Aggregates all ZIPs for Overview page
 src/app/api/census/route.ts  — Single ZIP read from DB
 src/app/api/census/batch/route.ts — Multi-ZIP read (Compare page)
+src/app/api/religious/route.ts — DFW overview + per-ZIP orgs from religious_orgs table
 src/app/api/boundaries/route.ts — ZCTA polygon GeoJSON from TIGERweb
+scripts/import-bmf.ts        — One-time IRS BMF loader (re-run to refresh; IRS publishes monthly)
+scripts/find-missing-zips.ts — Census Gazetteer-based ZIP radius discovery tool
+scripts/label-missing-zips.ts — Fetches city names for unlabeled ZIPs via zippopotam.us
 ```
 
 ## Slash commands
@@ -171,7 +182,6 @@ These are the next APIs to wire in, from Paul's Technical Specification v1.1 (Ap
 |---|---|---|
 | **CDC PLACES** | `/community-needs` page | Health rates per ZIP: diabetes, obesity, smoking, uninsured. Socrata |
 | **CDC/ATSDR SVI** | `/community-needs` page | Social Vulnerability Index per ZIP |
-| **IRS BMF (NTEE X)** | `/religious` page | Geocoded churches/mosques/temples. Monthly download |
 | **CFPB Consumer Complaints** | `/community-needs` page | Financial stress by ZIP. Socrata |
 | **HMDA** | `/community-needs` page | Mortgage denial rates = financial health proxy |
 
