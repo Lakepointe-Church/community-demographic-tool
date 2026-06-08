@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { DFW_ZIPS } from '@/lib/zips'
+import { InfoTooltip } from '@/components/InfoTooltip'
 
 interface ZipData {
   zip: string
@@ -12,6 +13,9 @@ interface ZipData {
   totalHouseholds: number
   avgHouseholdSize: number | null
   hhWithChildrenPct: number | null
+  sesClass: { label: string; score: number }
+  yfi: number
+  wfi: number
   race: { white: number; hispanic: number; black: number; asian: number; other: number }
   incomeBrackets: { label: string; pct: number }[]
 }
@@ -23,6 +27,13 @@ function fmtK(n: number) {
   return n.toLocaleString()
 }
 
+function indexLabel(score: number): string {
+  if (score >= 75) return 'High'
+  if (score >= 50) return 'Moderate-High'
+  if (score >= 25) return 'Moderate-Low'
+  return 'Low'
+}
+
 const ACCENT_RGB: Record<string, string> = {
   gold: '232,184,75', blue: '78,174,255', coral: '255,107,107',
   teal: '45,212,191', purple: '167,139,250',
@@ -32,10 +43,11 @@ const CARD_SURFACE   = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(
 const INCOME_COLORS  = ['#8A98AE', '#FF6B6B', '#4EAEFF', '#2DD4BF', '#A78BFA', '#E8B84B']
 
 // ── Stat Card ────────────────────────────────────────────────────
-function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
+function StatCard({ label, value, sub, accent = 'gold', loading = false, tooltip }: {
   label: string; value: string; sub?: string
   accent?: 'gold' | 'blue' | 'coral' | 'teal' | 'purple'
   loading?: boolean
+  tooltip?: string
 }) {
   const [hovered, setHovered] = useState(false)
   const colors = { gold: '#E8B84B', blue: '#4EAEFF', coral: '#FF6B6B', teal: '#2DD4BF', purple: '#A78BFA' }
@@ -53,14 +65,14 @@ function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
         border: `1px solid ${hovered ? `rgba(${rgb},0.4)` : '#232940'}`,
         padding: '24px',
         position: 'relative' as const,
-        overflow: 'hidden',
         transition: 'background 0.2s ease, border-color 0.2s ease',
         cursor: 'default',
       }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color }} />
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px' }}>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
         {label}
+        {tooltip && <InfoTooltip text={tooltip} />}
       </div>
       {loading ? (
         <div style={{ height: '40px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
@@ -231,7 +243,14 @@ function computeStats(data: ZipData[]) {
     pct: parseFloat((data.reduce((s, d) => s + d.incomeBrackets[i].pct * d.totalHouseholds, 0) / totalHH).toFixed(1)),
   }))
 
-  return { totalPop, totalHH, wtdIncome, wtdGrowth, combinedHHWithChildren, avgHHSize, combinedRace, combinedIncome }
+  const wtdYFI = Math.round(
+    data.reduce((s, d) => s + d.yfi * d.population, 0) / totalPop
+  )
+  const wtdWFI = Math.round(
+    data.reduce((s, d) => s + d.wfi * d.population, 0) / totalPop
+  )
+
+  return { totalPop, totalHH, wtdIncome, wtdGrowth, combinedHHWithChildren, avgHHSize, combinedRace, combinedIncome, wtdYFI, wtdWFI }
 }
 
 // ── Page ─────────────────────────────────────────────────────────
@@ -262,6 +281,9 @@ export default function ComparePage() {
   }
 
   const stats = !loading && zipData.length ? computeStats(zipData) : null
+
+  const yfiAccent = (s: number) => s >= 75 ? 'teal' : s >= 50 ? 'blue' : s >= 25 ? 'gold' : 'coral'
+  const wfiAccent = (s: number) => s >= 75 ? 'blue' : s >= 50 ? 'teal' : s >= 25 ? 'gold' : 'coral'
 
   return (
     <>
@@ -377,32 +399,61 @@ export default function ComparePage() {
             </div>
           ) : (
             <>
-              {/* Stat Cards */}
-              <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '24px' }}>
+              {/* Stat Cards Row 1 */}
+              <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '12px' }}>
                 <StatCard
                   label="Combined Population"
                   value={stats ? fmtK(stats.totalPop) : '—'}
                   sub={`${selected.size} ZIP code${selected.size !== 1 ? 's' : ''}`}
                   accent="gold" loading={loading}
+                  tooltip="Sum of all selected ZIP populations. Source: Census B01001 ACS 2023."
                 />
                 <StatCard
                   label="WTD Avg Median HHI"
                   value={stats ? `$${fmtK(stats.wtdIncome)}` : '—'}
                   sub="Population-weighted average"
                   accent="blue" loading={loading}
+                  tooltip="Population-weighted average of median household income across selected ZIPs. Source: Census B19013 ACS 2023."
                 />
                 <StatCard
                   label="WTD Avg Growth"
                   value={stats?.wtdGrowth != null ? `${stats.wtdGrowth}%` : '—'}
                   sub="Since 2020 · Pop-weighted"
                   accent="teal" loading={loading}
+                  tooltip="Population-weighted average growth rate since the 2020 Census across selected ZIPs."
                 />
                 <StatCard
                   label="HH w/ Children (18-)"
                   value={stats?.combinedHHWithChildren != null ? `${stats.combinedHHWithChildren}%` : '—'}
                   sub={stats ? `Avg HH Size: ${stats.avgHHSize}` : 'of all households'}
                   accent="purple" loading={loading}
+                  tooltip="HH-weighted average of households with own children under 18 across selected ZIPs. Source: Census B11005."
                 />
+              </div>
+
+              {/* Stat Cards Row 2 — Lakepointe Indexes */}
+              <div className="fade-up-3" style={{ marginBottom: '24px' }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.2em', color: '#5a6478', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
+                  Lakepointe Indexes
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                  <StatCard
+                    label="Avg Young Family Index"
+                    value={stats ? `${stats.wtdYFI}` : '—'}
+                    sub={stats ? `${indexLabel(stats.wtdYFI)} · /100 · Pop-weighted` : 'Composite index'}
+                    accent={stats ? yfiAccent(stats.wtdYFI) as 'teal' | 'blue' | 'gold' | 'coral' : 'teal'}
+                    loading={loading}
+                    tooltip="Population-weighted average Young Family Index across selected ZIPs. YFI = % under-18 (40%) + % family HH with children (40%) + avg HH size (20%). Derived from ACS 2023."
+                  />
+                  <StatCard
+                    label="Avg Working Family Index"
+                    value={stats ? `${stats.wtdWFI}` : '—'}
+                    sub={stats ? `${indexLabel(stats.wtdWFI)} · /100 · Pop-weighted` : 'Composite index'}
+                    accent={stats ? wfiAccent(stats.wtdWFI) as 'blue' | 'teal' | 'gold' | 'coral' : 'blue'}
+                    loading={loading}
+                    tooltip="Population-weighted average Working Family Index across selected ZIPs. WFI = working-parent HH rate (50%) + employment rate (30%) + % households earning $100K+ (20%). Derived from ACS 2023."
+                  />
+                </div>
               </div>
 
               {/* Charts */}
@@ -453,22 +504,34 @@ export default function ComparePage() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ display: 'grid', gridTemplateColumns: '80px 1fr repeat(4, 120px)', gap: '0' }}>
-                    {['ZIP', 'Name', 'Population', 'Median HHI', 'Growth', 'Race Mix'].map(h => (
-                      <div key={h} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '8px 12px 12px 0', borderBottom: '1px solid #232940' }}>{h}</div>
-                    ))}
-                    {zipData.map(d => [
-                      d.zip,
-                      d.name.replace('ZCTA5 ', ''),
-                      d.population.toLocaleString(),
-                      `$${fmtK(d.medianHouseholdIncome)}`,
-                      d.populationGrowth != null ? `↑ ${d.populationGrowth}%` : '—',
-                      `${d.race.white.toFixed(0)}% W · ${d.race.hispanic.toFixed(0)}% H`,
-                    ].map((cell, j) => (
-                      <div key={j} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: j === 0 ? '#2DD4BF' : '#F0F2F7', padding: '11px 12px 11px 0', borderBottom: '1px solid #1e2b3c', letterSpacing: j === 4 ? '0' : '0.02em' }}>
-                        {cell}
-                      </div>
-                    )))}
+                  <div style={{ overflowX: 'auto' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 90px 100px 70px 120px 105px 52px 52px', gap: '0', minWidth: '800px' }}>
+                      {['ZIP', 'Name', 'Population', 'Median HHI', 'Growth', 'Race Mix', 'SES Class', 'YFI', 'WFI'].map(h => (
+                        <div key={h} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '8px 12px 12px 0', borderBottom: '1px solid #232940' }}>{h}</div>
+                      ))}
+                      {zipData.map(d => [
+                        d.zip,
+                        d.name.replace('ZCTA5 ', ''),
+                        d.population.toLocaleString(),
+                        `$${fmtK(d.medianHouseholdIncome)}`,
+                        d.populationGrowth != null ? `↑ ${d.populationGrowth}%` : '—',
+                        `${d.race.white.toFixed(0)}% W · ${d.race.hispanic.toFixed(0)}% H`,
+                        d.sesClass?.label ?? '—',
+                        String(d.yfi ?? '—'),
+                        String(d.wfi ?? '—'),
+                      ].map((cell, j) => (
+                        <div key={j} style={{
+                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontSize: '12px',
+                          color: j === 0 ? '#2DD4BF' : j >= 7 ? '#A78BFA' : '#F0F2F7',
+                          padding: '11px 12px 11px 0',
+                          borderBottom: '1px solid #1e2b3c',
+                          letterSpacing: '0.02em',
+                        }}>
+                          {cell}
+                        </div>
+                      )))}
+                    </div>
                   </div>
                 )}
               </div>

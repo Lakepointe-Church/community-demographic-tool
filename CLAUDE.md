@@ -56,11 +56,37 @@ Composite 0–100 score: income (50%) + bachelor's rate (30%) + home value (20%)
 - Upper: 78–100 · Upper Middle: 58–77 · Middle: 40–57 · Lower Middle: 25–39 · Lower Income: 0–24
 
 ## Brand / design system
-- Background: `#0d0f14` · Surface: `#13161f` · Border: `#1e2433`
+- Background: `#0d0f14` · Surface: `#13161f` · Border: `#232940` · Border-sub: `#1e2b3c`
 - Gold (primary): `#E8B84B` · Blue: `#4EAEFF` · Teal: `#2DD4BF` · Coral: `#FF6B6B` · Purple: `#A78BFA`
+- Muted text: `#8A98AE` · Label text: `#A8B4C5` · Footer text: `#5a6478`
 - Fonts: Bebas Neue (display/numbers), IBM Plex Mono (labels/data), IBM Plex Sans (body)
 - No chart library — all charts are custom SVG inline in each page component
 - No UI component library — all inline styles
+
+### Stat card pattern (radial glow)
+```tsx
+// Default state
+background: `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.1) 0%, transparent 55%), linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)`
+border: `1px solid #232940`
+// Hovered state
+background: `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.22) 0%, transparent 60%), linear-gradient(145deg, rgba(${rgb},0.08) 0%, rgba(255,255,255,0.01) 100%)`
+border: `1px solid rgba(${rgb},0.4)`
+```
+`rgb` is a comma-separated RGB string e.g. `'232,184,75'` for gold.
+
+### Bar chart pattern (SVG, multi-color gradient bars)
+- `padTop = 22` — all y-coordinates offset by this amount to prevent label clipping in overflow containers
+- Per-bar `<linearGradient>` defs with unique IDs `bGrad-${i}` (or `ageGrad-${key}`, `incGrad-${i}`)
+- `barColors` prop accepts a `string[]` — one color per bar; gradient fades to `${color}80` at bottom
+- Age colors: `['#4EAEFF','#2DD4BF','#E8B84B','#A78BFA','#FF6B6B']`
+- Income colors: `['#8A98AE','#FF6B6B','#4EAEFF','#2DD4BF','#A78BFA','#E8B84B']`
+
+### Nav active pill
+```tsx
+background: 'rgba(232,184,75,0.12)', padding: '5px 10px', borderRadius: 4,
+border: '1px solid rgba(232,184,75,0.2)'
+```
+Inactive links use `#8A98AE` with `.nav-link-item` CSS class (hover → `#C8D4E4`).
 
 ## ZIP coverage
 **169 ZIPs** across the full DFW metro as of last session. Defined in `src/lib/zips.ts`.
@@ -117,6 +143,52 @@ src/app/api/census/route.ts  — Single ZIP read from DB
 src/app/api/census/batch/route.ts — Multi-ZIP read (Compare page)
 src/app/api/boundaries/route.ts — ZCTA polygon GeoJSON from TIGERweb
 ```
+
+## Slash commands
+- `/ship` — stage modified files, commit, push to origin main (triggers Vercel deploy)
+- `/doc` — review key files and update this CLAUDE.md to reflect current state
+
+## Planned next data sources (ordered by priority)
+These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).
+
+### High — free, no new keys needed
+| Source | What it unlocks | Notes |
+|---|---|---|
+| **YFI (Young Family Index)** | Site Scorer | Composite from ACS already in DB — no refresh needed |
+| **WFI (Working Family Index)** | Site Scorer | Same — all ACS variables already in DB |
+| **SES Classes view** | `/ses-classes` page | All data in DB — UI only |
+| **Census ZBP** | `/employers` page | Uses existing Census API key |
+| **BLS QCEW** | `/employers` page | Uses existing BLS key; pairs with ZBP |
+| **IRS SOI** | Site Scorer (tithe potential) | Annual download, no key |
+
+### High — free, nonprofit application in progress
+| Source | What it unlocks | Notes |
+|---|---|---|
+| **GreatSchools API** | Site Scorer | Nonprofit application required (~1–2 wk lead time) |
+
+### Medium — free, no key
+| Source | What it unlocks | Notes |
+|---|---|---|
+| **CDC PLACES** | `/community-needs` page | Health rates per ZIP: diabetes, obesity, smoking, uninsured. Socrata |
+| **CDC/ATSDR SVI** | `/community-needs` page | Social Vulnerability Index per ZIP |
+| **IRS BMF (NTEE X)** | `/religious` page | Geocoded churches/mosques/temples. Monthly download |
+| **CFPB Consumer Complaints** | `/community-needs` page | Financial stress by ZIP. Socrata |
+| **HMDA** | `/community-needs` page | Mortgage denial rates = financial health proxy |
+
+### Low — Phase 3 / paid / requires application
+PRRI, ARDA, Zillow, Data Axle, MissionInsite, County Appraisal Districts, NCTCOG
+
+## Lakepointe-specific indexes (from spec §9)
+**Young Family Index (YFI)** — composite 0–100
+- Young children share (B09001), family HH rate (B11003), fertility signal (B13016), HH size (B25010)
+
+**Working Family Index (WFI)** — composite 0–100
+- Dual-earner rate (B23007), working parent rate (B11003), commute burden (B08303), occupational diversity (C24010)
+
+**Lakepointe Fit Score** = YFI + WFI + SES alignment → feeds Site Scorer
+
+## Notion tracker
+Full task tracker (ordered by priority): https://www.notion.so/e94e55e73b55430bb9646e37600e4998
 
 ## Deployed
 - **Production**: https://community-demographic-tool.vercel.app

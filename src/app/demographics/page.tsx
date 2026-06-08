@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { DFW_ZIPS } from '@/lib/zips'
+import { InfoTooltip } from '@/components/InfoTooltip'
 
 interface CensusData {
   zip: string
@@ -16,6 +17,8 @@ interface CensusData {
   unemploymentRate: string
   bachelorsRate: string
   sesClass: { label: string; score: number }
+  yfi: number
+  wfi: number
   race: { white: number; hispanic: number; black: number; asian: number; other: number }
   education: { noHSDiploma: number; hsDiploma: number; someCollege: number; bachelorsPlus: number }
   ageDistribution: { age0_17: number; age18_34: number; age35_54: number; age55_74: number; age75plus: number } | null
@@ -37,6 +40,13 @@ function fmt(n: number, style: 'currency' | 'decimal' = 'decimal') {
   return n.toLocaleString()
 }
 
+function indexLabel(score: number): string {
+  if (score >= 75) return 'High'
+  if (score >= 50) return 'Moderate-High'
+  if (score >= 25) return 'Moderate-Low'
+  return 'Low'
+}
+
 const ACCENT_RGB: Record<string, string> = {
   gold: '232,184,75', blue: '78,174,255', coral: '255,107,107',
   teal: '45,212,191', purple: '167,139,250',
@@ -45,10 +55,11 @@ const ACCENT_RGB: Record<string, string> = {
 const CARD_SURFACE = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
 
 // ── Stat Card ────────────────────────────────────────────────────
-function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
+function StatCard({ label, value, sub, accent = 'gold', loading = false, tooltip }: {
   label: string; value: string; sub?: string
   accent?: 'gold' | 'blue' | 'coral' | 'teal' | 'purple'
   loading?: boolean
+  tooltip?: string
 }) {
   const [hovered, setHovered] = useState(false)
   const colors = { gold: '#E8B84B', blue: '#4EAEFF', coral: '#FF6B6B', teal: '#2DD4BF', purple: '#A78BFA' }
@@ -66,14 +77,14 @@ function StatCard({ label, value, sub, accent = 'gold', loading = false }: {
         border: `1px solid ${hovered ? `rgba(${rgb},0.4)` : '#232940'}`,
         padding: '24px',
         position: 'relative' as const,
-        overflow: 'hidden',
         transition: 'background 0.2s ease, border-color 0.2s ease',
         cursor: 'default',
       }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color }} />
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px' }}>
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
         {label}
+        {tooltip && <InfoTooltip text={tooltip} />}
       </div>
       {loading ? (
         <div style={{ height: '40px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
@@ -304,6 +315,9 @@ export default function DemographicsPage() {
 
   const selectedLabel = DFW_ZIPS.find(z => z.zip === selectedZip)?.label ?? selectedZip
 
+  const yfiAccent = (s: number) => s >= 75 ? 'teal' : s >= 50 ? 'blue' : s >= 25 ? 'gold' : 'coral'
+  const wfiAccent = (s: number) => s >= 75 ? 'blue' : s >= 50 ? 'teal' : s >= 25 ? 'gold' : 'coral'
+
   return (
     <>
       <style>{`
@@ -372,11 +386,13 @@ export default function DemographicsPage() {
                 ? `↑ ${data.populationGrowth}% since 2020`
                 : `ZIP ${selectedZip} · ${selectedLabel}`}
               accent="gold" loading={loading}
+              tooltip="ACS 5-Year 2023 population estimate. Growth % is vs. the 2020 Census count. Source: Census B01001."
             />
             <StatCard
               label="Median HH Income"
               value={data ? `$${fmtK(data.medianHouseholdIncome)}` : '—'}
               sub="ACS 5-Year Estimate" accent="blue" loading={loading}
+              tooltip="Median household income in the past 12 months, inflation-adjusted to 2023 dollars. Source: Census B19013."
             />
             <StatCard
               label="SES Class"
@@ -388,25 +404,29 @@ export default function DemographicsPage() {
                 data?.sesClass?.label === 'Middle' ? 'teal' : 'coral'
               }
               loading={loading}
+              tooltip="Composite 0–100: household income (50%), bachelor's+ rate (30%), median home value (20%). Bands: Upper 78+, Upper Middle 58–77, Middle 40–57, Lower Middle 25–39, Lower <25."
             />
             <StatCard
               label="HH w/ Children (18-)"
               value={data ? `${data.hhWithChildrenPct}%` : '—'}
               sub="of all households" accent="teal" loading={loading}
+              tooltip="Households with own children under 18 as a percent of all households. Source: Census B11005."
             />
           </div>
 
           {/* Second stat row */}
-          <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '36px' }}>
+          <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginBottom: '12px' }}>
             <StatCard
               label="Avg Household Size"
               value={data ? `${data.avgHouseholdSize}` : '—'}
               sub="persons per household" accent="purple" loading={loading}
+              tooltip="Average number of persons per occupied housing unit. Source: Census B25010."
             />
             <StatCard
               label="Median Home Value"
               value={data ? `$${fmtK(data.medianHomeValue)}` : '—'}
               sub="ACS 5-Year Estimate" accent="gold" loading={loading}
+              tooltip="Median value of owner-occupied housing units. Source: Census B25077."
             />
             <StatCard
               label="Unemployment Rate"
@@ -414,12 +434,39 @@ export default function DemographicsPage() {
               sub="Labor force basis · ACS"
               accent={parseFloat(data?.unemploymentRate ?? '0') > 5 ? 'coral' : 'teal'}
               loading={loading}
+              tooltip="Unemployed civilians as a percent of the total labor force. Source: Census B23025."
             />
             <StatCard
               label="Bachelor's Degree+"
               value={data?.bachelorsRate ? `${data.bachelorsRate}%` : '—'}
               sub="Adults 25+ · ACS" accent="blue" loading={loading}
+              tooltip="Adults 25+ with a bachelor's degree or higher as a percent of adults 25+. Source: Census B15003."
             />
+          </div>
+
+          {/* Lakepointe Indexes row */}
+          <div className="fade-up-3" style={{ marginBottom: '36px' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.2em', color: '#5a6478', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
+              Lakepointe Indexes
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+              <StatCard
+                label="Young Family Index"
+                value={data ? `${data.yfi}` : '—'}
+                sub={data ? `${indexLabel(data.yfi)} · /100` : 'Composite index'}
+                accent={data ? yfiAccent(data.yfi) as 'teal' | 'blue' | 'gold' | 'coral' : 'teal'}
+                loading={loading}
+                tooltip="Young Family Index (0–100): % population under 18 (40%) + % family households with children (40%) + avg household size (20%). Derived from ACS 2023 data."
+              />
+              <StatCard
+                label="Working Family Index"
+                value={data ? `${data.wfi}` : '—'}
+                sub={data ? `${indexLabel(data.wfi)} · /100` : 'Composite index'}
+                accent={data ? wfiAccent(data.wfi) as 'blue' | 'teal' | 'gold' | 'coral' : 'blue'}
+                loading={loading}
+                tooltip="Working Family Index (0–100): % working-parent households (50%) + employment rate (30%) + % households earning $100K+ (20%). Derived from ACS 2023 data."
+              />
+            </div>
           </div>
 
           {/* Charts — Race / Ethnicity + Education */}

@@ -20,6 +20,28 @@ export async function GET(request: NextRequest) {
     }
 
     const d = rows[0]
+
+    // Lakepointe index scores — computed from stored ACS columns
+    const iAge0_17    = d.age_0_17                 != null ? parseFloat(d.age_0_17)                 : 0
+    const iAvgHH      = d.avg_household_size        != null ? parseFloat(d.avg_household_size)        : 2.5
+    const iMwKids     = d.hh_married_with_children  != null ? parseFloat(d.hh_married_with_children)  : 0
+    const iSingle     = d.hh_single_parent          != null ? parseFloat(d.hh_single_parent)          : 0
+    const iFamilyHH   = iMwKids + iSingle
+    const iUnempl     = d.unemployment_rate         != null ? parseFloat(d.unemployment_rate)         : 5
+    const iInc100     = d.income_100_150k           != null ? parseFloat(d.income_100_150k)           : 0
+    const iInc150     = d.income_150k_plus          != null ? parseFloat(d.income_150k_plus)          : 0
+
+    const yfi = Math.round(
+      Math.min(100, (iAge0_17 / 30) * 100) * 0.40 +
+      Math.min(100, (iFamilyHH / 40) * 100) * 0.40 +
+      Math.min(100, Math.max(0, (iAvgHH - 1.5) / 2.0) * 100) * 0.20
+    )
+    const wfi = Math.round(
+      Math.min(100, (iFamilyHH / 40) * 100) * 0.50 +
+      Math.min(100, Math.max(0, (1 - iUnempl / 12) * 100)) * 0.30 +
+      Math.min(100, ((iInc100 + iInc150) / 40) * 100) * 0.20
+    )
+
     return NextResponse.json({
       zip: d.zip,
       name: d.name,
@@ -69,6 +91,8 @@ export async function GET(request: NextRequest) {
         livingAlone:         d.hh_living_alone          != null ? parseFloat(d.hh_living_alone)          : null,
         other:               d.hh_other_type            != null ? parseFloat(d.hh_other_type)            : null,
       },
+      yfi,
+      wfi,
       updatedAt: d.updated_at,
     })
   } catch (error) {
