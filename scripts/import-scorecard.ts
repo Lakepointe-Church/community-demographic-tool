@@ -103,6 +103,7 @@ async function main() {
       updated_at           TIMESTAMPTZ DEFAULT NOW()
     )
   `
+  await sql`ALTER TABLE colleges_cache ADD COLUMN IF NOT EXISTS zip       TEXT`
   await sql`ALTER TABLE colleges_cache ADD COLUMN IF NOT EXISTS latitude  NUMERIC(9,6)`
   await sql`ALTER TABLE colleges_cache ADD COLUMN IF NOT EXISTS longitude NUMERIC(9,6)`
   await sql`
