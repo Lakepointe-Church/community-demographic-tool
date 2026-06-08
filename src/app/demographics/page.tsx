@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { DFW_ZIPS } from '@/lib/zips'
+import { DFW_ZIPS, CAMPUS_ZIPS } from '@/lib/zips'
 import { InfoTooltip } from '@/components/InfoTooltip'
 
 interface CensusData {
@@ -25,6 +25,16 @@ interface CensusData {
   householdTypes: { marriedWithChildren: number; marriedNoChildren: number; singleParent: number; livingAlone: number; other: number } | null
   incomeBrackets: { label: string; pct: number }[]
   updatedAt: string
+}
+
+interface College {
+  name: string
+  city: string
+  state: string
+  enrollment: number | null
+  completionRate4yr: number | null
+  avgNetPrice: number | null
+  medianEarnings10yr: number | null
 }
 
 function fmtK(n: number) {
@@ -307,6 +317,8 @@ export default function DemographicsPage() {
   const [selectedZip, setSelectedZip] = useState<string>(DFW_ZIPS[0].zip)
   const [data, setData] = useState<CensusData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [colleges, setColleges] = useState<College[]>([])
+  const [collegesLoading, setCollegesLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
@@ -317,7 +329,17 @@ export default function DemographicsPage() {
       .catch(() => setLoading(false))
   }, [selectedZip])
 
+  useEffect(() => {
+    setCollegesLoading(true)
+    setColleges([])
+    fetch(`/api/scorecard?zip=${selectedZip}&radius=15`)
+      .then(r => r.json())
+      .then(d => { setColleges(d.schools ?? []); setCollegesLoading(false) })
+      .catch(() => setCollegesLoading(false))
+  }, [selectedZip])
+
   const selectedLabel = DFW_ZIPS.find(z => z.zip === selectedZip)?.label ?? selectedZip
+  const campusStatus = CAMPUS_ZIPS[selectedZip]
 
   const yfiAccent = (s: number) => s >= 75 ? 'teal' : s >= 50 ? 'blue' : s >= 25 ? 'gold' : 'coral'
   const wfiAccent = (s: number) => s >= 75 ? 'blue' : s >= 50 ? 'teal' : s >= 25 ? 'gold' : 'coral'
@@ -376,6 +398,19 @@ export default function DemographicsPage() {
               {data && (
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.06em', marginTop: '7px' }}>
                   Updated {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+              )}
+              {campusStatus && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginTop: '8px', justifyContent: 'flex-end' }}>
+                  <span style={{
+                    width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
+                    background: campusStatus === 'existing' ? '#E8B84B' : 'transparent',
+                    border: campusStatus === 'soon' ? '1.5px solid #E8B84B' : 'none',
+                    boxShadow: campusStatus === 'existing' ? '0 0 6px rgba(232,184,75,0.5)' : 'none',
+                  }} />
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#E8B84B', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
+                    {campusStatus === 'existing' ? 'Lakepointe Campus' : 'Campus Coming Soon'}
+                  </span>
                 </div>
               )}
             </div>
@@ -526,6 +561,50 @@ export default function DemographicsPage() {
                   ))}
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Nearby Colleges */}
+          <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+            <SectionHeader eyebrow="College Scorecard · Within 15 Miles" title="Nearby Colleges" />
+            {collegesLoading ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {[1, 2, 3].map(i => (
+                  <div key={i} style={{ height: '32px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${i * 0.08}s` }} />
+                ))}
+              </div>
+            ) : colleges.length === 0 ? (
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#8A98AE', letterSpacing: '0.04em' }}>
+                No colleges found within 15 miles.
+              </div>
+            ) : (
+              <div style={{ overflowX: 'auto' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 110px 140px', gap: '0', minWidth: '560px' }}>
+                  {['School', 'Enrollment', '4-Yr Completion', 'Median Earnings (10yr)'].map(h => (
+                    <div key={h} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE', letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '0 12px 10px 0', borderBottom: '1px solid #232940' }}>{h}</div>
+                  ))}
+                  {colleges.map((c, idx) => (
+                    <>
+                      <div key={`n${idx}`} style={{ padding: '10px 12px 10px 0', borderBottom: '1px solid #1e2b3c' }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', letterSpacing: '0.02em' }}>{c.name}</div>
+                        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE', marginTop: '2px' }}>{c.city}, {c.state}</div>
+                      </div>
+                      <div key={`e${idx}`} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', padding: '10px 12px 10px 0', borderBottom: '1px solid #1e2b3c', alignContent: 'center' }}>
+                        {c.enrollment != null ? c.enrollment.toLocaleString() : '—'}
+                      </div>
+                      <div key={`c${idx}`} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: c.completionRate4yr != null && c.completionRate4yr > 0.6 ? '#2DD4BF' : '#F0F2F7', padding: '10px 12px 10px 0', borderBottom: '1px solid #1e2b3c', alignContent: 'center' }}>
+                        {c.completionRate4yr != null ? `${Math.round(c.completionRate4yr * 100)}%` : '—'}
+                      </div>
+                      <div key={`m${idx}`} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#4EAEFF', padding: '10px 12px 10px 0', borderBottom: '1px solid #1e2b3c', alignContent: 'center' }}>
+                        {c.medianEarnings10yr != null ? `$${fmtK(c.medianEarnings10yr)}` : '—'}
+                      </div>
+                    </>
+                  ))}
+                </div>
+              </div>
+            )}
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.06em', marginTop: '16px' }}>
+              Source: U.S. Dept. of Education College Scorecard · collegescorecard.ed.gov
             </div>
           </div>
 

@@ -99,6 +99,7 @@ export const DFW_ZIPS = [
   // ── Dallas City ───────────────────────────────────────────────
   { zip: '75206', label: 'Dallas NE' },
   { zip: '75214', label: 'Lakewood' },
+  { zip: '75218', label: 'East Dallas' },
   { zip: '75216', label: 'Oak Cliff' },
   { zip: '75217', label: 'Dallas SE' },
   { zip: '75228', label: 'Dallas E' },
@@ -186,3 +187,17 @@ export const DFW_ZIPS = [
 ] as const
 
 export type ZipEntry = typeof DFW_ZIPS[number]
+
+// Lakepointe campus presence — keyed by ZIP
+export const CAMPUS_ZIPS: Record<string, 'existing' | 'soon'> = {
+  '75087': 'existing', // Rockwall
+  '75150': 'existing', // Mesquite
+  '75044': 'existing', // Firewheel
+  '75126': 'existing', // Forney
+  '75251': 'existing', // North Dallas
+  '75218': 'existing', // East Dallas
+  '75182': 'existing', // Sunnyvale
+  '75189': 'existing', // Royse City
+  '75002': 'soon',     // Lucas / Allen
+  '75401': 'soon',     // Greenville
+}
