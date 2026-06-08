@@ -82,9 +82,13 @@ function StatCard({ label, value, sub, accent = 'gold', loading = false, tooltip
       }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color }} />
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+      {tooltip && (
+        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1 }}>
+          <InfoTooltip text={tooltip} placement="below-right" />
+        </div>
+      )}
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px' }}>
         {label}
-        {tooltip && <InfoTooltip text={tooltip} />}
       </div>
       {loading ? (
         <div style={{ height: '40px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
@@ -386,13 +390,13 @@ export default function DemographicsPage() {
                 ? `↑ ${data.populationGrowth}% since 2020`
                 : `ZIP ${selectedZip} · ${selectedLabel}`}
               accent="gold" loading={loading}
-              tooltip="ACS 5-Year 2023 population estimate. Growth % is vs. the 2020 Census count. Source: Census B01001."
+              tooltip={"ACS 5-Year 2023 population estimate. Growth % is vs. the 2020 Census count.\n\nSource: Census B01001."}
             />
             <StatCard
               label="Median HH Income"
               value={data ? `$${fmtK(data.medianHouseholdIncome)}` : '—'}
               sub="ACS 5-Year Estimate" accent="blue" loading={loading}
-              tooltip="Median household income in the past 12 months, inflation-adjusted to 2023 dollars. Source: Census B19013."
+              tooltip={"Median household income in the past 12 months, inflation-adjusted to 2023 dollars.\n\nSource: Census B19013."}
             />
             <StatCard
               label="SES Class"
@@ -404,13 +408,13 @@ export default function DemographicsPage() {
                 data?.sesClass?.label === 'Middle' ? 'teal' : 'coral'
               }
               loading={loading}
-              tooltip="Composite 0–100: household income (50%), bachelor's+ rate (30%), median home value (20%). Bands: Upper 78+, Upper Middle 58–77, Middle 40–57, Lower Middle 25–39, Lower <25."
+              tooltip={"Composite score 0–100: household income (50%), bachelor's+ rate (30%), median home value (20%).\n\nBands: Upper 78+, Upper Middle 58–77, Middle 40–57, Lower Middle 25–39, Lower <25.\n\nSource: Derived from ACS 2023."}
             />
             <StatCard
               label="HH w/ Children (18-)"
               value={data ? `${data.hhWithChildrenPct}%` : '—'}
               sub="of all households" accent="teal" loading={loading}
-              tooltip="Households with own children under 18 as a percent of all households. Source: Census B11005."
+              tooltip={"Households with own children under 18 as a percent of all households.\n\nSource: Census B11005."}
             />
           </div>
 
@@ -420,13 +424,13 @@ export default function DemographicsPage() {
               label="Avg Household Size"
               value={data ? `${data.avgHouseholdSize}` : '—'}
               sub="persons per household" accent="purple" loading={loading}
-              tooltip="Average number of persons per occupied housing unit. Source: Census B25010."
+              tooltip={"Average number of persons per occupied housing unit.\n\nSource: Census B25010."}
             />
             <StatCard
               label="Median Home Value"
               value={data ? `$${fmtK(data.medianHomeValue)}` : '—'}
               sub="ACS 5-Year Estimate" accent="gold" loading={loading}
-              tooltip="Median value of owner-occupied housing units. Source: Census B25077."
+              tooltip={"Median value of owner-occupied housing units.\n\nSource: Census B25077."}
             />
             <StatCard
               label="Unemployment Rate"
@@ -434,13 +438,13 @@ export default function DemographicsPage() {
               sub="Labor force basis · ACS"
               accent={parseFloat(data?.unemploymentRate ?? '0') > 5 ? 'coral' : 'teal'}
               loading={loading}
-              tooltip="Unemployed civilians as a percent of the total labor force. Source: Census B23025."
+              tooltip={"Unemployed civilians as a percent of the total labor force.\n\nSource: Census B23025."}
             />
             <StatCard
               label="Bachelor's Degree+"
               value={data?.bachelorsRate ? `${data.bachelorsRate}%` : '—'}
               sub="Adults 25+ · ACS" accent="blue" loading={loading}
-              tooltip="Adults 25+ with a bachelor's degree or higher as a percent of adults 25+. Source: Census B15003."
+              tooltip={"Adults 25+ with a bachelor's degree or higher as a percent of adults 25+.\n\nSource: Census B15003."}
             />
           </div>
 
@@ -456,7 +460,7 @@ export default function DemographicsPage() {
                 sub={data ? `${indexLabel(data.yfi)} · /100` : 'Composite index'}
                 accent={data ? yfiAccent(data.yfi) as 'teal' | 'blue' | 'gold' | 'coral' : 'teal'}
                 loading={loading}
-                tooltip="Young Family Index (0–100): % population under 18 (40%) + % family households with children (40%) + avg household size (20%). Derived from ACS 2023 data."
+                tooltip={"Young Family Index (0–100): % population under 18 (40%) + % family households with children (40%) + avg household size (20%).\n\nSource: Derived from ACS 2023."}
               />
               <StatCard
                 label="Working Family Index"
@@ -464,7 +468,7 @@ export default function DemographicsPage() {
                 sub={data ? `${indexLabel(data.wfi)} · /100` : 'Composite index'}
                 accent={data ? wfiAccent(data.wfi) as 'blue' | 'teal' | 'gold' | 'coral' : 'blue'}
                 loading={loading}
-                tooltip="Working Family Index (0–100): % working-parent households (50%) + employment rate (30%) + % households earning $100K+ (20%). Derived from ACS 2023 data."
+                tooltip={"Working Family Index (0–100): % working-parent households (50%) + employment rate (30%) + % households earning $100K+ (20%).\n\nSource: Derived from ACS 2023."}
               />
             </div>
           </div>

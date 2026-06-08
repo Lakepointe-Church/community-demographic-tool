@@ -70,9 +70,13 @@ function StatCard({ label, value, sub, accent = 'gold', loading = false, tooltip
       }}
     >
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color }} />
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px', display: 'flex', alignItems: 'center' }}>
+      {tooltip && (
+        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 1 }}>
+          <InfoTooltip text={tooltip} placement="below-right" />
+        </div>
+      )}
+      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px' }}>
         {label}
-        {tooltip && <InfoTooltip text={tooltip} />}
       </div>
       {loading ? (
         <div style={{ height: '40px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
@@ -406,28 +410,28 @@ export default function ComparePage() {
                   value={stats ? fmtK(stats.totalPop) : '—'}
                   sub={`${selected.size} ZIP code${selected.size !== 1 ? 's' : ''}`}
                   accent="gold" loading={loading}
-                  tooltip="Sum of all selected ZIP populations. Source: Census B01001 ACS 2023."
+                  tooltip={"Sum of all selected ZIP populations.\n\nSource: Census B01001 ACS 2023."}
                 />
                 <StatCard
                   label="WTD Avg Median HHI"
                   value={stats ? `$${fmtK(stats.wtdIncome)}` : '—'}
                   sub="Population-weighted average"
                   accent="blue" loading={loading}
-                  tooltip="Population-weighted average of median household income across selected ZIPs. Source: Census B19013 ACS 2023."
+                  tooltip={"Population-weighted average of median household income across selected ZIPs.\n\nSource: Census B19013 ACS 2023."}
                 />
                 <StatCard
                   label="WTD Avg Growth"
                   value={stats?.wtdGrowth != null ? `${stats.wtdGrowth}%` : '—'}
                   sub="Since 2020 · Pop-weighted"
                   accent="teal" loading={loading}
-                  tooltip="Population-weighted average growth rate since the 2020 Census across selected ZIPs."
+                  tooltip={"Population-weighted average growth rate since the 2020 Census across selected ZIPs.\n\nSource: Census B01001 (2020 vs. 2023 ACS)."}
                 />
                 <StatCard
                   label="HH w/ Children (18-)"
                   value={stats?.combinedHHWithChildren != null ? `${stats.combinedHHWithChildren}%` : '—'}
                   sub={stats ? `Avg HH Size: ${stats.avgHHSize}` : 'of all households'}
                   accent="purple" loading={loading}
-                  tooltip="HH-weighted average of households with own children under 18 across selected ZIPs. Source: Census B11005."
+                  tooltip={"HH-weighted average of households with own children under 18 across selected ZIPs.\n\nSource: Census B11005 ACS 2023."}
                 />
               </div>
 
@@ -443,7 +447,7 @@ export default function ComparePage() {
                     sub={stats ? `${indexLabel(stats.wtdYFI)} · /100 · Pop-weighted` : 'Composite index'}
                     accent={stats ? yfiAccent(stats.wtdYFI) as 'teal' | 'blue' | 'gold' | 'coral' : 'teal'}
                     loading={loading}
-                    tooltip="Population-weighted average Young Family Index across selected ZIPs. YFI = % under-18 (40%) + % family HH with children (40%) + avg HH size (20%). Derived from ACS 2023."
+                    tooltip={"Population-weighted average Young Family Index across selected ZIPs. YFI = % under-18 (40%) + % family HH with children (40%) + avg HH size (20%).\n\nSource: Derived from ACS 2023."}
                   />
                   <StatCard
                     label="Avg Working Family Index"
@@ -451,7 +455,7 @@ export default function ComparePage() {
                     sub={stats ? `${indexLabel(stats.wtdWFI)} · /100 · Pop-weighted` : 'Composite index'}
                     accent={stats ? wfiAccent(stats.wtdWFI) as 'blue' | 'teal' | 'gold' | 'coral' : 'blue'}
                     loading={loading}
-                    tooltip="Population-weighted average Working Family Index across selected ZIPs. WFI = working-parent HH rate (50%) + employment rate (30%) + % households earning $100K+ (20%). Derived from ACS 2023."
+                    tooltip={"Population-weighted average Working Family Index across selected ZIPs. WFI = working-parent HH rate (50%) + employment rate (30%) + % HH earning $100K+ (20%).\n\nSource: Derived from ACS 2023."}
                   />
                 </div>
               </div>
