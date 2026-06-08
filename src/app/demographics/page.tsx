@@ -155,10 +155,13 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
   const selectedCampus = CAMPUS_ZIPS[value]
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block', background: '#13161f', borderRadius: '4px', zIndex: 10 }}>
       <button
         onClick={() => setOpen(v => !v)}
         style={{
+          WebkitAppearance: 'none' as const,
+          appearance: 'none' as const,
+          backgroundColor: '#13161f',
           background: '#13161f',
           border: `1px solid ${open ? '#E8B84B' : '#232940'}`,
           color: '#F0F2F7',
