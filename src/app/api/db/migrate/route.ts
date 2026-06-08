@@ -54,6 +54,26 @@ export async function POST() {
       )
     `
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS religious_orgs (
+        ein           TEXT PRIMARY KEY,
+        name          TEXT NOT NULL,
+        street        TEXT,
+        city          TEXT,
+        state         TEXT,
+        zip           TEXT,
+        ntee_cd       TEXT,
+        ntee_category TEXT,
+        ntee_label    TEXT,
+        ruling_year   INTEGER,
+        status        TEXT,
+        subsection    TEXT,
+        updated_at    TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS idx_religious_orgs_zip  ON religious_orgs(zip)`
+    await sql`CREATE INDEX IF NOT EXISTS idx_religious_orgs_ntee ON religious_orgs(ntee_cd)`
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)
