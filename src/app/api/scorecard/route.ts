@@ -13,8 +13,8 @@ export async function GET(request: NextRequest) {
 
   try {
     const url = new URL(SCORECARD_BASE)
-    url.searchParams.set('school.zip', zip)
-    url.searchParams.set('zip.radius', radius)
+    url.searchParams.set('zip', zip)
+    url.searchParams.set('distance', radius)
     url.searchParams.set('_fields', [
       'school.name',
       'school.city',
@@ -30,20 +30,31 @@ export async function GET(request: NextRequest) {
     }
 
     const response = await fetch(url.toString())
+
+    if (!response.ok) {
+      const errText = await response.text()
+      console.error('Scorecard API HTTP error:', response.status, errText.slice(0, 300))
+      return NextResponse.json({ zip, radius, total: 0, schools: [], apiError: response.status })
+    }
+
     const data = await response.json()
+
+    if (!data.results) {
+      console.error('Scorecard unexpected response:', JSON.stringify(data).slice(0, 300))
+    }
 
     return NextResponse.json({
       zip,
       radius,
       total: data.metadata?.total ?? 0,
       schools: (data.results ?? []).map((s: Record<string, unknown>) => ({
-        name:              s['school.name'],
-        city:              s['school.city'],
-        state:             s['school.state'],
-        enrollment:        s['latest.student.size'],
-        completionRate4yr: s['latest.completion.completion_rate_4yr_150nt'],
-        avgNetPrice:       s['latest.cost.avg_net_price.public'],
-        medianEarnings10yr:s['latest.earnings.10_yrs_after_entry.median'],
+        name:               s['school.name'],
+        city:               s['school.city'],
+        state:              s['school.state'],
+        enrollment:         s['latest.student.size'],
+        completionRate4yr:  s['latest.completion.completion_rate_4yr_150nt'],
+        avgNetPrice:        s['latest.cost.avg_net_price.public'],
+        medianEarnings10yr: s['latest.earnings.10_yrs_after_entry.median'],
       })),
     })
   } catch (error) {

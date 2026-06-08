@@ -1,7 +1,7 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { DFW_ZIPS, CAMPUS_ZIPS } from '@/lib/zips'
+import { useState, useEffect, useRef } from 'react'
+import { DFW_ZIPS, ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
 import { InfoTooltip } from '@/components/InfoTooltip'
 
 interface CensusData {
@@ -120,6 +120,142 @@ function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
     <div style={{ borderLeft: '3px solid #E8B84B', paddingLeft: '16px', marginBottom: '24px' }}>
       <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.15em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '6px' }}>{eyebrow}</div>
       <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '28px', letterSpacing: '0.04em', lineHeight: 1, color: '#F0F2F7' }}>{title}</div>
+    </div>
+  )
+}
+
+// ── Campus Dot ───────────────────────────────────────────────────
+function CampusDot({ status, size = 8 }: { status: 'existing' | 'soon'; size?: number }) {
+  return (
+    <span style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
+      background: status === 'existing' ? '#E8B84B' : 'transparent',
+      border: status === 'soon' ? '1.5px solid #E8B84B' : 'none',
+      boxShadow: status === 'existing' ? '0 0 5px rgba(232,184,75,0.5)' : 'none',
+    }} />
+  )
+}
+
+// ── ZIP Dropdown ──────────────────────────────────────────────────
+function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [hovered, setHovered] = useState<string | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const selected = DFW_ZIPS.find(z => z.zip === value)
+  const selectedCampus = CAMPUS_ZIPS[value]
+
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block' }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          background: open ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.03)',
+          border: `1px solid ${open ? '#E8B84B' : '#232940'}`,
+          color: '#F0F2F7',
+          padding: '9px 36px 9px 14px',
+          fontFamily: "'IBM Plex Mono', monospace",
+          fontSize: '13px',
+          letterSpacing: '0.04em',
+          cursor: 'pointer',
+          outline: 'none',
+          minWidth: '260px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          position: 'relative',
+          textAlign: 'left',
+          transition: 'border-color 0.15s ease',
+        }}
+      >
+        {selectedCampus && <CampusDot status={selectedCampus} size={7} />}
+        <span style={{ flex: 1 }}>{value} — {selected?.label}</span>
+        <svg width="12" height="7" viewBox="0 0 12 7" fill="none" style={{
+          position: 'absolute', right: '12px', top: '50%',
+          transform: `translateY(-50%) rotate(${open ? 180 : 0}deg)`,
+          transition: 'transform 0.15s ease', flexShrink: 0,
+        }}>
+          <path d="M1 1l5 5 5-5" stroke="#E8B84B" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute',
+          top: 'calc(100% + 4px)',
+          right: 0,
+          minWidth: '260px',
+          maxHeight: '360px',
+          overflowY: 'auto',
+          background: '#0d0f14',
+          border: '1px solid #232940',
+          zIndex: 200,
+          boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+        }}>
+          {ZIP_GROUPS.map(group => (
+            <div key={group.label}>
+              <div style={{
+                fontFamily: "'IBM Plex Mono', monospace",
+                fontSize: '9px',
+                color: '#5a6478',
+                letterSpacing: '0.15em',
+                textTransform: 'uppercase',
+                padding: '10px 14px 4px',
+                position: 'sticky',
+                top: 0,
+                background: '#0d0f14',
+                zIndex: 1,
+              }}>
+                {group.label}
+              </div>
+              {group.zips.map(({ zip, label }) => {
+                const campus = CAMPUS_ZIPS[zip]
+                const isSelected = zip === value
+                const isHovered = hovered === zip
+                return (
+                  <button
+                    key={zip}
+                    onClick={() => { onChange(zip); setOpen(false) }}
+                    onMouseEnter={() => setHovered(zip)}
+                    onMouseLeave={() => setHovered(null)}
+                    style={{
+                      width: '100%',
+                      background: isSelected
+                        ? 'rgba(232,184,75,0.1)'
+                        : isHovered ? 'rgba(255,255,255,0.04)' : 'transparent',
+                      border: 'none',
+                      padding: '7px 14px',
+                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontSize: '12px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '7px',
+                      letterSpacing: '0.03em',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <span style={{ width: 7, height: 7, flexShrink: 0, display: 'inline-flex', alignItems: 'center' }}>
+                      {campus && <CampusDot status={campus} size={7} />}
+                    </span>
+                    <span style={{ color: isSelected ? '#E8B84B' : '#C8D4E4', minWidth: '44px' }}>{zip}</span>
+                    <span style={{ color: isSelected ? '#E8B84B' : '#8A98AE', fontSize: '11px' }}>{label}</span>
+                  </button>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -347,26 +483,10 @@ export default function DemographicsPage() {
   return (
     <>
       <style>{`
-        .zip-select {
-          background: rgba(255,255,255,0.03);
-          border: 1px solid #232940;
-          color: #F0F2F7;
-          padding: 9px 36px 9px 14px;
-          font-family: 'IBM Plex Mono', monospace;
-          font-size: 13px;
-          letter-spacing: 0.04em;
-          cursor: pointer;
-          outline: none;
-          appearance: none;
-          -webkit-appearance: none;
-          min-width: 240px;
-          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7' viewBox='0 0 12 7'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23E8B84B' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
-          background-repeat: no-repeat;
-          background-position: right 12px center;
-          transition: border-color 0.15s ease;
-        }
-        .zip-select:hover, .zip-select:focus { border-color: #E8B84B; }
-        .zip-select option { background: #13161f; color: #F0F2F7; }
+        .zip-scroll::-webkit-scrollbar { width: 4px; }
+        .zip-scroll::-webkit-scrollbar-track { background: #0d0f14; }
+        .zip-scroll::-webkit-scrollbar-thumb { background: #232940; border-radius: 2px; }
+        .zip-scroll::-webkit-scrollbar-thumb:hover { background: #3a4861; }
       `}</style>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -390,11 +510,7 @@ export default function DemographicsPage() {
               <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '8px' }}>
                 Select ZIP Code
               </div>
-              <select className="zip-select" value={selectedZip} onChange={e => setSelectedZip(e.target.value)}>
-                {DFW_ZIPS.map(({ zip, label }) => (
-                  <option key={zip} value={zip}>{zip} — {label}</option>
-                ))}
-              </select>
+              <ZipDropdown value={selectedZip} onChange={setSelectedZip} />
               {data && (
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.06em', marginTop: '7px' }}>
                   Updated {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
@@ -402,12 +518,7 @@ export default function DemographicsPage() {
               )}
               {campusStatus && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '7px', marginTop: '8px', justifyContent: 'flex-end' }}>
-                  <span style={{
-                    width: 8, height: 8, borderRadius: '50%', flexShrink: 0,
-                    background: campusStatus === 'existing' ? '#E8B84B' : 'transparent',
-                    border: campusStatus === 'soon' ? '1.5px solid #E8B84B' : 'none',
-                    boxShadow: campusStatus === 'existing' ? '0 0 6px rgba(232,184,75,0.5)' : 'none',
-                  }} />
+                  <CampusDot status={campusStatus} size={8} />
                   <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#E8B84B', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>
                     {campusStatus === 'existing' ? 'Lakepointe Campus' : 'Campus Coming Soon'}
                   </span>
