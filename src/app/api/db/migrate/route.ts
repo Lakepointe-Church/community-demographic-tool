@@ -9,7 +9,7 @@ export async function POST() {
         name                  TEXT,
         population            INTEGER,
         population_2020       INTEGER,
-        population_growth     NUMERIC(5,1),
+        population_growth     NUMERIC(8,1),
         median_household_income INTEGER,
         median_home_value     INTEGER,
         total_households      INTEGER,

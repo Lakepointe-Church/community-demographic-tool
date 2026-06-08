@@ -43,8 +43,9 @@ const AGE_VARS = [
   'B01001_047E','B01001_048E','B01001_049E',                         // 75+
 ].join(',')
 
-function i(v: string | undefined) { return parseInt(v ?? '0') || 0 }
-function f(v: string | undefined) { return parseFloat(v ?? '0') || 0 }
+// Census missing-value codes are large negatives (-666666666, -888888888, etc.)
+function i(v: string | undefined) { const n = parseInt(v ?? '0'); return (isNaN(n) || n < 0) ? 0 : n }
+function f(v: string | undefined) { const n = parseFloat(v ?? '0'); return (isNaN(n) || n < 0) ? 0 : n }
 function pct(n: number, total: number) {
   return total > 0 ? parseFloat((n / total * 100).toFixed(1)) : 0
 }
@@ -80,9 +81,11 @@ export async function fetchZipData(zip: string) {
   // Population + growth
   const population   = i(r['B01001_001E'])
   const population2020 = data2020?.length >= 2 ? i(data2020[1][0]) : null
-  const populationGrowth = population2020 && population2020 > 0
+  const rawGrowth = population2020 && population2020 > 0
     ? parseFloat(((population - population2020) / population2020 * 100).toFixed(1))
     : null
+  // Cap at ±9999.9 — tiny base populations produce meaningless extremes
+  const populationGrowth = rawGrowth !== null ? Math.max(-9999.9, Math.min(9999.9, rawGrowth)) : null
 
   // Labor
   const laborForce = i(r['B23025_002E'])
