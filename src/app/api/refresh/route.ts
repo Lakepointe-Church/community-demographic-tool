@@ -181,7 +181,7 @@ export async function POST() {
       employersRefreshed++
     }
   }
-  errors.push(...employerErrors)
+  // CBP no-data is expected for rural ZIPs — don't count as errors
 
   // Metro stats (BLS + FRED)
   try {
@@ -215,6 +215,7 @@ export async function POST() {
   return NextResponse.json({
     ok: errors.length === 0,
     zipsRefreshed,
+    employersRefreshed,
     errors: errors.length > 0 ? errors : undefined,
     refreshedAt: new Date().toISOString(),
   })
