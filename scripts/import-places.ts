@@ -6,12 +6,17 @@
  * Source: https://data.cdc.gov/resource/qnzd-25i4.json
  */
 
+import { readFileSync } from 'fs'
 import { neon } from '@neondatabase/serverless'
 import { ZIP_GROUPS } from '../src/lib/zips'
-import * as dotenv from 'dotenv'
-import * as path from 'path'
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
+// Load .env.local
+try {
+  readFileSync('.env.local', 'utf8').split('\n').forEach(line => {
+    const m = line.match(/^([^#=\s][^=]*)=(.*)$/)
+    if (m) process.env[m[1].trim()] = m[2].trim().replace(/^"(.*)"$/, '$1')
+  })
+} catch { /* .env.local not found */ }
 
 const sql = neon(process.env.DATABASE_URL!)
 
