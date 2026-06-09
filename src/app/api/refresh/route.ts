@@ -169,13 +169,14 @@ export async function POST() {
       }
       const e = result.value
       await sql`
-        INSERT INTO zip_employers (zip, total_estab, total_emp, total_payroll, sectors, updated_at)
-        VALUES (${e.zip}, ${e.totalEstab}, ${e.totalEmp}, ${e.totalPayroll}, ${JSON.stringify(e.sectors)}, NOW())
+        INSERT INTO zip_employers (zip, total_estab, total_emp, total_payroll, sectors, size_dist, updated_at)
+        VALUES (${e.zip}, ${e.totalEstab}, ${e.totalEmp}, ${e.totalPayroll}, ${JSON.stringify(e.sectors)}, ${JSON.stringify(e.sizeDist)}, NOW())
         ON CONFLICT (zip) DO UPDATE SET
           total_estab   = EXCLUDED.total_estab,
           total_emp     = EXCLUDED.total_emp,
           total_payroll = EXCLUDED.total_payroll,
           sectors       = EXCLUDED.sectors,
+          size_dist     = EXCLUDED.size_dist,
           updated_at    = NOW()
       `
       employersRefreshed++
