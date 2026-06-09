@@ -66,9 +66,10 @@ export async function POST() {
     const batch = zips.slice(i, i + 5)
     const results = await Promise.allSettled(batch.map(({ zip }) => fetchZipData(zip)))
 
-    for (const result of results) {
+    for (let j = 0; j < results.length; j++) {
+      const result = results[j]
       if (result.status === 'rejected') {
-        errors.push(String(result.reason))
+        errors.push(`ZIP ${batch[j].zip}: ${String(result.reason)}`)
         continue
       }
 
