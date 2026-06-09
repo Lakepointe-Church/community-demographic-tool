@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { ZIP_GROUPS } from '@/lib/zips'
+import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
 
 interface SectorRow { label: string; estab: number; avgWage?: number | null }
 
@@ -122,7 +122,7 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
   const total = slices.reduce((s, x) => s + x.estab, 0)
   if (total === 0) return <div style={{ color:'#5a6478', fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px' }}>No data</div>
 
-  const cx = 90, cy = 90, r = 68, inner = 44
+  const cx = 110, cy = 110, r = 84, inner = 54
   let angle = -Math.PI / 2
   const donutPalette = ['#4EAEFF','#2DD4BF','#E8B84B','#A78BFA','#FF6B6B','#4EAEFF88','#2DD4BF88','#E8B84B88','#A78BFA88']
   const paths = slices.map((s, i) => {
@@ -139,8 +139,8 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
 
   const hov = hovered !== null ? paths[hovered] : null
   return (
-    <div style={{ display:'flex', gap:'20px', alignItems:'center' }}>
-      <svg width="180" height="180" style={{ flexShrink:0 }}>
+    <div style={{ display:'flex', gap:'24px', alignItems:'center' }}>
+      <svg width="220" height="220" style={{ flexShrink:0 }}>
         {paths.map(p => (
           <path key={p.i} d={p.d} fill={p.color}
             opacity={hovered === null || hovered === p.i ? 1 : 0.35}
@@ -148,10 +148,10 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
             onMouseEnter={() => setHovered(p.i)} onMouseLeave={() => setHovered(null)}
           />
         ))}
-        <text x={cx} y={cy - 6} textAnchor="middle" fill="#F0F2F7" fontSize="16" fontFamily="Bebas Neue" letterSpacing="0.05em">
+        <text x={cx} y={cy - 6} textAnchor="middle" fill="#F0F2F7" fontSize="20" fontFamily="Bebas Neue" letterSpacing="0.05em">
           {hov ? hov.pct + '%' : total.toLocaleString()}
         </text>
-        <text x={cx} y={cy + 10} textAnchor="middle" fill="#8A98AE" fontSize="8" fontFamily="IBM Plex Mono">
+        <text x={cx} y={cy + 12} textAnchor="middle" fill="#8A98AE" fontSize="9" fontFamily="IBM Plex Mono">
           {hov ? hov.label.slice(0,14) : 'establishments'}
         </text>
       </svg>
@@ -173,10 +173,10 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
 function SizeChart({ sizeDist }: { sizeDist: { label: string; estab: number }[] }) {
   if (!sizeDist.length) return <div style={{ color:'#5a6478', fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px' }}>No size data</div>
   const maxVal = Math.max(...sizeDist.map(s => s.estab), 1)
-  const barW = 36, gap = 8, padLeft = 4, padTop = 20, chartH = 100
+  const barW = 44, gap = 10, padLeft = 4, padTop = 22, chartH = 140
   const svgW = padLeft + sizeDist.length * (barW + gap)
   return (
-    <svg width="100%" viewBox={`0 0 ${svgW} ${chartH + 44}`} style={{ overflow:'visible', maxHeight:'160px' }}>
+    <svg width="100%" viewBox={`0 0 ${svgW} ${chartH + 48}`} style={{ overflow:'visible', maxHeight:'220px' }}>
       <defs>
         {sizeDist.map((_, i) => (
           <linearGradient key={i} id={`szG-${i}`} x1="0" y1="0" x2="0" y2="1">
@@ -193,13 +193,25 @@ function SizeChart({ sizeDist }: { sizeDist: { label: string; estab: number }[] 
         return (
           <g key={s.label}>
             <rect x={x} y={y} width={barW} height={bh} fill={`url(#szG-${i})`} rx="2" />
-            <text x={x+barW/2} y={y-3} textAnchor="middle" fill={color} fontSize="8" fontFamily="IBM Plex Mono" fontWeight="600">{s.estab}</text>
-            <text x={x+barW/2} y={padTop+chartH+12} textAnchor="middle" fill="#8A98AE" fontSize="7" fontFamily="IBM Plex Mono">{s.label}</text>
-            <text x={x+barW/2} y={padTop+chartH+22} textAnchor="middle" fill="#5a6478" fontSize="6" fontFamily="IBM Plex Mono">emp</text>
+            <text x={x+barW/2} y={y-4} textAnchor="middle" fill={color} fontSize="9" fontFamily="IBM Plex Mono" fontWeight="600">{s.estab}</text>
+            <text x={x+barW/2} y={padTop+chartH+14} textAnchor="middle" fill="#8A98AE" fontSize="8" fontFamily="IBM Plex Mono">{s.label}</text>
+            <text x={x+barW/2} y={padTop+chartH+25} textAnchor="middle" fill="#5a6478" fontSize="7" fontFamily="IBM Plex Mono">emp</text>
           </g>
         )
       })}
     </svg>
+  )
+}
+
+// ── Campus Dot ────────────────────────────────────────────────────
+function CampusDot({ status, size = 8 }: { status: 'existing' | 'soon'; size?: number }) {
+  return (
+    <span style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
+      background: status === 'existing' ? '#E8B84B' : 'transparent',
+      border: status === 'soon' ? '1.5px solid #E8B84B' : 'none',
+      boxShadow: status === 'existing' ? '0 0 5px rgba(232,184,75,0.5)' : 'none',
+    }} />
   )
 }
 
@@ -219,6 +231,7 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
   }, [open])
 
   const selected = value ? ZIP_GROUPS.flatMap(g => g.zips).find(z => z.zip === value) : null
+  const selectedCampus = value ? CAMPUS_ZIPS[value] : undefined
 
   return (
     <div ref={ref} style={{ position:'relative', display:'inline-block', background:'#13161f', borderRadius:'4px', zIndex:10 }}>
@@ -228,8 +241,10 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
         padding:'9px 36px 9px 14px', fontFamily:"'IBM Plex Mono',monospace", fontSize:'13px',
         letterSpacing:'0.04em', cursor:'pointer', outline:'none', minWidth:'240px',
         position:'relative', textAlign:'left', transition:'border-color 0.15s ease', borderRadius:'4px',
+        display:'flex', alignItems:'center', gap:'8px',
       }}>
-        <span>{selected ? `${value} — ${selected.label}` : 'DFW Metro Overview'}</span>
+        {selectedCampus && <CampusDot status={selectedCampus} size={7} />}
+        <span style={{ flex:1 }}>{selected ? `${value} — ${selected.label}` : 'DFW Metro Overview'}</span>
         <svg width="12" height="7" viewBox="0 0 12 7" fill="none" style={{
           position:'absolute', right:'12px', top:'50%',
           transform:`translateY(-50%) rotate(${open ? 180 : 0}deg)`,
@@ -263,6 +278,7 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
               }}>{group.label}</div>
               {group.zips.map(({ zip, label }) => {
                 const isSelected = zip === value, isHov = hovered === zip
+                const campus = CAMPUS_ZIPS[zip]
                 return (
                   <div key={zip}
                     onClick={() => { onChange(zip); setOpen(false) }}
@@ -271,9 +287,10 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
                       padding:'7px 14px', fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px',
                       color: isSelected ? '#E8B84B' : isHov ? '#F0F2F7' : '#A8B4C5',
                       background: isSelected ? 'rgba(232,184,75,0.08)' : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
-                      cursor:'pointer', letterSpacing:'0.04em', display:'flex', gap:'10px',
+                      cursor:'pointer', letterSpacing:'0.04em', display:'flex', alignItems:'center', gap:'8px',
                     }}>
-                    <span style={{ color: isSelected ? '#E8B84B' : '#5a6478', flexShrink:0 }}>{zip}</span>
+                    <span style={{ color: isSelected ? '#E8B84B' : '#5a6478', flexShrink:0, width:'38px' }}>{zip}</span>
+                    {campus && <CampusDot status={campus} size={7} />}
                     <span>{label}</span>
                   </div>
                 )
@@ -319,7 +336,7 @@ export default function EmployersPage() {
       <div style={{ padding:'32px 32px', maxWidth:'1440px', margin:'0 auto' }}>
 
         {/* Header */}
-        <div className="fade-up" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'28px', gap:'24px' }}>
+        <div className="fade-up" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'28px', gap:'24px', position:'relative', zIndex:20 }}>
           <div>
             <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.2em', color:'#E8B84B', textTransform:'uppercase', marginBottom:'10px' }}>Dashboard · Employers</div>
             <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(32px,3.5vw,48px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#F0F2F7' }}>Business &<br />Employment</h1>
