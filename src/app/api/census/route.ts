@@ -22,24 +22,30 @@ export async function GET(request: NextRequest) {
     const d = rows[0]
 
     // Lakepointe index scores — computed from stored ACS columns
-    const iAge0_17    = d.age_0_17                 != null ? parseFloat(d.age_0_17)                 : 0
-    const iAvgHH      = d.avg_household_size        != null ? parseFloat(d.avg_household_size)        : 2.5
-    const iMwKids     = d.hh_married_with_children  != null ? parseFloat(d.hh_married_with_children)  : 0
-    const iSingle     = d.hh_single_parent          != null ? parseFloat(d.hh_single_parent)          : 0
-    const iFamilyHH   = iMwKids + iSingle
-    const iUnempl     = d.unemployment_rate         != null ? parseFloat(d.unemployment_rate)         : 5
-    const iInc100     = d.income_100_150k           != null ? parseFloat(d.income_100_150k)           : 0
-    const iInc150     = d.income_150k_plus          != null ? parseFloat(d.income_150k_plus)          : 0
+    const iAge0_17     = d.age_0_17                 != null ? parseFloat(d.age_0_17)                 : 0
+    const iAvgHH       = d.avg_household_size        != null ? parseFloat(d.avg_household_size)        : 2.5
+    const iMwKids      = d.hh_married_with_children  != null ? parseFloat(d.hh_married_with_children)  : 0
+    const iSingle      = d.hh_single_parent          != null ? parseFloat(d.hh_single_parent)          : 0
+    const iFamilyHH    = iMwKids + iSingle
+    const iFertility   = d.fertility_rate            != null ? parseFloat(d.fertility_rate) * 100      : 5   // convert fraction → pct; default 5%
+    const iDualEarner  = d.dual_earner_pct           != null ? parseFloat(d.dual_earner_pct)           : 0
+    const iCommute30   = d.commute_30plus_pct        != null ? parseFloat(d.commute_30plus_pct)        : 50
+    const iHHWithKids  = d.hh_with_children_pct      != null ? parseFloat(d.hh_with_children_pct)      : 0
+    const iBachRate    = d.bachelors_rate            != null ? parseFloat(d.bachelors_rate)            : 0
 
+    // YFI: young children (40%) + family HH rate (25%) + fertility (20%) + HH size (15%)
     const yfi = Math.round(
-      Math.min(100, (iAge0_17 / 30) * 100) * 0.40 +
-      Math.min(100, (iFamilyHH / 40) * 100) * 0.40 +
-      Math.min(100, Math.max(0, (iAvgHH - 1.5) / 2.0) * 100) * 0.20
+      Math.min(100, (iAge0_17 / 30) * 100)                        * 0.40 +
+      Math.min(100, (iFamilyHH / 40) * 100)                       * 0.25 +
+      Math.min(100, (iFertility / 8) * 100)                       * 0.20 +
+      Math.min(100, Math.max(0, (iAvgHH - 1.5) / 2.0 * 100))     * 0.15
     )
+    // WFI: dual-earner rate (40%) + working parent rate (25%) + commute burden (20%) + occ diversity proxy (15%)
     const wfi = Math.round(
-      Math.min(100, (iFamilyHH / 40) * 100) * 0.50 +
-      Math.min(100, Math.max(0, (1 - iUnempl / 12) * 100)) * 0.30 +
-      Math.min(100, ((iInc100 + iInc150) / 40) * 100) * 0.20
+      Math.min(100, (iDualEarner / 40) * 100)                     * 0.40 +
+      Math.min(100, (iHHWithKids / 50) * 100)                     * 0.25 +
+      Math.max(0, 100 - iCommute30)                                * 0.20 +
+      Math.min(100, (iBachRate / 50) * 100)                        * 0.15
     )
 
     return NextResponse.json({

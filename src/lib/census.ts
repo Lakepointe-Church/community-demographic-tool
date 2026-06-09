@@ -27,6 +27,25 @@ const VARS = [
   'B19001_014E', 'B19001_015E', 'B19001_016E', 'B19001_017E',
 ].join(',')
 
+// YFI/WFI inputs — separate call
+const YFI_WFI_VARS = [
+  // Fertility signal (B13016)
+  'B13016_001E', // Women 15-50 total
+  'B13016_002E', // Women 15-50 who had a birth in past 12 months
+  // Dual-earner families (B23007)
+  'B23007_001E', // Total families
+  'B23007_004E', // Married-couple with children — husband & wife both in labor force
+  'B23007_014E', // Married-couple without children — husband & wife both in labor force
+  // Commute burden (B08303)
+  'B08303_001E', // Total workers 16+
+  'B08303_008E', // 30–34 min
+  'B08303_009E', // 35–39 min
+  'B08303_010E', // 40–44 min
+  'B08303_011E', // 45–59 min
+  'B08303_012E', // 60–89 min
+  'B08303_013E', // 90+ min
+].join(',')
+
 // Age distribution — separate call (46 vars, too many to combine above)
 const AGE_VARS = [
   // Male age groups
@@ -55,15 +74,17 @@ export async function fetchZipData(zip: string) {
   const base = `${CENSUS_BASE}/2023/acs/acs5`
   const geo  = `for=zip%20code%20tabulation%20area:${zip}&key=${key}`
 
-  const [res, res2020, resAge] = await Promise.all([
+  const [res, res2020, resAge, resYfiWfi] = await Promise.all([
     fetch(`${base}?get=NAME,${VARS}&${geo}`),
     fetch(`${CENSUS_BASE}/2020/acs/acs5?get=B01001_001E&${geo}`),
     fetch(`${base}?get=${AGE_VARS}&${geo}`),
+    fetch(`${base}?get=${YFI_WFI_VARS}&${geo}`),
   ])
 
-  const data    = await res.json()
-  const data2020 = await res2020.json()
-  const dataAge  = await resAge.json()
+  const data       = await res.json()
+  const data2020   = await res2020.json()
+  const dataAge    = await resAge.json()
+  const dataYfiWfi = await resYfiWfi.json()
 
   if (!data || data.length < 2) throw new Error(`No Census data for ZIP ${zip}`)
 
@@ -76,6 +97,13 @@ export async function fetchZipData(zip: string) {
   if (dataAge?.length >= 2) {
     const [ah, av] = dataAge
     ah.forEach((h: string, idx: number) => { ar[h] = av[idx] })
+  }
+
+  // YFI/WFI input data
+  const yr: Record<string, string> = {}
+  if (dataYfiWfi?.length >= 2) {
+    const [yh, yv] = dataYfiWfi
+    yh.forEach((h: string, idx: number) => { yr[h] = yv[idx] })
   }
 
   // Population + growth
@@ -124,6 +152,27 @@ export async function fetchZipData(zip: string) {
   // Age distribution
   const agePct = (...vars: string[]) =>
     pct(vars.reduce((s, v) => s + i(ar[v]), 0), population)
+
+  // Fertility signal
+  const fertWomen    = i(yr['B13016_001E'])
+  const fertBirths   = i(yr['B13016_002E'])
+  const fertilityRate = fertWomen > 0 ? parseFloat((fertBirths / fertWomen).toFixed(4)) : null
+
+  // Dual-earner families
+  const totalFamilies     = i(yr['B23007_001E'])
+  const dualEarnerWithKid = i(yr['B23007_004E'])
+  const dualEarnerNoKid   = i(yr['B23007_014E'])
+  const dualEarnerPct = totalFamilies > 0
+    ? parseFloat(((dualEarnerWithKid + dualEarnerNoKid) / totalFamilies * 100).toFixed(1))
+    : null
+
+  // Commute burden — % of workers with 30+ min commute
+  const commuteTotal   = i(yr['B08303_001E'])
+  const commute30plus  = i(yr['B08303_008E']) + i(yr['B08303_009E']) + i(yr['B08303_010E']) +
+                         i(yr['B08303_011E']) + i(yr['B08303_012E']) + i(yr['B08303_013E'])
+  const commute30PlusPct = commuteTotal > 0
+    ? parseFloat((commute30plus / commuteTotal * 100).toFixed(1))
+    : null
 
   // SES class
   const income      = i(r['B19013_001E'])
@@ -190,5 +239,8 @@ export async function fetchZipData(zip: string) {
       { label: '$100-150K', pct: incPct('B19001_014E','B19001_015E') },
       { label: '$150K+',    pct: incPct('B19001_016E','B19001_017E') },
     ],
+    fertilityRate,
+    dualEarnerPct,
+    commute30PlusPct,
   }
 }
