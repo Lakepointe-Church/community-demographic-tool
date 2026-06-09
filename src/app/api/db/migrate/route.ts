@@ -50,6 +50,7 @@ export async function POST() {
         fred_population_date       TEXT,
         fred_housing_permits       INTEGER,
         fred_housing_permits_date  TEXT,
+        sector_wages               JSONB,
         updated_at                 TIMESTAMPTZ DEFAULT NOW()
       )
     `

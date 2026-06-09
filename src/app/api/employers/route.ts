@@ -52,12 +52,11 @@ export async function GET(req: NextRequest) {
   }
 
   // DFW overview
-  const rows = await sql`
-    SELECT zip, total_estab, total_emp, total_payroll, sectors
-    FROM zip_employers
-    WHERE total_estab > 0
-    ORDER BY total_estab DESC
-  `
+  const [rows, metaRows] = await Promise.all([
+    sql`SELECT zip, total_estab, total_emp, total_payroll, sectors FROM zip_employers WHERE total_estab > 0 ORDER BY total_estab DESC`,
+    sql`SELECT sector_wages FROM metro_stats WHERE id = 1 LIMIT 1`,
+  ])
+  const storedSectorWages: { label: string; avgWage: number }[] = metaRows[0]?.sector_wages ?? []
 
   let totalEstab = 0, totalEmp = 0, totalPayroll = 0
   const sectorMap: Record<string, { estab: number; emp: number; payroll: number }> = {}
@@ -80,11 +79,12 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  const wageByLabel = Object.fromEntries(storedSectorWages.map(w => [w.label, w.avgWage]))
   const sectors = Object.entries(sectorMap)
     .map(([label, d]) => ({
       label,
       estab: d.estab,
-      avgWage: d.emp > 0 ? Math.round((d.payroll * 1000) / d.emp) : null,
+      avgWage: wageByLabel[label] ?? null,
     }))
     .sort((a, b) => b.estab - a.estab)
 

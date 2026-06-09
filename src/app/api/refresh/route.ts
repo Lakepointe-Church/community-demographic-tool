@@ -2,10 +2,59 @@ import { NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { DFW_ZIPS } from '@/lib/zips'
 import { fetchZipData } from '@/lib/census'
-import { fetchZipEmployers } from '@/lib/cbp'
+import { fetchZipEmployers, SECTORS } from '@/lib/cbp'
 
 const BLS_BASE = 'https://api.bls.gov/publicAPI/v2/timeseries/data/'
 const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations'
+const CBP_BASE  = 'https://api.census.gov/data/2022/cbp'
+
+// 4 core DFW counties — large enough that CBP doesn't suppress 2-digit NAICS emp/payroll
+const DFW_CORE_COUNTIES = [
+  ['48', '113'], // Dallas
+  ['48', '439'], // Tarrant
+  ['48', '085'], // Collin
+  ['48', '121'], // Denton
+]
+
+async function fetchCountySectorWages(): Promise<{ label: string; avgWage: number }[]> {
+  const key = process.env.CENSUS_API_KEY
+  const results = await Promise.all(
+    DFW_CORE_COUNTIES.map(([state, county]) =>
+      fetch(`${CBP_BASE}?get=NAICS2017,EMP,PAYANN&for=county:${county}&in=state:${state}&key=${key}`)
+        .then(r => r.ok ? r.json() as Promise<string[][]> : null)
+        .catch(() => null)
+    )
+  )
+
+  const accum: Record<string, { emp: number; payroll: number }> = {}
+  for (const rows of results) {
+    if (!rows || rows.length < 2) continue
+    const [hdr, ...data] = rows
+    const naicsIdx = hdr.indexOf('NAICS2017')
+    const empIdx   = hdr.indexOf('EMP')
+    const payIdx   = hdr.indexOf('PAYANN')
+    for (const row of data) {
+      const naics = row[naicsIdx]
+      if (naics.length !== 2 || naics === '00') continue
+      const emp  = parseInt(row[empIdx]  || '0')
+      const pay  = parseInt(row[payIdx]  || '0')
+      if (!accum[naics]) accum[naics] = { emp: 0, payroll: 0 }
+      accum[naics].emp     += emp
+      accum[naics].payroll += pay
+    }
+  }
+
+  const wages: { label: string; avgWage: number }[] = []
+  for (const sector of SECTORS) {
+    let emp = 0, payroll = 0
+    for (const prefix of sector.prefixes) {
+      emp     += accum[prefix]?.emp     ?? 0
+      payroll += accum[prefix]?.payroll ?? 0
+    }
+    if (emp > 0) wages.push({ label: sector.label, avgWage: Math.round((payroll * 1000) / emp) })
+  }
+  return wages.sort((a, b) => b.avgWage - a.avgWage)
+}
 
 async function fetchMetroStats() {
   const fredKey = process.env.FRED_API_KEY
@@ -184,18 +233,19 @@ export async function POST() {
   }
   // CBP no-data is expected for rural ZIPs — don't count as errors
 
-  // Metro stats (BLS + FRED)
+  // Metro stats (BLS + FRED) + county sector wages (CBP)
   try {
-    const m = await fetchMetroStats()
+    const [m, sectorWages] = await Promise.all([fetchMetroStats(), fetchCountySectorWages()])
+    const sectorWagesJson = JSON.stringify(sectorWages)
     await sql`
       INSERT INTO metro_stats (
         id, bls_unemployment_rate, bls_employed_persons, bls_labor_force,
         bls_period, bls_year, fred_population, fred_population_date,
-        fred_housing_permits, fred_housing_permits_date, updated_at
+        fred_housing_permits, fred_housing_permits_date, sector_wages, updated_at
       ) VALUES (
         1, ${m.blsUnemploymentRate}, ${m.blsEmployedPersons}, ${m.blsLaborForce},
         ${m.blsPeriod}, ${m.blsYear}, ${m.fredPopulation}, ${m.fredPopulationDate},
-        ${m.fredHousingPermits}, ${m.fredHousingPermitsDate}, NOW()
+        ${m.fredHousingPermits}, ${m.fredHousingPermitsDate}, ${sectorWagesJson}, NOW()
       )
       ON CONFLICT (id) DO UPDATE SET
         bls_unemployment_rate     = EXCLUDED.bls_unemployment_rate,
@@ -207,6 +257,7 @@ export async function POST() {
         fred_population_date      = EXCLUDED.fred_population_date,
         fred_housing_permits      = EXCLUDED.fred_housing_permits,
         fred_housing_permits_date = EXCLUDED.fred_housing_permits_date,
+        sector_wages              = EXCLUDED.sector_wages,
         updated_at                = NOW()
     `
   } catch (e) {

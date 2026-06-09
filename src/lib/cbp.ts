@@ -3,7 +3,7 @@ const CBP_BASE = 'https://api.census.gov/data/2022/cbp'
 // Sectors: each has a short label and one or more NAICS 2-digit prefix strings.
 // Retail (44-45), Manufacturing (31-33), and Transportation (48-49) each span
 // multiple 2-digit codes that CBP never emits as a single row — aggregate them.
-const SECTORS: { label: string; prefixes: string[] }[] = [
+export const SECTORS: { label: string; prefixes: string[] }[] = [
   { label: 'Agriculture',          prefixes: ['11'] },
   { label: 'Mining & Energy',      prefixes: ['21'] },
   { label: 'Utilities',            prefixes: ['22'] },
