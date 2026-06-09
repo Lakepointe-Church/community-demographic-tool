@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { label: 'Compare',     href: '/compare' },
   { label: 'Religious',   href: '/religious' },
   { label: 'Employers',   href: '/employers' },
+  { label: 'Comm. Needs', href: '/community-needs' },
   { label: 'Site Scorer', href: '/site-scorer' },
 ]
 

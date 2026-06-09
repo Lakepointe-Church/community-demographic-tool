@@ -184,6 +184,28 @@ export async function POST() {
   }
   // CBP no-data is expected for rural ZIPs — don't count as errors
 
+  // CFPB complaint counts — batches of 10 (each call is fast)
+  let complaintsRefreshed = 0
+  for (let i = 0; i < zips.length; i += 10) {
+    const batch = zips.slice(i, i + 10)
+    await Promise.allSettled(batch.map(async ({ zip }) => {
+      try {
+        const res = await fetch(`https://www.consumerfinance.gov/data-research/consumer-complaints/search/api/v1/?size=0&zip_code=${zip}`)
+        if (!res.ok) return
+        const data = await res.json()
+        const count: number = data.hits?.total?.value ?? 0
+        await sql`
+          INSERT INTO community_health (zip, cfpb_complaints, updated_at)
+          VALUES (${zip}, ${count}, NOW())
+          ON CONFLICT (zip) DO UPDATE SET
+            cfpb_complaints = EXCLUDED.cfpb_complaints,
+            updated_at      = NOW()
+        `
+        complaintsRefreshed++
+      } catch { /* skip on error */ }
+    }))
+  }
+
   // Metro stats (BLS + FRED)
   try {
     const m = await fetchMetroStats()
@@ -217,6 +239,7 @@ export async function POST() {
     ok: errors.length === 0,
     zipsRefreshed,
     employersRefreshed,
+    complaintsRefreshed,
     errors: errors.length > 0 ? errors : undefined,
     refreshedAt: new Date().toISOString(),
   })

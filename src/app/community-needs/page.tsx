@@ -1,0 +1,370 @@
+'use client'
+
+import { useState, useEffect, useMemo } from 'react'
+import { ZIP_GROUPS } from '@/lib/zips'
+
+interface ZipHealth {
+  zip: string
+  name: string
+  diabetes: number | null
+  obesity: number | null
+  uninsured: number | null
+  depression: number | null
+  mentalDistress: number | null
+  cfpbComplaints: number | null
+  population: number | null
+}
+
+interface Overview {
+  zipCount: number
+  avgDiabetes: number | null
+  avgObesity: number | null
+  avgSmoking: number | null
+  avgUninsured: number | null
+  avgHighBP: number | null
+  avgDepression: number | null
+  avgMentalDistress: number | null
+  avgPhysInactivity: number | null
+  avgGenPoorHealth: number | null
+  totalComplaints: number
+  complaintsPer1k: number | null
+  zips: ZipHealth[]
+}
+
+interface ZipData {
+  zip: string
+  name: string
+  diabetes: number | null
+  obesity: number | null
+  smoking: number | null
+  uninsured: number | null
+  highBloodPressure: number | null
+  depression: number | null
+  mentalDistress: number | null
+  physInactivity: number | null
+  genPoorHealth: number | null
+  cfpbComplaints: number | null
+  cfpbPer1k: number | null
+  population: number | null
+  sesLabel: string | null
+}
+
+const CARD_BG = 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.01) 100%)'
+const RGB_MAP: Record<string,string> = {
+  '#E8B84B':'232,184,75','#4EAEFF':'78,174,255',
+  '#2DD4BF':'45,212,191','#A78BFA':'167,139,250','#FF6B6B':'255,107,107',
+}
+
+function fmtPct(n: number | null) { return n != null ? n.toFixed(1) + '%' : '—' }
+function fmtN(n: number | null) { return n != null ? n.toLocaleString() : '—' }
+
+// Color thresholds — higher = worse for most health metrics
+function healthColor(val: number | null, warn: number, danger: number): string {
+  if (val == null) return '#8A98AE'
+  if (val >= danger) return '#FF6B6B'
+  if (val >= warn)   return '#E8B84B'
+  return '#2DD4BF'
+}
+
+// ── Stat Card ──────────────────────────────────────────────────────
+function StatCard({ label, value, sub, color, loading }: {
+  label: string; value: string; sub?: string; color: string; loading?: boolean
+}) {
+  const [hov, setHov] = useState(false)
+  const rgb = RGB_MAP[color] ?? '232,184,75'
+  return (
+    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
+      background: hov
+        ? `radial-gradient(ellipse at 50% 0%,rgba(${rgb},0.22) 0%,transparent 60%),linear-gradient(145deg,rgba(${rgb},0.08) 0%,rgba(255,255,255,0.01) 100%)`
+        : `radial-gradient(ellipse at 50% 0%,rgba(${rgb},0.1) 0%,transparent 55%),${CARD_BG}`,
+      border: `1px solid ${hov ? `rgba(${rgb},0.4)` : '#232940'}`,
+      borderRadius: '4px', padding: '20px 24px', transition: 'all 0.2s',
+    }}>
+      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'10px' }}>{label}</div>
+      {loading
+        ? <div style={{ height:'36px', width:'60%', background:'rgba(255,255,255,0.05)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
+        : <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'40px', letterSpacing:'0.04em', color, lineHeight:1 }}>{value}</div>
+      }
+      {sub && <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#5a6478', marginTop:'8px', letterSpacing:'0.04em' }}>{sub}</div>}
+    </div>
+  )
+}
+
+// ── Health Metric Row (horizontal fill bar) ────────────────────────
+function MetricRow({ label, value, warn, danger, benchmark, unit = '%' }: {
+  label: string; value: number | null; warn: number; danger: number; benchmark?: number; unit?: string
+}) {
+  const color = healthColor(value, warn, danger)
+  const pct = value != null ? Math.min(value / danger * 100, 100) : 0
+  return (
+    <div style={{ display:'flex', alignItems:'center', gap:'12px', padding:'9px 0', borderBottom:'1px solid #1e2b3c' }}>
+      <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#A8B4C5', flex:1 }}>{label}</span>
+      <div style={{ width:'120px', height:'4px', background:'#1e2b3c', borderRadius:'2px', flexShrink:0 }}>
+        <div style={{ width:`${pct}%`, height:'100%', background:`linear-gradient(90deg,${color},${color}80)`, borderRadius:'2px', transition:'width 0.4s ease' }} />
+      </div>
+      <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color, width:'44px', textAlign:'right', flexShrink:0 }}>
+        {value != null ? value.toFixed(1) + unit : '—'}
+      </span>
+      {benchmark != null && (
+        <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', width:'52px', textAlign:'right', flexShrink:0 }}>
+          DFW: {benchmark.toFixed(1)}{unit}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// ── Radar-style comparison bars for ZIP vs DFW avg ─────────────────
+function ComparisonChart({ zipData, overview }: { zipData: ZipData; overview: Overview }) {
+  const metrics = [
+    { label: 'Diabetes',          zip: zipData.diabetes,       dfw: overview.avgDiabetes,       warn: 10, danger: 14 },
+    { label: 'Obesity',           zip: zipData.obesity,        dfw: overview.avgObesity,         warn: 33, danger: 40 },
+    { label: 'Smoking',           zip: zipData.smoking,        dfw: overview.avgSmoking,         warn: 12, danger: 18 },
+    { label: 'Uninsured',         zip: zipData.uninsured,      dfw: overview.avgUninsured,       warn: 12, danger: 20 },
+    { label: 'High Blood Pressure', zip: zipData.highBloodPressure, dfw: overview.avgHighBP,     warn: 32, danger: 38 },
+    { label: 'Depression',        zip: zipData.depression,     dfw: overview.avgDepression,      warn: 22, danger: 28 },
+    { label: 'Mental Distress',   zip: zipData.mentalDistress, dfw: overview.avgMentalDistress,  warn: 15, danger: 20 },
+    { label: 'Physical Inactivity', zip: zipData.physInactivity, dfw: overview.avgPhysInactivity, warn: 22, danger: 30 },
+    { label: 'Poor Health',       zip: zipData.genPoorHealth,  dfw: overview.avgGenPoorHealth,   warn: 14, danger: 20 },
+  ]
+  return (
+    <div>
+      {metrics.map(m => (
+        <MetricRow key={m.label} label={m.label} value={m.zip} warn={m.warn} danger={m.danger} benchmark={m.dfw ?? undefined} />
+      ))}
+    </div>
+  )
+}
+
+// ── Sortable ZIP table ─────────────────────────────────────────────
+type SortKey = 'diabetes' | 'obesity' | 'uninsured' | 'depression' | 'mentalDistress' | 'cfpbComplaints'
+
+function ZipTable({ zips }: { zips: ZipHealth[] }) {
+  const [sortKey, setSortKey] = useState<SortKey>('diabetes')
+  const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc')
+
+  const sorted = useMemo(() => [...zips].sort((a, b) => {
+    const va = a[sortKey] ?? -1
+    const vb = b[sortKey] ?? -1
+    return sortDir === 'desc' ? vb - va : va - vb
+  }), [zips, sortKey, sortDir])
+
+  function toggleSort(k: SortKey) {
+    if (sortKey === k) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
+    else { setSortKey(k); setSortDir('desc') }
+  }
+
+  const cols: { label: string; key: SortKey; warn: number; danger: number }[] = [
+    { label: 'Diabetes %',     key: 'diabetes',       warn: 10, danger: 14 },
+    { label: 'Obesity %',      key: 'obesity',        warn: 33, danger: 40 },
+    { label: 'Uninsured %',    key: 'uninsured',      warn: 12, danger: 20 },
+    { label: 'Depression %',   key: 'depression',     warn: 22, danger: 28 },
+    { label: 'Mental Dist %',  key: 'mentalDistress', warn: 15, danger: 20 },
+    { label: 'Complaints',     key: 'cfpbComplaints', warn: 500, danger: 1500 },
+  ]
+
+  return (
+    <div style={{ overflowX:'auto' }}>
+      <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <thead>
+          <tr>
+            <th style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #232940', whiteSpace:'nowrap' }}>ZIP</th>
+            <th style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #232940', whiteSpace:'nowrap' }}>Area</th>
+            {cols.map(c => (
+              <th key={c.key} onClick={() => toggleSort(c.key)} style={{
+                fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em',
+                color: sortKey === c.key ? '#E8B84B' : '#8A98AE',
+                textTransform:'uppercase', textAlign:'right', padding:'0 0 12px 16px',
+                borderBottom:'1px solid #232940', whiteSpace:'nowrap', cursor:'pointer',
+              }}>
+                {c.label}{sortKey === c.key ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.slice(0, 50).map(z => (
+            <tr key={z.zip} style={{ borderBottom:'1px solid #1e2b3c' }}>
+              <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#F0F2F7', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.zip}</td>
+              <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#A8B4C5', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.name}</td>
+              {cols.map(c => {
+                const val = z[c.key] as number | null
+                const color = healthColor(val, c.warn, c.danger)
+                return (
+                  <td key={c.key} style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color, padding:'10px 0 10px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
+                    {c.key === 'cfpbComplaints' ? fmtN(val) : fmtPct(val)}
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'12px' }}>
+        Showing top 50 of {zips.length} ZIPs · Color: teal = below avg, gold = elevated, red = high · Click headers to sort
+      </div>
+    </div>
+  )
+}
+
+// ── Page ──────────────────────────────────────────────────────────
+export default function CommunityNeedsPage() {
+  const [overview, setOverview] = useState<Overview | null>(null)
+  const [zipData, setZipData] = useState<ZipData | null>(null)
+  const [selectedZip, setSelectedZip] = useState('')
+  const [loading, setLoading] = useState(true)
+  const [zipLoading, setZipLoading] = useState(false)
+
+  useEffect(() => {
+    fetch('/api/community-needs')
+      .then(r => r.json())
+      .then(d => { setOverview(d); setLoading(false) })
+      .catch(() => setLoading(false))
+  }, [])
+
+  function handleZipChange(zip: string) {
+    setSelectedZip(zip)
+    if (!zip) { setZipData(null); return }
+    setZipLoading(true)
+    fetch(`/api/community-needs?zip=${zip}`)
+      .then(r => r.json())
+      .then(d => { setZipData(d); setZipLoading(false) })
+      .catch(() => setZipLoading(false))
+  }
+
+  return (
+    <>
+      <style>{`
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        .zip-select option{background:#13161f;color:#F0F2F7}
+        .cn-row:hover{background:rgba(255,255,255,0.02)}
+      `}</style>
+      <div style={{ padding:'40px 32px', maxWidth:'1440px', margin:'0 auto' }}>
+
+        {/* Header */}
+        <div className="fade-up" style={{ marginBottom:'36px' }}>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.2em', color:'#E8B84B', textTransform:'uppercase', marginBottom:'12px' }}>Dashboard · Community Needs</div>
+          <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#F0F2F7' }}>Community<br />Health & Needs</h1>
+          <div style={{ width:'48px', height:'2px', background:'linear-gradient(90deg,#E8B84B,rgba(232,184,75,0))', marginTop:'16px' }} />
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#8A98AE', letterSpacing:'0.08em', marginTop:'12px', textTransform:'uppercase' }}>
+            CDC PLACES 2023 · CFPB Consumer Complaints · {loading ? '—' : overview?.zipCount ?? '—'} DFW ZIPs
+          </div>
+        </div>
+
+        {/* DFW Overview Cards */}
+        <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
+          <StatCard label="Avg Diabetes Rate" value={loading ? '—' : fmtPct(overview?.avgDiabetes ?? null)} sub="% adults diagnosed" color="#FF6B6B" loading={loading} />
+          <StatCard label="Avg Obesity Rate"  value={loading ? '—' : fmtPct(overview?.avgObesity ?? null)}  sub="% adults" color="#E8B84B" loading={loading} />
+          <StatCard label="Avg Uninsured"     value={loading ? '—' : fmtPct(overview?.avgUninsured ?? null)} sub="% without coverage" color="#4EAEFF" loading={loading} />
+          <StatCard label="Avg Depression"    value={loading ? '—' : fmtPct(overview?.avgDepression ?? null)} sub="% adults" color="#A78BFA" loading={loading} />
+        </div>
+
+        {/* Second row of cards */}
+        <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
+          <StatCard label="Avg Smoking"        value={loading ? '—' : fmtPct(overview?.avgSmoking ?? null)}       sub="current cigarette use" color="#FF6B6B" loading={loading} />
+          <StatCard label="Avg Mental Distress" value={loading ? '—' : fmtPct(overview?.avgMentalDistress ?? null)} sub="frequent bad mental health days" color="#A78BFA" loading={loading} />
+          <StatCard label="Avg High Blood Pressure" value={loading ? '—' : fmtPct(overview?.avgHighBP ?? null)}   sub="% adults" color="#E8B84B" loading={loading} />
+          <StatCard label="CFPB Complaints"    value={loading ? '—' : fmtN(overview?.totalComplaints ?? null)}    sub={`${overview?.complaintsPer1k ?? '—'}/1K residents`} color="#4EAEFF" loading={loading} />
+        </div>
+
+        {/* ZIP Rankings Table */}
+        <div className="fade-up-3" style={{ background:CARD_BG, border:'1px solid #232940', padding:'24px', marginBottom:'24px' }}>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>ZIP Rankings by Health Indicator</div>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'20px' }}>Top 50 ZIPs · sort by column to find highest-need areas</div>
+          {loading
+            ? <div style={{ height:'300px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
+            : overview?.zips?.length
+              ? <ZipTable zips={overview.zips} />
+              : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#5a6478', padding:'24px 0' }}>No data yet — run the PLACES import script to populate.</div>
+          }
+        </div>
+
+        {/* Per-ZIP Drill-down */}
+        <div className="fade-up-4" style={{ background:CARD_BG, border:'1px solid #232940', padding:'24px' }}>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'16px' }}>ZIP Code Health Profile</div>
+
+          <div style={{ marginBottom:'24px', position:'relative', display:'inline-block' }}>
+            <select className="zip-select" value={selectedZip} onChange={e => handleZipChange(e.target.value)} style={{
+              fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', letterSpacing:'0.06em',
+              background:'#13161f', color: selectedZip ? '#F0F2F7' : '#8A98AE',
+              border:'1px solid #232940', borderRadius:'4px',
+              padding:'10px 40px 10px 14px', cursor:'pointer', outline:'none',
+              appearance:'none', WebkitAppearance:'none', minWidth:'280px',
+            }}>
+              <option value="">Select a ZIP code…</option>
+              {ZIP_GROUPS.map(group => (
+                <optgroup key={group.label} label={group.label}>
+                  {group.zips.map(z => (
+                    <option key={z.zip} value={z.zip}>{z.zip} — {z.label}</option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+            <div style={{ position:'absolute', right:'12px', top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'#8A98AE', fontSize:'10px' }}>▼</div>
+          </div>
+
+          {!selectedZip && (
+            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#5a6478', padding:'24px 0' }}>
+              Select a ZIP to see its full health profile compared to the DFW average.
+            </div>
+          )}
+
+          {selectedZip && zipLoading && (
+            <div style={{ height:'300px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
+          )}
+
+          {zipData && !zipLoading && overview && (
+            <>
+              {/* ZIP stat cards */}
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
+                <StatCard label="Diabetes" value={fmtPct(zipData.diabetes)} sub="% adults diagnosed" color={healthColor(zipData.diabetes, 10, 14)} />
+                <StatCard label="Obesity"  value={fmtPct(zipData.obesity)}  sub="% adults" color={healthColor(zipData.obesity, 33, 40)} />
+                <StatCard label="Uninsured" value={fmtPct(zipData.uninsured)} sub="% without coverage" color={healthColor(zipData.uninsured, 12, 20)} />
+                <StatCard label="Depression" value={fmtPct(zipData.depression)} sub="% adults" color={healthColor(zipData.depression, 22, 28)} />
+              </div>
+
+              {/* Metric comparison vs DFW avg */}
+              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px' }}>
+                <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'20px' }}>
+                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>Health Metrics vs DFW Avg</div>
+                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name} · % of adults</div>
+                  <ComparisonChart zipData={zipData} overview={overview} />
+                </div>
+
+                <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'20px' }}>
+                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>Financial Stress Indicators</div>
+                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name}</div>
+
+                  <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
+                    <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>CFPB Consumer Complaints</div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color: healthColor(zipData.cfpbComplaints, 500, 1500), lineHeight:1 }}>{fmtN(zipData.cfpbComplaints)}</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'4px' }}>total · {zipData.cfpbPer1k != null ? zipData.cfpbPer1k + '/1K residents' : ''}</div>
+                    </div>
+
+                    <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>Physical Inactivity</div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color: healthColor(zipData.physInactivity, 22, 30), lineHeight:1 }}>{fmtPct(zipData.physInactivity)}</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'4px' }}>% adults · DFW avg: {fmtPct(overview.avgPhysInactivity)}</div>
+                    </div>
+
+                    <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>SES Class</div>
+                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color:'#E8B84B', lineHeight:1 }}>{zipData.sesLabel ?? '—'}</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'4px' }}>socioeconomic tier</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'16px', letterSpacing:'0.06em' }}>
+          Health data: CDC PLACES 2023 (age-adjusted prevalence estimates) · Complaints: CFPB Consumer Complaint Database (all-time) · HMDA mortgage denial rates — Phase 2
+        </div>
+
+      </div>
+    </>
+  )
+}
