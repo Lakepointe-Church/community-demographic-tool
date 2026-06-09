@@ -84,7 +84,9 @@ export async function fetchZipData(zip: string) {
   const data       = await res.json()
   const data2020   = await res2020.json()
   const dataAge    = await resAge.json()
-  const dataYfiWfi = await resYfiWfi.json()
+  // YFI/WFI call may fail for some ZIPs — parse defensively
+  let dataYfiWfi: unknown = null
+  try { dataYfiWfi = resYfiWfi.ok ? await resYfiWfi.json() : null } catch { /* leave null */ }
 
   if (!data || data.length < 2) throw new Error(`No Census data for ZIP ${zip}`)
 
@@ -101,8 +103,8 @@ export async function fetchZipData(zip: string) {
 
   // YFI/WFI input data
   const yr: Record<string, string> = {}
-  if (dataYfiWfi?.length >= 2) {
-    const [yh, yv] = dataYfiWfi
+  if (Array.isArray(dataYfiWfi) && dataYfiWfi.length >= 2) {
+    const [yh, yv] = dataYfiWfi as string[][]
     yh.forEach((h: string, idx: number) => { yr[h] = yv[idx] })
   }
 
