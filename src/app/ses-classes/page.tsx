@@ -392,7 +392,7 @@ export default function SesClassesPage() {
                   return (
                     <tr key={z.zip} className="ses-row" style={{ borderBottom: '1px solid #1e2b3c', transition: 'background 0.15s' }}>
                       <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{z.zip}</td>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#A8B4C5', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{z.name?.replace(/^ZCTA5\s+\d+,?\s*/i, '') ?? '—'}</td>
+                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#A8B4C5', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{z.name ?? '—'}</td>
                       <td style={{ padding: '11px 16px 11px 0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                           <div style={{ width: '60px', height: '4px', background: '#1e2b3c', borderRadius: '2px', flexShrink: 0 }}>

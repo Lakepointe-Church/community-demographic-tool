@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
+import { ZIP_GROUPS } from '@/lib/zips'
+
+const ZIP_LABEL: Record<string, string> = {}
+for (const group of ZIP_GROUPS) {
+  for (const z of group.zips) ZIP_LABEL[z.zip] = z.label
+}
 
 export async function GET() {
   try {
@@ -23,7 +29,7 @@ export async function GET() {
       if (d.ses_label && countByTier[d.ses_label] !== undefined) countByTier[d.ses_label]++
       return {
         zip:                  d.zip,
-        name:                 d.name,
+        name:                 ZIP_LABEL[d.zip] ?? d.zip,
         sesLabel:             d.ses_label,
         sesScore:             score,
         medianHouseholdIncome: d.median_household_income,
