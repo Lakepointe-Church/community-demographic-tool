@@ -164,17 +164,18 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
   ]
 
   return (
-    <div style={{ maxHeight:'320px', overflowY:'auto', overflowX:'auto' }}>
+    <div style={{ maxHeight:'320px', overflowY:'auto', overflowX:'auto', scrollbarGutter:'stable' }}>
       <table style={{ width:'100%', borderCollapse:'collapse' }}>
         <thead style={{ position:'sticky', top:0, background:'#13161f', zIndex:1 }}>
           <tr>
             <th style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #232940', whiteSpace:'nowrap' }}>ZIP</th>
             <th style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #232940', whiteSpace:'nowrap' }}>Area</th>
-            {cols.map(c => (
+            {cols.map((c, ci) => (
               <th key={c.key} onClick={() => toggleSort(c.key)} style={{
                 fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em',
                 color: sortKey === c.key ? '#E8B84B' : '#8A98AE',
-                textTransform:'uppercase', textAlign:'right', padding:'0 0 12px 16px',
+                textTransform:'uppercase', textAlign:'right',
+                padding: ci === cols.length - 1 ? '0 4px 12px 16px' : '0 0 12px 16px',
                 borderBottom:'1px solid #232940', whiteSpace:'nowrap', cursor:'pointer',
               }}>
                 {c.label}{sortKey === c.key ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
@@ -187,11 +188,11 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
             <tr key={z.zip} style={{ borderBottom:'1px solid #1e2b3c' }}>
               <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#F0F2F7', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.zip}</td>
               <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#A8B4C5', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.name}</td>
-              {cols.map(c => {
+              {cols.map((c, ci) => {
                 const val = z[c.key] as number | null
                 const color = healthColor(val, c.warn, c.danger)
                 return (
-                  <td key={c.key} style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color, padding:'10px 0 10px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
+                  <td key={c.key} style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color, padding: ci === cols.length - 1 ? '10px 4px 10px 16px' : '10px 0 10px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
                     {c.key === 'cfpbComplaints' ? fmtN(val) : fmtPct(val)}
                   </td>
                 )
@@ -252,6 +253,10 @@ export default function CommunityNeedsPage() {
         </div>
 
         {/* DFW Overview Cards */}
+        <div className="fade-up-2" style={{ marginBottom:'12px' }}>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>DFW Metro Averages</div>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'12px' }}>Weighted across all {loading ? '—' : overview?.zipCount ?? '—'} ZIP codes in the DFW coverage area</div>
+        </div>
         <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
           <StatCard label="Avg Diabetes Rate" value={loading ? '—' : fmtPct(overview?.avgDiabetes ?? null)} sub="% adults diagnosed" color="#FF6B6B" loading={loading} />
           <StatCard label="Avg Obesity Rate"  value={loading ? '—' : fmtPct(overview?.avgObesity ?? null)}  sub="% adults" color="#E8B84B" loading={loading} />
