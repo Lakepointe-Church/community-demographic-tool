@@ -175,7 +175,7 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
                 fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em',
                 color: sortKey === c.key ? '#E8B84B' : '#8A98AE',
                 textTransform:'uppercase', textAlign:'right',
-                padding: ci === cols.length - 1 ? '0 4px 12px 16px' : '0 0 12px 16px',
+                padding: ci === cols.length - 1 ? '0 20px 12px 16px' : '0 0 12px 16px',
                 borderBottom:'1px solid #232940', whiteSpace:'nowrap', cursor:'pointer',
               }}>
                 {c.label}{sortKey === c.key ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
@@ -192,7 +192,7 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
                 const val = z[c.key] as number | null
                 const color = healthColor(val, c.warn, c.danger)
                 return (
-                  <td key={c.key} style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color, padding: ci === cols.length - 1 ? '10px 4px 10px 16px' : '10px 0 10px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
+                  <td key={c.key} style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color, padding: ci === cols.length - 1 ? '10px 20px 10px 16px' : '10px 0 10px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
                     {c.key === 'cfpbComplaints' ? fmtN(val) : fmtPct(val)}
                   </td>
                 )
@@ -253,9 +253,9 @@ export default function CommunityNeedsPage() {
         </div>
 
         {/* DFW Overview Cards */}
-        <div className="fade-up-2" style={{ marginBottom:'12px' }}>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>DFW Metro Averages</div>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'12px' }}>Weighted across all {loading ? '—' : overview?.zipCount ?? '—'} ZIP codes in the DFW coverage area</div>
+        <div className="fade-up-2" style={{ marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid #232940' }}>
+          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'28px', letterSpacing:'0.08em', color:'#F0F2F7', lineHeight:1, marginBottom:'6px' }}>DFW Metro Averages</div>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#8A98AE', letterSpacing:'0.08em' }}>Across all {loading ? '—' : overview?.zipCount ?? '—'} ZIP codes in the DFW coverage area · CDC PLACES 2023</div>
         </div>
         <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
           <StatCard label="Avg Diabetes Rate" value={loading ? '—' : fmtPct(overview?.avgDiabetes ?? null)} sub="% adults diagnosed" color="#FF6B6B" loading={loading} />
