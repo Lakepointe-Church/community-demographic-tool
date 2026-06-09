@@ -164,9 +164,9 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
   ]
 
   return (
-    <div style={{ overflowX:'auto' }}>
+    <div style={{ maxHeight:'320px', overflowY:'auto', overflowX:'auto' }}>
       <table style={{ width:'100%', borderCollapse:'collapse' }}>
-        <thead>
+        <thead style={{ position:'sticky', top:0, background:'#13161f', zIndex:1 }}>
           <tr>
             <th style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #232940', whiteSpace:'nowrap' }}>ZIP</th>
             <th style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #232940', whiteSpace:'nowrap' }}>Area</th>
@@ -183,7 +183,7 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
           </tr>
         </thead>
         <tbody>
-          {sorted.slice(0, 50).map(z => (
+          {sorted.map(z => (
             <tr key={z.zip} style={{ borderBottom:'1px solid #1e2b3c' }}>
               <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#F0F2F7', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.zip}</td>
               <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#A8B4C5', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.name}</td>
@@ -201,7 +201,7 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
         </tbody>
       </table>
       <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'12px' }}>
-        Showing top 50 of {zips.length} ZIPs · Color: teal = below avg, gold = elevated, red = high · Click headers to sort
+        {zips.length} ZIPs · Color: teal = below avg, gold = elevated, red = high · Click headers to sort
       </div>
     </div>
   )
@@ -270,7 +270,7 @@ export default function CommunityNeedsPage() {
         {/* ZIP Rankings Table */}
         <div className="fade-up-3" style={{ background:CARD_BG, border:'1px solid #232940', padding:'24px', marginBottom:'24px' }}>
           <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>ZIP Rankings by Health Indicator</div>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'20px' }}>Top 50 ZIPs · sort by column to find highest-need areas</div>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'20px' }}>All ZIPs · scroll to explore · sort by column to find highest-need areas</div>
           {loading
             ? <div style={{ height:'300px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
             : overview?.zips?.length
