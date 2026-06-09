@@ -99,6 +99,8 @@ export async function GET(request: NextRequest) {
       },
       yfi,
       wfi,
+      dualEarnerPct:    d.dual_earner_pct     != null ? parseFloat(d.dual_earner_pct)     : null,
+      commute30PlusPct: d.commute_30plus_pct  != null ? parseFloat(d.commute_30plus_pct)  : null,
       updatedAt: d.updated_at,
     })
   } catch (error) {

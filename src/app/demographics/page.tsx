@@ -19,6 +19,8 @@ interface CensusData {
   sesClass: { label: string; score: number }
   yfi: number
   wfi: number
+  dualEarnerPct: number | null
+  commute30PlusPct: number | null
   race: { white: number; hispanic: number; black: number; asian: number; other: number }
   education: { noHSDiploma: number; hsDiploma: number; someCollege: number; bachelorsPlus: number }
   ageDistribution: { age0_17: number; age18_34: number; age35_54: number; age55_74: number; age75plus: number } | null
@@ -603,14 +605,14 @@ export default function DemographicsPage() {
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.2em', color: '#5a6478', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
               Lakepointe Indexes
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
               <StatCard
                 label="Young Family Index"
                 value={data ? `${data.yfi}` : '—'}
                 sub={data ? `${indexLabel(data.yfi)} · /100` : 'Composite index'}
                 accent={data ? yfiAccent(data.yfi) as 'teal' | 'blue' | 'gold' | 'coral' : 'teal'}
                 loading={loading}
-                tooltip={"Young Family Index (0–100): % population under 18 (40%) + % family households with children (40%) + avg household size (20%).\n\nSource: Derived from ACS 2023."}
+                tooltip={"Young Family Index (0–100): % population under 18 (40%) + % family households (25%) + fertility rate (20%) + avg household size (15%).\n\nSource: Derived from ACS 2023."}
               />
               <StatCard
                 label="Working Family Index"
@@ -618,7 +620,22 @@ export default function DemographicsPage() {
                 sub={data ? `${indexLabel(data.wfi)} · /100` : 'Composite index'}
                 accent={data ? wfiAccent(data.wfi) as 'blue' | 'teal' | 'gold' | 'coral' : 'blue'}
                 loading={loading}
-                tooltip={"Working Family Index (0–100): % working-parent households (50%) + employment rate (30%) + % households earning $100K+ (20%).\n\nSource: Derived from ACS 2023."}
+                tooltip={"Working Family Index (0–100): dual-earner rate (40%) + working parent rate (25%) + commute burden (20%) + occupational mix (15%).\n\nSource: Derived from ACS 2023."}
+              />
+              <StatCard
+                label="Dual-Earner HH"
+                value={data?.dualEarnerPct != null ? `${data.dualEarnerPct}%` : '—'}
+                sub="of married-couple families"
+                accent="purple" loading={loading}
+                tooltip={"Married-couple families where both spouses are in the labor force, as a percent of all families.\n\nSource: Census B23007."}
+              />
+              <StatCard
+                label="Long Commute"
+                value={data?.commute30PlusPct != null ? `${data.commute30PlusPct}%` : '—'}
+                sub="workers · 30+ min each way"
+                accent={data?.commute30PlusPct != null && data.commute30PlusPct > 50 ? 'coral' : 'teal'}
+                loading={loading}
+                tooltip={"Workers 16+ who travel 30 minutes or more to work, as a percent of all workers.\n\nSource: Census B08303."}
               />
             </div>
           </div>
