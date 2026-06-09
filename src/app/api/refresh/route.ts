@@ -60,10 +60,10 @@ export async function POST() {
   const errors: string[] = []
   let zipsRefreshed = 0
 
-  // Fetch ZIPs in batches of 3 — 4 concurrent Census calls per ZIP × 3 = 12 concurrent requests
+  // Fetch ZIPs in batches of 5 to avoid Census rate limits
   const zips = [...DFW_ZIPS]
-  for (let i = 0; i < zips.length; i += 3) {
-    const batch = zips.slice(i, i + 3)
+  for (let i = 0; i < zips.length; i += 5) {
+    const batch = zips.slice(i, i + 5)
     const results = await Promise.allSettled(batch.map(({ zip }) => fetchZipData(zip)))
 
     for (const result of results) {

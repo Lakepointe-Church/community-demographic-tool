@@ -74,19 +74,22 @@ export async function fetchZipData(zip: string) {
   const base = `${CENSUS_BASE}/2023/acs/acs5`
   const geo  = `for=zip%20code%20tabulation%20area:${zip}&key=${key}`
 
-  const [res, res2020, resAge, resYfiWfi] = await Promise.all([
+  const [res, res2020, resAge] = await Promise.all([
     fetch(`${base}?get=NAME,${VARS}&${geo}`),
     fetch(`${CENSUS_BASE}/2020/acs/acs5?get=B01001_001E&${geo}`),
     fetch(`${base}?get=${AGE_VARS}&${geo}`),
-    fetch(`${base}?get=${YFI_WFI_VARS}&${geo}`),
   ])
 
-  const data       = await res.json()
-  const data2020   = await res2020.json()
-  const dataAge    = await resAge.json()
-  // YFI/WFI call may fail for some ZIPs — parse defensively
+  const data      = await res.json()
+  const data2020  = await res2020.json()
+  const dataAge   = await resAge.json()
+
+  // YFI/WFI vars fetched separately — some ZIPs return empty/error for these tables
   let dataYfiWfi: unknown = null
-  try { dataYfiWfi = resYfiWfi.ok ? await resYfiWfi.json() : null } catch { /* leave null */ }
+  try {
+    const resYfiWfi = await fetch(`${base}?get=${YFI_WFI_VARS}&${geo}`)
+    if (resYfiWfi.ok) dataYfiWfi = await resYfiWfi.json()
+  } catch { /* leave null for ZIPs without coverage */ }
 
   if (!data || data.length < 2) throw new Error(`No Census data for ZIP ${zip}`)
 
