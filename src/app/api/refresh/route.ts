@@ -87,7 +87,7 @@ export async function POST() {
           age_0_17, age_18_34, age_35_54, age_55_74, age_75_plus,
           hh_married_with_children, hh_married_no_children,
           hh_single_parent, hh_living_alone, hh_other_type,
-          fertility_rate, dual_earner_pct, commute_30plus_pct,
+          fertility_rate, dual_earner_pct, commute_30plus_pct, occ_mgmt_prof_pct,
           updated_at
         ) VALUES (
           ${d.zip}, ${d.name}, ${d.population}, ${d.population2020}, ${d.populationGrowth},
@@ -102,7 +102,7 @@ export async function POST() {
           ${d.ageDistribution.age55_74}, ${d.ageDistribution.age75plus},
           ${d.householdTypes.marriedWithChildren}, ${d.householdTypes.marriedNoChildren},
           ${d.householdTypes.singleParent}, ${d.householdTypes.livingAlone}, ${d.householdTypes.other},
-          ${d.fertilityRate}, ${d.dualEarnerPct}, ${d.commute30PlusPct},
+          ${d.fertilityRate}, ${d.dualEarnerPct}, ${d.commute30PlusPct}, ${d.occMgmtProfPct},
           NOW()
         )
         ON CONFLICT (zip) DO UPDATE SET
@@ -147,6 +147,7 @@ export async function POST() {
           fertility_rate             = EXCLUDED.fertility_rate,
           dual_earner_pct            = EXCLUDED.dual_earner_pct,
           commute_30plus_pct         = EXCLUDED.commute_30plus_pct,
+          occ_mgmt_prof_pct          = EXCLUDED.occ_mgmt_prof_pct,
           updated_at                 = NOW()
       `
       zipsRefreshed++

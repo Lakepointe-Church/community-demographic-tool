@@ -93,6 +93,13 @@ export async function fetchZipData(zip: string) {
     if (resYfiWfi.ok) dataYfiWfi = await resYfiWfi.json()
   } catch { /* leave null for ZIPs without coverage */ }
 
+  // Occupation vars fetched separately
+  let dataOcc: unknown = null
+  try {
+    const resOcc = await fetch(`${base}?get=C24010_001E,C24010_003E,C24010_039E&${geo}`)
+    if (resOcc.ok) dataOcc = await resOcc.json()
+  } catch { /* leave null */ }
+
   if (!data || data.length < 2) throw new Error(`No Census data for ZIP ${zip}`)
 
   const [headers, values] = data
@@ -112,6 +119,21 @@ export async function fetchZipData(zip: string) {
     const [yh, yv] = dataYfiWfi as string[][]
     yh.forEach((h: string, idx: number) => { yr[h] = yv[idx] })
   }
+
+  // Occupation data
+  const or: Record<string, string> = {}
+  if (Array.isArray(dataOcc) && dataOcc.length >= 2) {
+    const [oh, ov] = dataOcc as string[][]
+    oh.forEach((h: string, idx: number) => { or[h] = ov[idx] })
+  }
+
+  // Occupational mix — % in management/professional/science/arts
+  const occTotal    = i(or['C24010_001E'])
+  const occMaleMgmt = i(or['C24010_003E'])
+  const occFemMgmt  = i(or['C24010_039E'])
+  const occMgmtProfPct = occTotal > 0
+    ? parseFloat(((occMaleMgmt + occFemMgmt) / occTotal * 100).toFixed(1))
+    : null
 
   // Population + growth
   const population   = i(r['B01001_001E'])
@@ -249,5 +271,6 @@ export async function fetchZipData(zip: string) {
     fertilityRate,
     dualEarnerPct,
     commute30PlusPct,
+    occMgmtProfPct,
   }
 }
