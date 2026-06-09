@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { DFW_ZIPS } from '@/lib/zips'
 import { fetchZipData } from '@/lib/census'
+import { fetchZipEmployers } from '@/lib/cbp'
 
 const BLS_BASE = 'https://api.bls.gov/publicAPI/v2/timeseries/data/'
 const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations'
@@ -153,6 +154,34 @@ export async function POST() {
       zipsRefreshed++
     }
   }
+
+  // CBP employer data — separate pass, batches of 5
+  const employerErrors: string[] = []
+  let employersRefreshed = 0
+  for (let i = 0; i < zips.length; i += 5) {
+    const batch = zips.slice(i, i + 5)
+    const results = await Promise.allSettled(batch.map(({ zip }) => fetchZipEmployers(zip)))
+    for (let j = 0; j < results.length; j++) {
+      const result = results[j]
+      if (result.status === 'rejected' || result.value === null) {
+        employerErrors.push(`ZIP ${batch[j].zip}: CBP no data`)
+        continue
+      }
+      const e = result.value
+      await sql`
+        INSERT INTO zip_employers (zip, total_estab, total_emp, total_payroll, sectors, updated_at)
+        VALUES (${e.zip}, ${e.totalEstab}, ${e.totalEmp}, ${e.totalPayroll}, ${JSON.stringify(e.sectors)}, NOW())
+        ON CONFLICT (zip) DO UPDATE SET
+          total_estab   = EXCLUDED.total_estab,
+          total_emp     = EXCLUDED.total_emp,
+          total_payroll = EXCLUDED.total_payroll,
+          sectors       = EXCLUDED.sectors,
+          updated_at    = NOW()
+      `
+      employersRefreshed++
+    }
+  }
+  errors.push(...employerErrors)
 
   // Metro stats (BLS + FRED)
   try {
