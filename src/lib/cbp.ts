@@ -44,7 +44,7 @@ export interface ZipEmployerData {
   totalEstab: number
   totalEmp: number
   totalPayroll: number
-  sectors: { label: string; estab: number }[]
+  sectors: { label: string; estab: number; emp: number; payroll: number }[]
   sizeDist: { label: string; estab: number }[]
 }
 
@@ -83,11 +83,12 @@ export async function fetchZipEmployers(zip: string): Promise<ZipEmployerData | 
   const totalEmp     = totalRow ? parseInt(totalRow[empIdx]    || '0') : 0
   const totalPayroll = totalRow ? parseInt(totalRow[payannIdx] || '0') : 0
 
-  const sectors = SECTORS.map(s => {
-    const estab = data
-      .filter(r => s.prefixes.some(p => r[naicsIdx].startsWith(p)))
-      .reduce((sum, r) => sum + parseInt(r[estabIdx] || '0'), 0)
-    return { label: s.label, estab }
+  const sectors: { label: string; estab: number; emp: number; payroll: number }[] = SECTORS.map(s => {
+    const matching = data.filter(r => s.prefixes.some(p => r[naicsIdx].startsWith(p)))
+    const estab   = matching.reduce((sum, r) => sum + parseInt(r[estabIdx]  || '0'), 0)
+    const emp     = matching.reduce((sum, r) => sum + parseInt(r[empIdx]    || '0'), 0)
+    const payroll = matching.reduce((sum, r) => sum + parseInt(r[payannIdx] || '0'), 0)
+    return { label: s.label, estab, emp, payroll }
   }).filter(s => s.estab > 0)
     .sort((a, b) => b.estab - a.estab)
 

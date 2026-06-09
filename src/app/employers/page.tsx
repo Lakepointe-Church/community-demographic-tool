@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ZIP_GROUPS } from '@/lib/zips'
 
-interface SectorRow { label: string; estab: number }
+interface SectorRow { label: string; estab: number; avgWage?: number | null }
 
 interface Overview {
   totalEstab: number
@@ -25,6 +25,7 @@ interface ZipData {
   topSector: string | null
   avgWage: number | null
   sectors: SectorRow[]
+  sectorWages: { label: string; avgWage: number }[]
   sizeDist: SectorRow[]
   population: number | null
   medianHouseholdIncome: number | null
@@ -200,6 +201,43 @@ function SectorBarChart({ sectors }: { sectors: SectorRow[] }) {
   )
 }
 
+// ── Wage Bar Chart ────────────────────────────────────────────────
+function WageBarChart({ sectors }: { sectors: SectorRow[] }) {
+  const withWage = sectors.filter(s => s.avgWage != null).sort((a, b) => (b.avgWage ?? 0) - (a.avgWage ?? 0))
+  if (!withWage.length) return (
+    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#5a6478', padding:'12px 0' }}>
+      Wage data available after next data refresh
+    </div>
+  )
+  const maxWage = Math.max(...withWage.map(s => s.avgWage ?? 0))
+  const rowH = 30, labelW = 155, barAreaW = 300, numW = 85
+  const svgW = labelW + barAreaW + numW
+  return (
+    <svg width="100%" viewBox={`0 0 ${svgW} ${withWage.length * rowH + 16}`} style={{ overflow:'visible' }}>
+      <defs>
+        {withWage.map((_, i) => (
+          <linearGradient key={i} id={`wGrad-${i}`} x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stopColor={PALETTE[i % 5]} />
+            <stop offset="100%" stopColor={`${PALETTE[i % 5]}40`} />
+          </linearGradient>
+        ))}
+      </defs>
+      {withWage.map((s, i) => {
+        const y = i * rowH + 8
+        const bw = ((s.avgWage ?? 0) / maxWage) * barAreaW
+        const color = PALETTE[i % 5]
+        return (
+          <g key={s.label}>
+            <text x={labelW - 8} y={y + 10} textAnchor="end" fill="#8A98AE" fontSize="10" fontFamily="IBM Plex Mono">{s.label}</text>
+            <rect x={labelW} y={y} width={Math.max(bw, 2)} height={18} fill={`url(#wGrad-${i})`} rx="2" />
+            <text x={labelW + bw + 8} y={y + 12} fill={color} fontSize="10" fontFamily="IBM Plex Mono" fontWeight="600">${((s.avgWage ?? 0) / 1000).toFixed(0)}K</text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────
 export default function EmployersPage() {
   const [overview, setOverview] = useState<Overview | null>(null)
@@ -279,6 +317,16 @@ export default function EmployersPage() {
               ))
             }
           </div>
+        </div>
+
+        {/* DFW Avg Wage by Sector */}
+        <div className="fade-up-4" style={{ background:CARD_BG, border:'1px solid #232940', padding:'24px', marginBottom:'24px' }}>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>Avg Annual Wage by Sector</div>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'20px' }}>DFW Metro · Derived from CBP 2022 payroll ÷ employment per sector</div>
+          {loading
+            ? <div style={{ height:'300px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
+            : <WageBarChart sectors={dfw?.sectors ?? []} />
+          }
         </div>
 
         {/* Per-ZIP Drill-down */}

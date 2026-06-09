@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     `
     if (!rows.length) return NextResponse.json({ error: 'No data' }, { status: 404 })
     const r = rows[0]
-    const sectors: { label: string; estab: number }[] = r.sectors ?? []
+    const sectors: { label: string; estab: number; emp?: number; payroll?: number }[] = r.sectors ?? []
     const sizeDist: { label: string; estab: number }[] = r.size_dist ?? []
 
     // Large employers = 100+ employees (size classes 100-249, 250-499, 500-999, 1000+)
@@ -29,6 +29,10 @@ export async function GET(req: NextRequest) {
     const largeEstab = sizeDist.filter(s => largeLabels.has(s.label)).reduce((sum, s) => sum + s.estab, 0)
     const topSector = sectors[0]?.label ?? null
     const avgWage = r.total_emp > 0 ? Math.round((Number(r.total_payroll) * 1000) / r.total_emp) : null
+    const sectorWages = sectors
+      .filter(s => (s.emp ?? 0) > 0)
+      .map(s => ({ label: s.label, avgWage: Math.round(((s.payroll ?? 0) * 1000) / (s.emp ?? 1)) }))
+      .sort((a, b) => b.avgWage - a.avgWage)
 
     return NextResponse.json({
       zip: r.zip,
@@ -40,6 +44,7 @@ export async function GET(req: NextRequest) {
       topSector,
       avgWage,
       sectors,
+      sectorWages,
       sizeDist,
       population: r.population,
       medianHouseholdIncome: r.median_household_income,
@@ -55,7 +60,7 @@ export async function GET(req: NextRequest) {
   `
 
   let totalEstab = 0, totalEmp = 0, totalPayroll = 0
-  const sectorMap: Record<string, number> = {}
+  const sectorMap: Record<string, { estab: number; emp: number; payroll: number }> = {}
   const topZips = rows.slice(0, 20).map(r => ({
     zip: r.zip,
     name: ZIP_LABEL[r.zip] ?? r.zip,
@@ -68,12 +73,19 @@ export async function GET(req: NextRequest) {
     totalEmp     += r.total_emp   ?? 0
     totalPayroll += Number(r.total_payroll ?? 0)
     for (const s of (r.sectors ?? [])) {
-      sectorMap[s.label] = (sectorMap[s.label] ?? 0) + s.estab
+      if (!sectorMap[s.label]) sectorMap[s.label] = { estab: 0, emp: 0, payroll: 0 }
+      sectorMap[s.label].estab   += s.estab   ?? 0
+      sectorMap[s.label].emp     += s.emp     ?? 0
+      sectorMap[s.label].payroll += s.payroll ?? 0
     }
   }
 
   const sectors = Object.entries(sectorMap)
-    .map(([label, estab]) => ({ label, estab }))
+    .map(([label, d]) => ({
+      label,
+      estab: d.estab,
+      avgWage: d.emp > 0 ? Math.round((d.payroll * 1000) / d.emp) : null,
+    }))
     .sort((a, b) => b.estab - a.estab)
 
   const avgWage = totalEmp > 0 ? Math.round((totalPayroll * 1000) / totalEmp) : null
