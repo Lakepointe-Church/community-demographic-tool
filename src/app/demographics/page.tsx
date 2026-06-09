@@ -720,7 +720,7 @@ export default function DemographicsPage() {
             )}
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.06em', marginTop: '16px', lineHeight: 1.7 }}>
               Source: U.S. Dept. of Education College Scorecard · collegescorecard.ed.gov<br />
-              — indicates data not reported: applies to vocational/trade schools (no 4-yr program) or institutions below Scorecard disclosure threshold
+              — indicates data not reported: institution below Scorecard disclosure threshold · trade/vocational schools excluded
             </div>
           </div>
 

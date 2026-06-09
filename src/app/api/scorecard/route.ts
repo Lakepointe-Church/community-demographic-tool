@@ -5,6 +5,7 @@ const SCORECARD_BASE = 'https://api.data.ed.gov/student/v1/schools.json'
 
 const FIELDS = [
   'id', 'school.name', 'school.city', 'school.state',
+  'school.institutional_characteristics.level',
   'latest.student.size',
   'latest.completion.completion_rate_4yr_150nt',
   'latest.cost.avg_net_price.public',
@@ -26,6 +27,7 @@ export async function GET(request: NextRequest) {
       FROM colleges_cache c
       JOIN zip_colleges zc ON c.unit_id = zc.unit_id
       WHERE zc.dfw_zip = ${zip}
+        AND (c.iclevel IS NULL OR c.iclevel != 3)
       ORDER BY c.enrollment DESC NULLS LAST
       LIMIT 10
     `
@@ -63,9 +65,11 @@ export async function GET(request: NextRequest) {
     }
 
     const data = await response.json()
+    const results = (data.results ?? []) as Record<string, unknown>[]
+    const filtered = results.filter(s => s['school.institutional_characteristics.level'] !== 3)
     return NextResponse.json({
-      zip, radius, total: data.metadata?.total ?? 0, cached: false,
-      schools: (data.results ?? []).map((s: Record<string, unknown>) => ({
+      zip, radius, total: filtered.length, cached: false,
+      schools: filtered.map(s => ({
         name:               s['school.name'],
         city:               s['school.city'],
         state:              s['school.state'],

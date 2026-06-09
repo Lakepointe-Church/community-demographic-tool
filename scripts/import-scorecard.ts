@@ -106,6 +106,7 @@ async function main() {
   await sql`ALTER TABLE colleges_cache ADD COLUMN IF NOT EXISTS zip       TEXT`
   await sql`ALTER TABLE colleges_cache ADD COLUMN IF NOT EXISTS latitude  NUMERIC(9,6)`
   await sql`ALTER TABLE colleges_cache ADD COLUMN IF NOT EXISTS longitude NUMERIC(9,6)`
+  await sql`ALTER TABLE colleges_cache ADD COLUMN IF NOT EXISTS iclevel   SMALLINT`
   await sql`
     CREATE TABLE IF NOT EXISTS zip_colleges (
       dfw_zip TEXT,
@@ -121,7 +122,7 @@ async function main() {
 
   interface School {
     unitId: number; name: string; city: string; state: string; zip: string
-    lat: number; lng: number
+    lat: number; lng: number; iclevel: number | null
     enrollment: number | null; completionRate4yr: number | null
     avgNetPrice: number | null; medianEarnings10yr: number | null
   }
@@ -150,6 +151,7 @@ async function main() {
     const rawNetPrice = parseN(row['NPT4_PUB']) ?? parseN(row['NPT4_PRIV'])
     const rawEnroll   = parseN(row['UGDS'])
     const rawEarnings = parseN(row['MD_EARN_WNE_P10'])
+    const rawIclevel  = parseN(row['ICLEVEL'])
 
     schools.push({
       unitId,
@@ -158,6 +160,7 @@ async function main() {
       state:               row['STABBR']  ?? '',
       zip:                 (row['ZIP'] ?? '').slice(0, 5),
       lat, lng,
+      iclevel:             rawIclevel != null ? Math.round(rawIclevel) : null,
       enrollment:          rawEnroll   != null ? Math.round(rawEnroll)   : null,
       completionRate4yr:   parseN(row['C150_4']),
       avgNetPrice:         rawNetPrice != null ? Math.round(rawNetPrice) : null,
@@ -172,14 +175,14 @@ async function main() {
   for (const s of schools) {
     await sql`
       INSERT INTO colleges_cache
-        (unit_id, name, city, state, zip, latitude, longitude,
+        (unit_id, name, city, state, zip, latitude, longitude, iclevel,
          enrollment, completion_rate_4yr, avg_net_price, median_earnings_10yr, updated_at)
       VALUES
-        (${s.unitId}, ${s.name}, ${s.city}, ${s.state}, ${s.zip}, ${s.lat}, ${s.lng},
+        (${s.unitId}, ${s.name}, ${s.city}, ${s.state}, ${s.zip}, ${s.lat}, ${s.lng}, ${s.iclevel},
          ${s.enrollment}, ${s.completionRate4yr}, ${s.avgNetPrice}, ${s.medianEarnings10yr}, NOW())
       ON CONFLICT (unit_id) DO UPDATE SET
         name = EXCLUDED.name, city = EXCLUDED.city, state = EXCLUDED.state, zip = EXCLUDED.zip,
-        latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude,
+        latitude = EXCLUDED.latitude, longitude = EXCLUDED.longitude, iclevel = EXCLUDED.iclevel,
         enrollment = EXCLUDED.enrollment, completion_rate_4yr = EXCLUDED.completion_rate_4yr,
         avg_net_price = EXCLUDED.avg_net_price, median_earnings_10yr = EXCLUDED.median_earnings_10yr,
         updated_at = NOW()
