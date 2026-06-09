@@ -80,9 +80,11 @@ export async function fetchZipData(zip: string) {
     fetch(`${base}?get=${AGE_VARS}&${geo}`),
   ])
 
-  const data      = await res.json()
-  const data2020  = await res2020.json()
-  const dataAge   = await resAge.json()
+  const data     = await res.json()
+  // Some ZCTAs didn't exist in 2020 (new subdivisions) — 204 No Content, no body to parse
+  let data2020: unknown = null
+  try { if (res2020.status !== 204) data2020 = await res2020.json() } catch { /* no 2020 data */ }
+  const dataAge  = await resAge.json()
 
   // YFI/WFI vars fetched separately — some ZIPs return empty/error for these tables
   let dataYfiWfi: unknown = null
@@ -113,7 +115,7 @@ export async function fetchZipData(zip: string) {
 
   // Population + growth
   const population   = i(r['B01001_001E'])
-  const population2020 = data2020?.length >= 2 ? i(data2020[1][0]) : null
+  const population2020 = Array.isArray(data2020) && data2020.length >= 2 ? i((data2020 as string[][])[1][0]) : null
   const rawGrowth = population2020 && population2020 > 0
     ? parseFloat(((population - population2020) / population2020 * 100).toFixed(1))
     : null
