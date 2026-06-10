@@ -18,7 +18,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/religious` | ✅ | DFW religious landscape: stat cards, faith distribution bar chart, top Islamic ZIPs table, per-ZIP org breakdown, Islamic org panel with ruling year + NEW badge |
 | `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
-| `/site-scorer` | 🔲 | Not built |
+| `/site-scorer` | ✅ | Placeholder — "Coming Phase 2" branded page; prerequisite: church saturation index (Phase 2.1). Fixes dead nav link. |
 
 ### Data sources (all routed through Neon DB)
 - **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %
@@ -45,11 +45,11 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
         ↓
   /api/census?zip=             ← single ZIP read (Demographics page)
   /api/census/batch?zips=      ← multi-ZIP read (Compare page)
-  /api/overview                ← aggregates all ZIPs + computes weighted averages
+  /api/overview?coverage=      ← aggregates all ZIPs + computes weighted averages; ?coverage=core|all (default core)
   /api/religious               ← DFW overview stats + per-ZIP orgs
-  /api/ses-classes             ← all ZIPs sorted by SES score with tier counts
+  /api/ses-classes?coverage=   ← all ZIPs sorted by SES score with tier counts; ?coverage=core|all
   /api/employers?zip=          ← CBP employer data (overview or per-ZIP)
-  /api/community-needs?zip=    ← CDC PLACES + CFPB health data (overview or per-ZIP)
+  /api/community-needs?coverage=&zip= ← CDC PLACES + CFPB health data; ?coverage=core|all for overview mode
   /api/scorecard?zip=&radius=  ← College Scorecard (direct, not cached in Neon)
   /api/boundaries              ← ZCTA polygon GeoJSON from TIGERweb (24hr cache)
         ↓
@@ -131,9 +131,57 @@ border: '1px solid rgba(232,184,75,0.2)'
 ```
 Inactive links use `#8A98AE` with `.nav-link-item` CSS class (hover → `#C8D4E4`).
 
+### Coverage controls pattern (Overview, SES Classes, Community Needs)
+Page-level `<select>` + `↺ Refresh` button in the page header (right side). `coverage` and `refreshKey` are local state; `useEffect([coverage, refreshKey])` drives fetch. `window.history.replaceState` syncs the URL without triggering Next.js navigation.
+```tsx
+const [coverage, setCoverage] = useState<'core'|'all'>('core')
+const [refreshKey, setRefreshKey] = useState(0)
+
+function handleCoverageChange(val: 'core' | 'all') {
+  setCoverage(val)
+  const url = new URL(window.location.href)
+  val === 'all' ? url.searchParams.set('coverage', 'all') : url.searchParams.delete('coverage')
+  window.history.replaceState(null, '', url.toString())
+}
+// mount effect reads URL once for initial state
+// fetch effect: useEffect(() => { fetch(`/api/...?coverage=${coverage}`) }, [coverage, refreshKey])
+```
+Controls render:
+```tsx
+<select value={coverage} onChange={e => handleCoverageChange(e.target.value as 'core' | 'all')}
+  style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px',
+    background:'#13161f', color:'#C8D4E4', border:'1px solid #232940',
+    borderRadius:'4px', padding:'6px 10px', cursor:'pointer', outline:'none',
+    appearance:'none' as const, WebkitAppearance:'none' as const }}>
+  <option value="core">Core MSA · 11 counties</option>
+  <option value="all">All ZIPs · Full coverage</option>
+</select>
+<button onClick={() => setRefreshKey(k => k + 1)} ...>↺ Refresh</button>
+```
+
+### ZCTA footnote
+Present in the footer of every page that displays ACS data (Overview, Demographics, Compare, SES Classes, Community Needs):
+```tsx
+<span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478' }}>
+  * ZIP-level data uses ZCTA boundaries (Census ZIP Code Tabulation Areas), which approximate but do not exactly match USPS ZIP codes.
+</span>
+```
+
 ## ZIP coverage
 **370 ZIPs** across the full DFW metro (75-mile radius from Dallas center). Defined in `src/lib/zips.ts`.
 30 groups: East Corridor · North Dallas · Central/Richardson · Irving/Las Colinas · Denton County · Tarrant/Mid-Cities · Fort Worth Suburbs · Fort Worth City Core · Grand Prairie · Garland · Dallas City · Dallas City Core · South Dallas Suburbs · Ellis County · Johnson County · Parker County · Wise County · Hood County · Cooke/Montague County · Collin County North · Grayson County · Fanin County · Hunt County · Kaufman County · Van Zandt/Rains County · Henderson County · Navarro County · Hill County · Hopkins/Wood County · Suburban Fill
+
+### Region tagging
+Each group has a `region: 'core_msa' | 'extended'` field. Pages with a coverage dropdown filter aggregates to the selected set.
+- **`core_msa`** (21 groups, 273 ZIPs) — standard 11-county DFW-Plano-Arlington MSA; default for all averages and rankings
+- **`extended`** (9 groups, 97 ZIPs) — outer counties: Hood, Cooke/Montague, Grayson, Fanin, Van Zandt/Rains, Henderson, Navarro, Hill, Hopkins/Wood
+
+`src/lib/zips.ts` exports:
+```ts
+DFW_ZIPS          // all 370 entries with { zip, label, region }
+CORE_MSA_ZIPS     // 273 core MSA entries
+CORE_MSA_ZIP_SET  // Set<string> for O(1) lookup
+```
 
 To add ZIPs: append to `src/lib/zips.ts`, then run `POST /api/refresh` from the dev server or production URL.
 
@@ -185,9 +233,11 @@ src/lib/zips.ts                        — ZIP list (edit here to add/remove ZIP
 src/lib/census.ts                      — Census ACS fetch logic (all variables); handles sentinel values
 src/lib/cbp.ts                         — Census CBP fetch logic: 20 NAICS sectors (exported as SECTORS) + size distribution; sectors include emp+payroll per sector
 src/lib/db.ts                          — Neon client
-src/components/TopNav.tsx              — Shared nav with active-link routing (do NOT also render in page files)
+src/components/TopNav.tsx              — Shared nav; renders <CoverageNav /> (do NOT also render in page files)
+src/components/CoverageNav.tsx         — Suspense-wrapped nav links; preserves ?coverage=all param across page transitions
 src/components/MapboxChoropleth.tsx    — Mapbox choropleth map component
 src/app/page.tsx                       — Overview page
+src/app/site-scorer/page.tsx           — Placeholder "Coming Phase 2" page
 src/app/demographics/page.tsx          — Per-ZIP demographics + YFI/WFI + college scorecard
 src/app/compare/page.tsx               — Multi-ZIP comparison
 src/app/ses-classes/page.tsx           — SES tier breakdown: scatter, distribution chart, sortable table
@@ -198,7 +248,7 @@ src/app/api/refresh/route.ts           — Main refresh: ACS + CBP + BLS/FRED (~
 src/app/api/refresh-community/route.ts — CFPB complaint refresh (separate to avoid Vercel timeout)
 src/app/api/overview/route.ts          — Aggregates all ZIPs for Overview page
 src/app/api/census/route.ts            — Single ZIP read from DB
-src/app/api/census/batch/route.ts      — Multi-ZIP read (Compare page)
+src/app/api/census/batch/route.ts      — Multi-ZIP read (Compare page); uses DFW_ZIPS label map so `name` returns neighborhood label, not Census ZCTA string
 src/app/api/ses-classes/route.ts       — All ZIPs sorted by SES score + tier counts
 src/app/api/religious/route.ts         — DFW overview + per-ZIP orgs from religious_orgs table
 src/app/api/employers/route.ts         — CBP employer data (overview or per-ZIP)
@@ -213,6 +263,9 @@ scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs
 ## Slash commands
 - `/ship` — stage modified files, commit, push to origin main (triggers Vercel deploy)
 - `/doc` — review key files and update this CLAUDE.md to reflect current state
+
+## Enhancement roadmap
+Full phased plan lives in `cip-enhancement-spec.md` (repo root). Phase 0 (UX fixes + coverage toggle) is complete. Phases 1–5: methodology page, exports/printing, MOE guards, church saturation index, Muslim population estimates, drive-time isochrones, leading indicators.
 
 ## Planned next data sources (ordered by priority)
 These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).

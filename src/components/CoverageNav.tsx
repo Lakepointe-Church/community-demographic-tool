@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { label: 'Employers',   href: '/employers' },
   { label: 'Comm. Needs', href: '/community-needs' },
   { label: 'Site Scorer', href: '/site-scorer' },
+  { label: 'Methodology', href: '/methodology' },
 ]
 
 function CoverageNavInner() {
