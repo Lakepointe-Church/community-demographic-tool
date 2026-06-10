@@ -75,6 +75,31 @@ export async function POST() {
     await sql`CREATE INDEX IF NOT EXISTS idx_religious_orgs_zip  ON religious_orgs(zip)`
     await sql`CREATE INDEX IF NOT EXISTS idx_religious_orgs_ntee ON religious_orgs(ntee_cd)`
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS religious_adherence (
+        fips                 TEXT PRIMARY KEY,
+        county               TEXT NOT NULL,
+        region               TEXT NOT NULL,
+        population           INTEGER,
+        total_adherents      INTEGER,
+        unclaimed            INTEGER,
+        evangelical          INTEGER,
+        mainline_protestant  INTEGER,
+        black_protestant     INTEGER,
+        catholic             INTEGER,
+        orthodox             INTEGER,
+        jewish               INTEGER,
+        buddhist             INTEGER,
+        hindu                INTEGER,
+        muslim               INTEGER,
+        other_christian      INTEGER,
+        other                INTEGER,
+        congregations        INTEGER,
+        source               TEXT DEFAULT '2020 U.S. Religion Census (ASARB)',
+        updated_at           TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

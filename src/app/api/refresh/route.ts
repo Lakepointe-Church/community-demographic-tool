@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { DFW_ZIPS } from '@/lib/zips'
-import { fetchZipData } from '@/lib/census'
+import { fetchZipData, fetchZipProxy } from '@/lib/census'
 import { fetchZipEmployers, SECTORS } from '@/lib/cbp'
 
 const BLS_BASE = 'https://api.bls.gov/publicAPI/v2/timeseries/data/'
@@ -114,7 +114,9 @@ export async function POST() {
   const zips = [...DFW_ZIPS]
   for (let i = 0; i < zips.length; i += 5) {
     const batch = zips.slice(i, i + 5)
-    const results = await Promise.allSettled(batch.map(({ zip }) => fetchZipData(zip)))
+    const results = await Promise.allSettled(
+      batch.map(({ zip }) => Promise.all([fetchZipData(zip), fetchZipProxy(zip)]))
+    )
 
     for (let j = 0; j < results.length; j++) {
       const result = results[j]
@@ -123,7 +125,7 @@ export async function POST() {
         continue
       }
 
-      const d = result.value
+      const [d, p] = result.value
       await sql`
         INSERT INTO zip_demographics (
           zip, name, population, population_2020, population_growth,
@@ -138,6 +140,7 @@ export async function POST() {
           hh_married_with_children, hh_married_no_children,
           hh_single_parent, hh_living_alone, hh_other_type,
           fertility_rate, dual_earner_pct, commute_30plus_pct, occ_mgmt_prof_pct,
+          proxy_born, proxy_language,
           updated_at
         ) VALUES (
           ${d.zip}, ${d.name}, ${d.population}, ${d.population2020}, ${d.populationGrowth},
@@ -153,6 +156,7 @@ export async function POST() {
           ${d.householdTypes.marriedWithChildren}, ${d.householdTypes.marriedNoChildren},
           ${d.householdTypes.singleParent}, ${d.householdTypes.livingAlone}, ${d.householdTypes.other},
           ${d.fertilityRate}, ${d.dualEarnerPct}, ${d.commute30PlusPct}, ${d.occMgmtProfPct},
+          ${p.proxyBorn}, ${p.proxyLanguage},
           NOW()
         )
         ON CONFLICT (zip) DO UPDATE SET
@@ -198,6 +202,8 @@ export async function POST() {
           dual_earner_pct            = EXCLUDED.dual_earner_pct,
           commute_30plus_pct         = EXCLUDED.commute_30plus_pct,
           occ_mgmt_prof_pct          = EXCLUDED.occ_mgmt_prof_pct,
+          proxy_born                 = EXCLUDED.proxy_born,
+          proxy_language             = EXCLUDED.proxy_language,
           updated_at                 = NOW()
       `
       zipsRefreshed++

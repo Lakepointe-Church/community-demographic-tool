@@ -15,7 +15,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/demographics` | ✅ | Per-ZIP: 8 stat cards + Dual-Earner HH + Long Commute cards, YFI/WFI indexes, race donut, education bars, age bars, household type donut, college scorecard |
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | ✅ | SES tier breakdown: 4 stat cards, distribution bar chart, scatter plot (SES score vs income), filterable/sortable table with ZIP/Class/HHI/Bachelor+/Mgmt+Prof/Unemployment/Trend |
-| `/religious` | ✅ | DFW religious landscape: stat cards (incl. Avg Churches/10K), faith distribution bar chart, top Islamic ZIPs table, per-ZIP org breakdown, Islamic org panel with ruling year + NEW badge |
+| `/religious` | ✅ | DFW religious landscape: stat cards, faith distribution bar, top Islamic ZIPs table, county comparison (Islamic vs Christian BMF), 2020 Religion Census county adherence panel (Unclaimed/tradition breakdown, ESTIMATE-labeled), **ACS proxy layer** (PROXY-labeled ranked list: foreign-born from 20 Muslim-majority countries + Arabic speakers, per-1K, sortable, caveat callout with Iraq/Egypt/Syria flags), per-ZIP org breakdown, Islamic org panel |
 | `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
 | `/site-scorer` | ✅ | Full Site Scorer: 5 adjustable weight sliders (YFI/WFI/SES/Growth/Saturation) with Normalize + Reset, opportunity quadrant scatter (growth vs. churches/10K, target quadrant highlighted), top-10 sidebar, sortable ranked table, CSV export, coverage toggle |
@@ -23,13 +23,14 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
 ### Data sources (all routed through Neon DB)
-- **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %
+- **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %, proxy_born (B05006 foreign-born from 20 Muslim-majority countries), proxy_language (C16001 Arabic speakers)
 - **Census CBP 2022 (County Business Patterns)** — per-ZIP: total establishments, employment, payroll, sector breakdown (20 NAICS sectors, now includes emp+payroll per sector), employer size distribution. Also fetches county-level CBP for 4 DFW core counties (Dallas/Tarrant/Collin/Denton) to compute avg wages by sector. Loaded via `/api/refresh`
 - **BLS LAUS** — DFW metro unemployment + labor force
 - **FRED** — DFW metro population + housing permits
 - **College Scorecard** — `/api/scorecard?zip=&radius=` direct API call (not cached); trade schools (iclevel=3) filtered from display
 - **Census TIGERweb** — ZCTA polygon boundaries for Mapbox map (24hr server cache)
 - **IRS BMF (NTEE X)** — DFW religious orgs from `eo_tx.csv`; 7,040 orgs loaded via `scripts/import-bmf.ts`. Refresh: re-run script (IRS publishes monthly)
+- **2020 U.S. Religion Census (ASARB)** — county-level adherent counts by tradition (Evangelical/Mainline/Black Protestant, Catholic, Orthodox, Muslim, Jewish, Buddhist, Hindu, Other, Unclaimed) for 23 DFW counties. Static data in `data/religion-census-dfw.json`; loaded via `scripts/import-religion-census.ts`. Decennial data (next ~2030). Attribution required: "2020 U.S. Religion Census (ASARB) · County level · Adherent estimates"
 - **CDC PLACES (2023)** — per-ZIP health rates: diabetes, obesity, smoking, uninsured, high BP, depression, mental distress, physical inactivity, poor general health. Loaded via `scripts/import-places.ts` (run annually)
 - **CFPB Consumer Complaints** — per-ZIP complaint counts. Loaded via `POST /api/refresh-community` (run monthly, separate from main refresh to avoid timeout)
 
@@ -48,7 +49,9 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
   /api/census?zip=             ← single ZIP read (Demographics page)
   /api/census/batch?zips=      ← multi-ZIP read (Compare page)
   /api/overview?coverage=      ← aggregates all ZIPs + computes weighted averages; ?coverage=core|all (default core)
-  /api/religious               ← DFW overview stats (incl. saturation) + per-ZIP orgs
+  /api/religious               ← DFW overview stats (incl. saturation + county comparison) + per-ZIP orgs
+  /api/religious/adherence     ← 2020 Religion Census county adherence by tradition (23 counties) + core MSA summary
+  /api/religious/proxy?coverage= ← per-ZIP Muslim community proxy: proxy_born + proxy_language ranked list
   /api/site-scorer?coverage=   ← per-ZIP: church saturation + YFI + WFI + SES + growth; joins zip_demographics + religious_orgs
   /api/ses-classes?coverage=   ← all ZIPs sorted by SES score with tier counts; ?coverage=core|all
   /api/employers?zip=          ← CBP employer data (overview or per-ZIP)
@@ -62,7 +65,7 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
 ## Database schema
 
 **`zip_demographics`** — one row per ZIP, upserted on refresh
-Key columns: `zip`, `population`, `population_2020`, `population_growth` (NUMERIC(8,1) — widened to handle extreme rural growth rates), `median_household_income`, `median_home_value`, `total_households`, `avg_household_size`, `hh_with_children_pct`, `unemployment_rate`, `bachelors_rate`, `ses_label`, `ses_score`, `race_*`, `edu_*`, `age_*`, `hh_married_with_children`, `hh_married_no_children`, `hh_single_parent`, `hh_living_alone`, `hh_other_type`, `income_lt25k` through `income_150k_plus`, `fertility_rate`, `dual_earner_pct`, `commute_30plus_pct`, `occ_mgmt_prof_pct`, `updated_at`
+Key columns: `zip`, `population`, `population_2020`, `population_growth` (NUMERIC(8,1) — widened to handle extreme rural growth rates), `median_household_income`, `median_home_value`, `total_households`, `avg_household_size`, `hh_with_children_pct`, `unemployment_rate`, `bachelors_rate`, `ses_label`, `ses_score`, `race_*`, `edu_*`, `age_*`, `hh_married_with_children`, `hh_married_no_children`, `hh_single_parent`, `hh_living_alone`, `hh_other_type`, `income_lt25k` through `income_150k_plus`, `fertility_rate`, `dual_earner_pct`, `commute_30plus_pct`, `occ_mgmt_prof_pct`, `proxy_born` (INT — sum of B05006 foreign-born from 20 Muslim-majority countries), `proxy_language` (INT — C16001_033E Arabic speakers), `updated_at`
 
 **`metro_stats`** — single row (id=1), BLS + FRED metro data
 Columns: `bls_unemployment_rate`, `bls_employed_persons`, `bls_labor_force`, `bls_period`, `bls_year`, `fred_population`, `fred_population_date`, `fred_housing_permits`, `fred_housing_permits_date`, `sector_wages` (JSONB — `[{label, avgWage}]` from county-level CBP, sorted by avgWage DESC), `updated_at`
@@ -73,6 +76,9 @@ Indexes: `idx_religious_orgs_zip`, `idx_religious_orgs_ntee`
 
 **`zip_employers`** — one row per ZIP, upserted via `/api/refresh` (CBP pass)
 Columns: `zip` (PK), `total_estab`, `total_emp`, `total_payroll` (BIGINT, in $1000s), `sectors` (JSONB — `[{label, estab, emp, payroll}]` sorted by estab DESC), `size_dist` (JSONB — `[{label, estab}]` by employee size band), `updated_at`
+
+**`religious_adherence`** — one row per county (23 DFW counties), loaded via `scripts/import-religion-census.ts`
+Columns: `fips` (PK), `county`, `region` (core_msa|extended), `population`, `total_adherents`, `unclaimed`, `evangelical`, `mainline_protestant`, `black_protestant`, `catholic`, `orthodox`, `jewish`, `buddhist`, `hindu`, `muslim`, `other_christian`, `other`, `congregations`, `source`, `updated_at`
 
 **`community_health`** — one row per ZIP, loaded via scripts + `/api/refresh-community`
 Columns: `zip` (PK), `diabetes`, `obesity`, `smoking`, `uninsured`, `high_blood_pressure`, `depression`, `mental_distress`, `phys_inactivity`, `gen_poor_health` (all NUMERIC(5,1), % of adults), `cfpb_complaints` (INT), `updated_at`
@@ -257,12 +263,17 @@ src/app/api/census/route.ts            — Single ZIP read from DB
 src/app/api/census/batch/route.ts      — Multi-ZIP read (Compare page); uses DFW_ZIPS label map so `name` returns neighborhood label, not Census ZCTA string
 src/app/api/ses-classes/route.ts       — All ZIPs sorted by SES score + tier counts
 src/app/api/religious/route.ts         — DFW overview + per-ZIP orgs from religious_orgs table
+src/app/api/religious/adherence/route.ts — 2020 ASARB county adherence + core MSA summary
+src/app/api/religious/proxy/route.ts   — per-ZIP proxy_born + proxy_language ranked list (?coverage=core|all)
+data/proxy-countries.json              — approved country list with B05006/C16001 variable codes, flags, exclusions
 src/app/api/employers/route.ts         — CBP employer data (overview or per-ZIP)
 src/app/api/community-needs/route.ts   — CDC PLACES + CFPB health data (overview or per-ZIP)
 src/app/api/site-scorer/route.ts       — Per-ZIP church saturation (Christian NTEE orgs/pop × 10K) + YFI + WFI scores; joins zip_demographics + religious_orgs
 src/app/api/boundaries/route.ts        — ZCTA polygon GeoJSON from TIGERweb
 scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS publishes monthly)
 scripts/import-places.ts               — CDC PLACES loader (re-run annually)
+scripts/import-religion-census.ts      — 2020 ASARB Religion Census loader (decennial; re-run only on new release ~2030)
+data/religion-census-dfw.json          — Static processed county adherence data (23 DFW counties, extracted from ASARB Excel)
 scripts/find-missing-zips.ts           — Census Gazetteer-based ZIP radius discovery tool
 scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs via zippopotam.us
 ```
@@ -278,7 +289,7 @@ Full phased plan lives in `cip-enhancement-spec.md` (repo root).
 - **Phase 1.2** ✅ complete — CSV export on ranking tables (Overview, SES Classes, Community Needs) + per-ZIP print one-pager (`/zip/[zip]/print`)
 - **Phase 1.3** — ACS margin-of-error guard (dimmed values + tooltip when MOE/estimate > 0.3) — not yet started
 - **Phase 2** ✅ complete — Church saturation index (churches/10K per ZIP from IRS BMF) + full Site Scorer page (quadrant scatter, adjustable weights, ranked table)
-- **Phase 3** — Religious landscape expansion: 2020 Religion Census county-level adherence data, Muslim population proxy layer (ACS ancestry/birthplace), presentation rules — requires ASARB terms-of-use review and PRRI data access verification before starting
+- **Phase 3** — Religious landscape expansion: **3.4 ✅** mosque/congregation BMF layer. **3.1 ✅** 2020 ASARB county adherence panel. **3.2** dropped (PRRI data not publicly downloadable; email drafted to info@prri.org). **3.3 ✅** ACS proxy layer: proxy_born (B05006, 20 countries) + proxy_language (C16001_033E Arabic), PROXY-labeled ranked list on /religious with Iraq/Egypt/Syria overcounting caveat. B16001 (Urdu/Bengali/Somali) not available at ZCTA level — Arabic only for language signal. **3.5** confidence tiers applied throughout. Methodology page update (Phase 3 section) not yet written.
 - **Phases 4–5** — Attendee density overlay (Rock RMS), drive-time isochrones (Mapbox), leading growth indicators (building permits, TEA enrollment)
 
 ## Planned next data sources (ordered by priority)

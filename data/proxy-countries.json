@@ -1,0 +1,35 @@
+{
+  "_note": "ACS 5-Year 2023 Muslim community proxy — approved country list for proxy_born column in zip_demographics. Excluded: Iran (large secular diaspora), Lebanon (large Maronite Christian community), India (mixed Hindu/Muslim/Sikh), Israel.",
+  "birthplace_vars": [
+    { "code": "B05006_057E", "country": "Afghanistan",                                  "flagged": false },
+    { "code": "B05006_058E", "country": "Bangladesh",                                   "flagged": false },
+    { "code": "B05006_064E", "country": "Pakistan",                                     "flagged": false },
+    { "code": "B05006_066E", "country": "Uzbekistan",                                   "flagged": false },
+    { "code": "B05006_083E", "country": "Iraq",                                         "flagged": true,  "flag_reason": "Chaldean Catholic and Assyrian Christian community — overcounts Muslim proxy" },
+    { "code": "B05006_085E", "country": "Jordan",                                       "flagged": false },
+    { "code": "B05006_086E", "country": "Kuwait",                                       "flagged": false },
+    { "code": "B05006_088E", "country": "Saudi Arabia",                                 "flagged": false },
+    { "code": "B05006_089E", "country": "Syria",                                        "flagged": true,  "flag_reason": "Syrian Christian and Alawi minority — overcounts Muslim proxy" },
+    { "code": "B05006_090E", "country": "Turkey",                                       "flagged": false },
+    { "code": "B05006_091E", "country": "UAE",                                          "flagged": false },
+    { "code": "B05006_092E", "country": "Yemen",                                        "flagged": false },
+    { "code": "B05006_093E", "country": "Other Western Asia (Bahrain, Qatar, Oman, West Bank/Gaza)", "flagged": false },
+    { "code": "B05006_100E", "country": "Somalia",                                      "flagged": false },
+    { "code": "B05006_111E", "country": "Algeria",                                      "flagged": false },
+    { "code": "B05006_112E", "country": "Egypt",                                        "flagged": true,  "flag_reason": "Coptic Orthodox community (est. 10% of Egyptian diaspora) — overcounts Muslim proxy" },
+    { "code": "B05006_113E", "country": "Morocco",                                      "flagged": false },
+    { "code": "B05006_114E", "country": "Sudan",                                        "flagged": false },
+    { "code": "B05006_115E", "country": "Other Northern Africa (Libya, Tunisia, others)","flagged": false },
+    { "code": "B05006_125E", "country": "Senegal",                                      "flagged": false }
+  ],
+  "language_vars": [
+    { "code": "C16001_033E", "language": "Arabic (all speakers, English proficiency level not filtered)", "note": "C16001 is the only language table available at the ZCTA level in ACS 5-Year. B16001 (which includes Urdu, Bengali, Somali separately) is only available at tract and county geography." }
+  ],
+  "language_note": "Urdu, Bengali, and Somali are NOT separately listed in C16001 at ZCTA level. They are collapsed into 'Other Indo-European' and 'Other and unspecified' groups. The language proxy is therefore Arabic-only. South Asian Muslims (Pakistani, Bangladeshi) are captured by the birthplace proxy instead.",
+  "excluded_birthplace": [
+    { "country": "Iran",    "reason": "User decision: diaspora composition makes it more noise than signal (large secular/non-Muslim share in DFW)" },
+    { "country": "Lebanon", "reason": "User decision: diaspora composition makes it more noise than signal (large Maronite Christian community in DFW)" },
+    { "country": "Israel",  "reason": "Jewish state — not a Muslim community proxy" },
+    { "country": "India",   "reason": "Mixed Hindu/Muslim/Sikh diaspora — too noisy as a Muslim proxy" }
+  ]
+}

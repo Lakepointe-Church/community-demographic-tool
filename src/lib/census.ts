@@ -1,5 +1,25 @@
 const CENSUS_BASE = 'https://api.census.gov/data'
 
+// B05006 birthplace proxy — Muslim-majority country origins (excludes Iran, Lebanon, Israel, India)
+// Full rationale: data/proxy-countries.json
+const PROXY_BORN_VARS = [
+  'B05006_057E','B05006_058E','B05006_064E','B05006_066E', // Afghanistan, Bangladesh, Pakistan, Uzbekistan
+  'B05006_083E','B05006_085E','B05006_086E','B05006_088E', // Iraq*, Jordan, Kuwait, Saudi Arabia
+  'B05006_089E','B05006_090E','B05006_091E','B05006_092E', // Syria*, Turkey, UAE, Yemen
+  'B05006_093E',                                            // Other Western Asia (Bahrain, Qatar, Oman, W. Bank/Gaza)
+  'B05006_100E',                                            // Somalia
+  'B05006_111E','B05006_112E','B05006_113E','B05006_114E', // Algeria, Egypt*, Morocco, Sudan
+  'B05006_115E',                                            // Other Northern Africa (Libya, Tunisia)
+  'B05006_125E',                                            // Senegal
+]
+
+// C16001 language proxy — Arabic only (ZCTA-level; B16001 is tract/county only)
+// C16001_033E = Total Arabic speakers (all English proficiency levels)
+// Urdu, Bengali, Somali are not separately listed in C16001 at ZCTA level
+const PROXY_LANG_VARS = [
+  'C16001_033E', // Arabic speakers (household language, all ages 5+)
+]
+
 const VARS = [
   'B01001_001E', // Total population
   'B19013_001E', // Median household income
@@ -273,4 +293,32 @@ export async function fetchZipData(zip: string) {
     commute30PlusPct,
     occMgmtProfPct,
   }
+}
+
+export async function fetchZipProxy(zip: string): Promise<{ proxyBorn: number; proxyLanguage: number }> {
+  const key = process.env.CENSUS_API_KEY
+  const base = `${CENSUS_BASE}/2023/acs/acs5`
+  const geo  = `for=zip%20code%20tabulation%20area:${zip}&key=${key}`
+
+  const [resBorn, resLang] = await Promise.all([
+    fetch(`${base}?get=${PROXY_BORN_VARS.join(',')}&${geo}`).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch(`${base}?get=${PROXY_LANG_VARS.join(',')}&${geo}`).then(r => r.ok ? r.json() : null).catch(() => null),
+  ])
+
+  const born: Record<string, string> = {}
+  if (Array.isArray(resBorn) && resBorn.length >= 2) {
+    const [h, v] = resBorn as string[][]
+    h.forEach((col, idx) => { born[col] = v[idx] })
+  }
+
+  const lang: Record<string, string> = {}
+  if (Array.isArray(resLang) && resLang.length >= 2) {
+    const [h, v] = resLang as string[][]
+    h.forEach((col, idx) => { lang[col] = v[idx] })
+  }
+
+  const proxyBorn     = PROXY_BORN_VARS.reduce((sum, v) => sum + i(born[v]), 0)
+  const proxyLanguage = PROXY_LANG_VARS.reduce((sum, v) => sum + i(lang[v]), 0)
+
+  return { proxyBorn, proxyLanguage }
 }
