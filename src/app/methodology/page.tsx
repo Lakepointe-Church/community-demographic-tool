@@ -127,10 +127,87 @@ export default function MethodologyPage() {
           </div>
         </div>
 
-        <p style={{ ...bodyStyle, marginTop: '16px', fontSize: '12px', color: '#5a6478' }}>
-          Composite weighting for YFI and WFI is defined in the platform specification and will be documented here when the Site Scorer (Phase 2) is finalized. The underlying ACS variables shown above are fixed.
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginTop: '20px' }}>
+          <div style={cardStyle}>
+            <div style={{ ...cardLabelStyle, color: '#4EAEFF' }}>YFI weights</div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
+              <div><span style={{ color: '#4EAEFF' }}>40%</span> — Young children share (age_0_17 / 30%)</div>
+              <div><span style={{ color: '#4EAEFF' }}>25%</span> — Family HH rate (mwKids + single parent / 40%)</div>
+              <div><span style={{ color: '#4EAEFF' }}>20%</span> — Fertility signal (rate × 100 / 8%)</div>
+              <div><span style={{ color: '#4EAEFF' }}>15%</span> — HH size ((size − 1.5) / 2.0)</div>
+            </div>
+          </div>
+          <div style={cardStyle}>
+            <div style={{ ...cardLabelStyle, color: '#2DD4BF' }}>WFI weights</div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
+              <div><span style={{ color: '#2DD4BF' }}>40%</span> — Dual-earner rate (/ 40%)</div>
+              <div><span style={{ color: '#2DD4BF' }}>25%</span> — HH with children rate (/ 50%)</div>
+              <div><span style={{ color: '#2DD4BF' }}>20%</span> — Commute burden inverse (100 − commute30+%)</div>
+              <div><span style={{ color: '#2DD4BF' }}>15%</span> — Bachelor&apos;s rate proxy (/ 50%)</div>
+            </div>
+          </div>
+        </div>
+        <p style={{ ...bodyStyle, marginTop: '12px', fontSize: '12px', color: '#5a6478' }}>
+          Each component is normalized to 0–100 before weighting. All components are capped at 100.
         </p>
       </Section>
+
+      {/* ── SITE SCORER ──────────────────────────────── */}
+      <div id="site-scorer">
+        <Section title="Site Scorer">
+          <p style={bodyStyle}>
+            The Site Scorer combines five signals into a single 0–100 Fit Score per ZIP, with user-adjustable weights visible and editable on the <a href="/site-scorer" style={{ color: '#E8B84B' }}>Site Scorer page</a>. All weights default to the values below and are normalized to sum to 100% before scoring.
+          </p>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '20px' }}>
+            <div style={cardStyle}>
+              <div style={cardLabelStyle}>Default weights</div>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
+                <div><span style={{ color: '#4EAEFF' }}>25%</span> — Young Family Index (YFI)</div>
+                <div><span style={{ color: '#2DD4BF' }}>25%</span> — Working Family Index (WFI)</div>
+                <div><span style={{ color: '#A78BFA' }}>20%</span> — SES Score</div>
+                <div><span style={{ color: '#FF6B6B' }}>15%</span> — Population Growth</div>
+                <div><span style={{ color: '#E8B84B' }}>15%</span> — Church Saturation Opportunity</div>
+              </div>
+            </div>
+
+            <div style={cardStyle}>
+              <div style={cardLabelStyle}>Component normalization</div>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
+                <div>Growth score: <span style={{ color: '#5a6478' }}>(growth + 10) / 50 × 100, capped 0–100</span></div>
+                <div>Saturation opp.: <span style={{ color: '#5a6478' }}>100 − min(100, churches/10K / 30 × 100)</span></div>
+                <div>YFI / WFI / SES: <span style={{ color: '#5a6478' }}>already 0–100 (see above)</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: '20px' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+              Church Saturation Index
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Definition', definition: 'Count of IRS BMF Christian organizations (NTEE category X — X20 Christian, X21 Protestant, X22 Roman Catholic, and other X2x subcodes) divided by ZIP population × 10,000. Filtered to ntee_category = \'Christian\' in the database.' },
+                { label: 'Source', definition: 'IRS EO Business Master File (BMF). Updated monthly. Only 501(c) registered organizations appear; churches below the 990-filing threshold are not counted.' },
+                { label: 'Interpretation', definition: 'Lower churches/10K = less saturated market = higher campus opportunity. The index is relative — useful for comparing ZIPs to each other, not for stating absolute church counts. Treat as a directional signal, not a census.' },
+                { label: 'Known gap', definition: 'The BMF systematically undercounts congregations, especially newer or smaller churches that operate under a group exemption or have never filed. This bias is consistent across ZIPs, preserving the relative ranking value of the index.' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(232,184,75,0.05)', border: '1px solid rgba(232,184,75,0.15)', borderRadius: '4px' }}>
+            <p style={{ ...bodyStyle, margin: 0, fontSize: '12px' }}>
+              <span style={{ color: '#E8B84B', fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em' }}>TRANSPARENCY · </span>
+              All Site Scorer weights are shown on the scoring page and can be adjusted in real time. Changing a weight updates all scores and the opportunity quadrant immediately. No hidden weighting is applied.
+            </p>
+          </div>
+        </Section>
+      </div>
 
       {/* ── METRIC DEFINITIONS ──────────────────────── */}
       <Section title="Metric Definitions">

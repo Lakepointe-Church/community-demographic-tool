@@ -19,6 +19,8 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
 | `/site-scorer` | ✅ | Placeholder — "Coming Phase 2" branded page; prerequisite: church saturation index (Phase 2.1). Fixes dead nav link. |
+| `/methodology` | ✅ | Static data dictionary: all 9 sources with vintage + refresh cadence, SES scoring formula + tier table, YFI/WFI component variables, per-metric definitions (ACS table IDs), known limitations per source |
+| `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
 ### Data sources (all routed through Neon DB)
 - **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %
@@ -244,6 +246,9 @@ src/app/ses-classes/page.tsx           — SES tier breakdown: scatter, distribu
 src/app/religious/page.tsx             — Religious landscape (IRS BMF data)
 src/app/employers/page.tsx             — CBP employer data: ZIP dropdown (DFW default), BarList industry mix + wages, top ZIPs grid; per-ZIP: donut + size dist + sector wages
 src/app/community-needs/page.tsx       — CDC PLACES + CFPB: DFW metro averages + per-ZIP profile
+src/app/methodology/page.tsx           — Static data dictionary page (no data fetch; all content inline)
+src/app/zip/[zip]/print/page.tsx       — Per-ZIP print one-pager; fetches census + community-needs + employers + religious in parallel
+src/lib/csv.ts                         — Client-side CSV download utility: downloadCsv(filename, headers, rows)
 src/app/api/refresh/route.ts           — Main refresh: ACS + CBP + BLS/FRED (~8 min, 370 ZIPs)
 src/app/api/refresh-community/route.ts — CFPB complaint refresh (separate to avoid Vercel timeout)
 src/app/api/overview/route.ts          — Aggregates all ZIPs for Overview page
@@ -265,7 +270,12 @@ scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs
 - `/doc` — review key files and update this CLAUDE.md to reflect current state
 
 ## Enhancement roadmap
-Full phased plan lives in `cip-enhancement-spec.md` (repo root). Phase 0 (UX fixes + coverage toggle) is complete. Phases 1–5: methodology page, exports/printing, MOE guards, church saturation index, Muslim population estimates, drive-time isochrones, leading indicators.
+Full phased plan lives in `cip-enhancement-spec.md` (repo root).
+- **Phase 0** ✅ complete — UX fixes, coverage toggle, ZCTA footnotes, site-scorer placeholder
+- **Phase 1.1** ✅ complete — `/methodology` data dictionary page
+- **Phase 1.2** ✅ complete — CSV export on ranking tables (Overview, SES Classes, Community Needs) + per-ZIP print one-pager (`/zip/[zip]/print`)
+- **Phase 1.3** — ACS margin-of-error guard (dimmed values + tooltip when MOE/estimate > 0.3) — not yet started
+- **Phases 2–5** — church saturation index, Site Scorer, Muslim population estimates, drive-time isochrones, leading indicators
 
 ## Planned next data sources (ordered by priority)
 These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).

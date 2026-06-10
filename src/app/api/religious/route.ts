@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ zip, orgs, counts })
     }
 
-    // Overview: DFW-wide stats + top Islamic ZIPs
+    // Overview: DFW-wide stats + top Islamic ZIPs + church saturation
     const stats = await sql`
       SELECT
         COUNT(*)::int                                                        AS total,
@@ -39,6 +39,21 @@ export async function GET(request: NextRequest) {
         COUNT(*) FILTER (WHERE ntee_category = 'Islamic'
                            AND ruling_year >= 2015)::int                    AS islamic_new
       FROM religious_orgs
+    `
+
+    // Church saturation: avg churches/10K across ZIPs with population data
+    const saturation = await sql`
+      SELECT
+        AVG(CASE WHEN d.population > 0 THEN c.church_count::float / d.population * 10000 ELSE NULL END) AS avg_churches_per_10k,
+        MAX(CASE WHEN d.population > 0 THEN c.church_count::float / d.population * 10000 ELSE NULL END) AS max_churches_per_10k,
+        COUNT(DISTINCT c.zip)::int AS zips_with_churches
+      FROM (
+        SELECT zip, COUNT(*)::int AS church_count
+        FROM religious_orgs
+        WHERE ntee_category = 'Christian'
+        GROUP BY zip
+      ) c
+      JOIN zip_demographics d ON c.zip = d.zip
     `
 
     const topIslamicZips = await sql`
@@ -61,6 +76,7 @@ export async function GET(request: NextRequest) {
       stats: stats[0],
       topIslamicZips,
       byCategory,
+      saturation: saturation[0] ?? null,
     })
   } catch {
     return NextResponse.json({ error: 'religious_orgs table not yet populated — run scripts/import-bmf.ts' }, { status: 503 })

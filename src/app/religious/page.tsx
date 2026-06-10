@@ -13,6 +13,7 @@ interface Overview {
   }
   topIslamicZips: { zip: string; count: number }[]
   byCategory: { ntee_category: string; count: number }[]
+  saturation: { avg_churches_per_10k: number; max_churches_per_10k: number; zips_with_churches: number } | null
 }
 
 interface ZipData {
@@ -276,6 +277,14 @@ export default function ReligiousPage() {
             <StatCard label="Christian Churches" value={overview.stats.christian} rgb="78,174,255" />
             <StatCard label="New Since 2015"    value={overview.stats.new_since_2015} rgb="167,139,250"
               sub="across all faiths" />
+            {overview.saturation && (
+              <StatCard
+                label="Avg Churches / 10K · DFW"
+                value={parseFloat(String(overview.saturation.avg_churches_per_10k)).toFixed(1)}
+                rgb="232,184,75"
+                sub={`${overview.saturation.zips_with_churches} ZIPs w/ registered churches`}
+              />
+            )}
           </div>
         )}
 
