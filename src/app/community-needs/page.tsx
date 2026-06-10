@@ -216,11 +216,11 @@ export default function CommunityNeedsPage() {
   const [loading, setLoading] = useState(true)
   const [zipLoading, setZipLoading] = useState(false)
   const [coverage, setCoverage] = useState<'core' | 'all'>('core')
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const c = params.get('coverage') === 'all' ? 'all' : 'core'
-    setCoverage(c)
+    if (params.get('coverage') === 'all') setCoverage('all')
   }, [])
 
   useEffect(() => {
@@ -229,7 +229,14 @@ export default function CommunityNeedsPage() {
       .then(r => r.json())
       .then(d => { setOverview(d); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [coverage])
+  }, [coverage, refreshKey])
+
+  function handleCoverageChange(val: 'core' | 'all') {
+    setCoverage(val)
+    const url = new URL(window.location.href)
+    val === 'all' ? url.searchParams.set('coverage', 'all') : url.searchParams.delete('coverage')
+    window.history.replaceState(null, '', url.toString())
+  }
 
   function handleZipChange(zip: string) {
     setSelectedZip(zip)
@@ -251,12 +258,45 @@ export default function CommunityNeedsPage() {
       <div style={{ padding:'40px 32px', maxWidth:'1440px', margin:'0 auto' }}>
 
         {/* Header */}
-        <div className="fade-up" style={{ marginBottom:'36px' }}>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.2em', color:'#E8B84B', textTransform:'uppercase', marginBottom:'12px' }}>Dashboard · Community Needs</div>
-          <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#F0F2F7' }}>Community<br />Health & Needs</h1>
-          <div style={{ width:'48px', height:'2px', background:'linear-gradient(90deg,#E8B84B,rgba(232,184,75,0))', marginTop:'16px' }} />
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#8A98AE', letterSpacing:'0.08em', marginTop:'12px', textTransform:'uppercase' }}>
-            CDC PLACES 2023 · CFPB Consumer Complaints · {overview?.zipCount ?? DFW_ZIPS.length} DFW ZIPs
+        <div className="fade-up" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'36px' }}>
+          <div>
+            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.2em', color:'#E8B84B', textTransform:'uppercase', marginBottom:'12px' }}>Dashboard · Community Needs</div>
+            <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#F0F2F7' }}>Community<br />Health & Needs</h1>
+            <div style={{ width:'48px', height:'2px', background:'linear-gradient(90deg,#E8B84B,rgba(232,184,75,0))', marginTop:'16px' }} />
+            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#8A98AE', letterSpacing:'0.08em', marginTop:'12px', textTransform:'uppercase' }}>
+              CDC PLACES 2023 · CFPB Consumer Complaints · {overview?.zipCount ?? DFW_ZIPS.length} DFW ZIPs
+            </div>
+          </div>
+          {/* Coverage + Refresh controls */}
+          <div style={{ display:'flex', alignItems:'center', gap:'8px', flexShrink:0, marginTop:'4px' }}>
+            <select
+              value={coverage}
+              onChange={e => handleCoverageChange(e.target.value as 'core' | 'all')}
+              style={{
+                fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.06em',
+                background:'#13161f', color:'#C8D4E4',
+                border:'1px solid #232940', borderRadius:'4px',
+                padding:'6px 10px', cursor:'pointer', outline:'none',
+                appearance:'none' as const, WebkitAppearance:'none' as const,
+              }}
+            >
+              <option value="core">Core MSA · 11 counties</option>
+              <option value="all">All ZIPs · Full coverage</option>
+            </select>
+            <button
+              onClick={() => setRefreshKey(k => k + 1)}
+              title="Refresh data from database"
+              style={{
+                fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.06em',
+                background:'transparent', color:'#8A98AE',
+                border:'1px solid #232940', borderRadius:'4px',
+                padding:'6px 10px', cursor:'pointer',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#C8D4E4'; e.currentTarget.style.borderColor = '#4EAEFF' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#8A98AE'; e.currentTarget.style.borderColor = '#232940' }}
+            >
+              ↺ Refresh
+            </button>
           </div>
         </div>
 

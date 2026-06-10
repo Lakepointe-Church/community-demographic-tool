@@ -35,10 +35,8 @@ export default function TopNav() {
         </div>
       </div>
 
-      {/* Nav links + coverage toggle (Suspense-wrapped, coverage-aware) */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'center' }}>
-        <CoverageNav />
-      </div>
+      {/* Nav links (Suspense-wrapped, coverage-aware) */}
+      <CoverageNav />
 
       {/* Right badge */}
       <div style={{

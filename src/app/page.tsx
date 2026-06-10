@@ -188,20 +188,29 @@ export default function OverviewPage() {
   const [data, setData]       = useState<OverviewData | null>(null)
   const [loading, setLoading] = useState(true)
   const [coverage, setCoverage] = useState<'core' | 'all'>('core')
+  const [refreshKey, setRefreshKey] = useState(0)
 
+  // Read initial coverage from URL on mount
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    const c = params.get('coverage') === 'all' ? 'all' : 'core'
-    setCoverage(c)
+    if (params.get('coverage') === 'all') setCoverage('all')
   }, [])
 
+  // Fetch whenever coverage or refresh button changes
   useEffect(() => {
     setLoading(true)
     fetch(`/api/overview?coverage=${coverage}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [coverage])
+  }, [coverage, refreshKey])
+
+  function handleCoverageChange(val: 'core' | 'all') {
+    setCoverage(val)
+    const url = new URL(window.location.href)
+    val === 'all' ? url.searchParams.set('coverage', 'all') : url.searchParams.delete('coverage')
+    window.history.replaceState(null, '', url.toString())
+  }
 
   const ageBands = data?.ageDistribution ? [
     { label: '0–17',  pct: data.ageDistribution.age0_17 },
@@ -229,14 +238,47 @@ export default function OverviewPage() {
             </h1>
             <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #E8B84B, rgba(232,184,75,0))', marginTop: '16px' }} />
           </div>
-          {data?.updatedAt && (
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '5px' }}>Data Refreshed</div>
-              <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '14px', fontWeight: 500, color: '#C8D4E4' }}>
-                {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+            {/* Coverage + Refresh controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <select
+                value={coverage}
+                onChange={e => handleCoverageChange(e.target.value as 'core' | 'all')}
+                style={{
+                  fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.06em',
+                  background: '#13161f', color: '#C8D4E4',
+                  border: '1px solid #232940', borderRadius: '4px',
+                  padding: '6px 10px', cursor: 'pointer', outline: 'none',
+                  appearance: 'none' as const, WebkitAppearance: 'none' as const,
+                }}
+              >
+                <option value="core">Core MSA · 11 counties</option>
+                <option value="all">All ZIPs · Full coverage</option>
+              </select>
+              <button
+                onClick={() => setRefreshKey(k => k + 1)}
+                title="Refresh data from database"
+                style={{
+                  fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.06em',
+                  background: 'transparent', color: '#8A98AE',
+                  border: '1px solid #232940', borderRadius: '4px',
+                  padding: '6px 10px', cursor: 'pointer',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.color = '#C8D4E4'; e.currentTarget.style.borderColor = '#4EAEFF' }}
+                onMouseLeave={e => { e.currentTarget.style.color = '#8A98AE'; e.currentTarget.style.borderColor = '#232940' }}
+              >
+                ↺ Refresh
+              </button>
             </div>
-          )}
+            {data?.updatedAt && (
+              <div style={{ textAlign: 'right' }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '3px' }}>Data Refreshed</div>
+                <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', fontWeight: 500, color: '#C8D4E4' }}>
+                  {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Aggregate Stat Cards */}

@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
+import { DFW_ZIPS } from '@/lib/zips'
+
+const ZIP_LABEL: Record<string, string> = Object.fromEntries(DFW_ZIPS.map(z => [z.zip, z.label]))
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
@@ -42,7 +45,7 @@ export async function GET(request: NextRequest) {
 
       return {
         zip: d.zip,
-        name: d.name,
+        name: ZIP_LABEL[d.zip] ?? d.name?.replace('ZCTA5 ', '') ?? d.zip,
         population: d.population,
         population2020: d.population_2020,
         populationGrowth: d.population_growth != null ? parseFloat(d.population_growth) : null,
