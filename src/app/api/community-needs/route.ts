@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { ZIP_GROUPS } from '@/lib/zips'
+import { ZIP_GROUPS, CORE_MSA_ZIP_SET } from '@/lib/zips'
 
 const ZIP_LABEL: Record<string, string> = {}
 for (const group of ZIP_GROUPS) {
@@ -47,13 +47,18 @@ export async function GET(req: NextRequest) {
     })
   }
 
+  const coverage = req.nextUrl.searchParams.get('coverage') ?? 'core'
+
   // DFW overview
-  const rows = await sql`
+  const allRows = await sql`
     SELECT ch.*, d.population
     FROM community_health ch
     LEFT JOIN zip_demographics d ON d.zip = ch.zip
     WHERE ch.diabetes IS NOT NULL
   `
+  const rows = coverage === 'core'
+    ? allRows.filter(r => CORE_MSA_ZIP_SET.has(r.zip))
+    : allRows
 
   const overview: Record<string, (number | null)[]> = Object.fromEntries(HEALTH_COLS.map(c => [c, []]))
   let totalComplaints = 0, totalPop = 0, coveredZips = 0

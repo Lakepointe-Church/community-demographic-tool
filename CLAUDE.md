@@ -16,13 +16,13 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | ✅ | SES tier breakdown: 4 stat cards, distribution bar chart, scatter plot (SES score vs income), filterable/sortable table with ZIP/Class/HHI/Bachelor+/Mgmt+Prof/Unemployment/Trend |
 | `/religious` | ✅ | DFW religious landscape: stat cards, faith distribution bar chart, top Islamic ZIPs table, per-ZIP org breakdown, Islamic org panel with ruling year + NEW badge |
-| `/employers` | ✅ | Census CBP 2022: DFW metro stat cards, industry mix bar chart, top ZIPs list, per-ZIP donut chart + employer size distribution chart |
+| `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
 | `/site-scorer` | 🔲 | Not built |
 
 ### Data sources (all routed through Neon DB)
 - **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %
-- **Census CBP 2022 (County Business Patterns)** — per-ZIP: total establishments, employment, payroll, sector breakdown (20 NAICS sectors), employer size distribution. Loaded via `/api/refresh`
+- **Census CBP 2022 (County Business Patterns)** — per-ZIP: total establishments, employment, payroll, sector breakdown (20 NAICS sectors, now includes emp+payroll per sector), employer size distribution. Also fetches county-level CBP for 4 DFW core counties (Dallas/Tarrant/Collin/Denton) to compute avg wages by sector. Loaded via `/api/refresh`
 - **BLS LAUS** — DFW metro unemployment + labor force
 - **FRED** — DFW metro population + housing permits
 - **College Scorecard** — `/api/scorecard?zip=&radius=` direct API call (not cached); trade schools (iclevel=3) filtered from display
@@ -62,13 +62,14 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
 Key columns: `zip`, `population`, `population_2020`, `population_growth` (NUMERIC(8,1) — widened to handle extreme rural growth rates), `median_household_income`, `median_home_value`, `total_households`, `avg_household_size`, `hh_with_children_pct`, `unemployment_rate`, `bachelors_rate`, `ses_label`, `ses_score`, `race_*`, `edu_*`, `age_*`, `hh_married_with_children`, `hh_married_no_children`, `hh_single_parent`, `hh_living_alone`, `hh_other_type`, `income_lt25k` through `income_150k_plus`, `fertility_rate`, `dual_earner_pct`, `commute_30plus_pct`, `occ_mgmt_prof_pct`, `updated_at`
 
 **`metro_stats`** — single row (id=1), BLS + FRED metro data
+Columns: `bls_unemployment_rate`, `bls_employed_persons`, `bls_labor_force`, `bls_period`, `bls_year`, `fred_population`, `fred_population_date`, `fred_housing_permits`, `fred_housing_permits_date`, `sector_wages` (JSONB — `[{label, avgWage}]` from county-level CBP, sorted by avgWage DESC), `updated_at`
 
 **`religious_orgs`** — one row per EIN, loaded via `scripts/import-bmf.ts`
 Columns: `ein` (PK), `name`, `street`, `city`, `state`, `zip`, `ntee_cd`, `ntee_category` (Christian/Islamic/Jewish/Hindu/Buddhist/Unitarian/Other), `ntee_label`, `ruling_year`, `status`, `subsection`, `updated_at`
 Indexes: `idx_religious_orgs_zip`, `idx_religious_orgs_ntee`
 
 **`zip_employers`** — one row per ZIP, upserted via `/api/refresh` (CBP pass)
-Columns: `zip` (PK), `total_estab`, `total_emp`, `total_payroll` (BIGINT, in $1000s), `sectors` (JSONB — `[{label, estab}]` sorted by estab DESC), `size_dist` (JSONB — `[{label, estab}]` by employee size band), `updated_at`
+Columns: `zip` (PK), `total_estab`, `total_emp`, `total_payroll` (BIGINT, in $1000s), `sectors` (JSONB — `[{label, estab, emp, payroll}]` sorted by estab DESC), `size_dist` (JSONB — `[{label, estab}]` by employee size band), `updated_at`
 
 **`community_health`** — one row per ZIP, loaded via scripts + `/api/refresh-community`
 Columns: `zip` (PK), `diabetes`, `obesity`, `smoking`, `uninsured`, `high_blood_pressure`, `depression`, `mental_distress`, `phys_inactivity`, `gen_poor_health` (all NUMERIC(5,1), % of adults), `cfpb_complaints` (INT), `updated_at`
@@ -102,6 +103,26 @@ border: `1px solid rgba(${rgb},0.4)`
 - `barColors` prop accepts a `string[]` — one color per bar; gradient fades to `${color}80` at bottom
 - Age colors: `['#4EAEFF','#2DD4BF','#E8B84B','#A78BFA','#FF6B6B']`
 - Income colors: `['#8A98AE','#FF6B6B','#4EAEFF','#2DD4BF','#A78BFA','#E8B84B']`
+
+### Horizontal bar list pattern (CSS flex, immune to container-width scaling)
+Used in `/employers` for industry mix and sector wage charts. **Do NOT use SVG for horizontal bar lists** — `width="100%"` on SVG scales all dimensions proportionally and makes bars enormous on wide screens.
+```tsx
+// BarList component: fixed 12px bar height, flex layout
+<div style={{ display:'flex', flexDirection:'column', gap:'5px' }}>
+  {rows.map((r, i) => {
+    const pct = (r.value / maxVal) * 100
+    return (
+      <div key={r.label} style={{ display:'flex', alignItems:'center', gap:'8px' }}>
+        <div style={{ width:'130px', flexShrink:0, textAlign:'right', fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#8A98AE' }}>{r.label}</div>
+        <div style={{ flex:1, height:'12px', background:'rgba(255,255,255,0.05)', borderRadius:'2px', position:'relative', overflow:'hidden' }}>
+          <div style={{ position:'absolute', left:0, top:0, bottom:0, width:`${pct}%`, background:`linear-gradient(90deg,${color},${color}50)` }} />
+        </div>
+        <div style={{ width:'60px', flexShrink:0, textAlign:'right', fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color, fontWeight:'600' }}>{formatValue(r.value)}</div>
+      </div>
+    )
+  })}
+</div>
+```
 
 ### Nav active pill
 ```tsx
@@ -162,7 +183,7 @@ DATABASE_URL=$(grep '^DATABASE_URL=' .env.local | cut -d'"' -f2) node -e "
 ```
 src/lib/zips.ts                        — ZIP list (edit here to add/remove ZIPs)
 src/lib/census.ts                      — Census ACS fetch logic (all variables); handles sentinel values
-src/lib/cbp.ts                         — Census CBP fetch logic: 20 NAICS sectors + size distribution
+src/lib/cbp.ts                         — Census CBP fetch logic: 20 NAICS sectors (exported as SECTORS) + size distribution; sectors include emp+payroll per sector
 src/lib/db.ts                          — Neon client
 src/components/TopNav.tsx              — Shared nav with active-link routing (do NOT also render in page files)
 src/components/MapboxChoropleth.tsx    — Mapbox choropleth map component
@@ -171,7 +192,7 @@ src/app/demographics/page.tsx          — Per-ZIP demographics + YFI/WFI + coll
 src/app/compare/page.tsx               — Multi-ZIP comparison
 src/app/ses-classes/page.tsx           — SES tier breakdown: scatter, distribution chart, sortable table
 src/app/religious/page.tsx             — Religious landscape (IRS BMF data)
-src/app/employers/page.tsx             — CBP employer data: sector donut, size distribution
+src/app/employers/page.tsx             — CBP employer data: ZIP dropdown (DFW default), BarList industry mix + wages, top ZIPs grid; per-ZIP: donut + size dist + sector wages
 src/app/community-needs/page.tsx       — CDC PLACES + CFPB: DFW metro averages + per-ZIP profile
 src/app/api/refresh/route.ts           — Main refresh: ACS + CBP + BLS/FRED (~8 min, 370 ZIPs)
 src/app/api/refresh-community/route.ts — CFPB complaint refresh (separate to avoid Vercel timeout)
@@ -201,7 +222,7 @@ These are the next APIs to wire in, from Paul's Technical Specification v1.1 (Ap
 |---|---|---|
 | **YFI (Young Family Index)** | Site Scorer | Composite from ACS already in DB — no refresh needed |
 | **WFI (Working Family Index)** | Site Scorer | Same — all ACS variables already in DB |
-| **BLS QCEW** | `/employers` page | Avg wage by sector; uses existing BLS key |
+| ~~**BLS QCEW**~~ | ✅ **Done via CBP county-level** | Avg wage by sector now computed from Census CBP county data for 4 DFW counties (Dallas/Tarrant/Collin/Denton); stored in `metro_stats.sector_wages` |
 | **IRS SOI** | Site Scorer (tithe potential) | Annual download, no key |
 
 ### High — free, nonprofit application in progress

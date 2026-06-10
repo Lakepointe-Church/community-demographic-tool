@@ -1,6 +1,11 @@
-export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[] }[] = [
+// Core MSA = 11-county official DFW-Plano-Arlington MSA
+// (Dallas, Tarrant, Collin, Denton, Rockwall, Ellis, Johnson, Kaufman, Parker, Wise, Hunt)
+// Extended = counties beyond the MSA boundary included for coverage completeness.
+
+export const ZIP_GROUPS = [
   {
     label: 'East Corridor',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75087', label: 'Rockwall' },
       { zip: '75032', label: 'Rockwall Heath' },
@@ -32,6 +37,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'North Dallas',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75034', label: 'Frisco W' },
       { zip: '75035', label: 'Frisco E' },
@@ -55,6 +61,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Central / Richardson',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75080', label: 'Richardson W' },
       { zip: '75081', label: 'Richardson E' },
@@ -75,6 +82,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Irving / Las Colinas',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75039', label: 'Las Colinas' },
       { zip: '75060', label: 'Irving S' },
@@ -83,6 +91,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Denton County',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76210', label: 'Denton S' },
       { zip: '76208', label: 'Denton' },
@@ -106,6 +115,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Tarrant / Mid-Cities',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76021', label: 'Bedford' },
       { zip: '76022', label: 'Bedford N' },
@@ -130,6 +140,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Fort Worth Suburbs',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76104', label: 'Fort Worth SE' },
       { zip: '76108', label: 'Fort Worth W' },
@@ -146,6 +157,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Fort Worth City Core',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76102', label: 'Fort Worth' },
       { zip: '76103', label: 'Fort Worth E' },
@@ -175,6 +187,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Grand Prairie',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75050', label: 'Grand Prairie N' },
       { zip: '75051', label: 'Grand Prairie' },
@@ -184,6 +197,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Garland',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75041', label: 'Garland' },
       { zip: '75042', label: 'Garland NW' },
@@ -192,6 +206,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Dallas City',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75206', label: 'Dallas NE' },
       { zip: '75214', label: 'Lakewood' },
@@ -207,6 +222,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Dallas City Core',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75201', label: 'Downtown' },
       { zip: '75202', label: 'S Downtown' },
@@ -247,6 +263,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'South Dallas Suburbs',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75104', label: 'Cedar Hill' },
       { zip: '75115', label: 'DeSoto' },
@@ -265,6 +282,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Ellis County',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76065', label: 'Midlothian' },
       { zip: '75119', label: 'Ennis' },
@@ -279,6 +297,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Johnson County',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76028', label: 'Burleson' },
       { zip: '76036', label: 'Crowley' },
@@ -295,6 +314,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Parker County',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76008', label: 'Aledo' },
       { zip: '76020', label: 'Azle' },
@@ -317,6 +337,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Wise County',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76052', label: 'Haslet' },
       { zip: '76071', label: 'Newark' },
@@ -330,6 +351,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Hood County',
+    region: 'extended' as const,
     zips: [
       { zip: '76048', label: 'Granbury' },
       { zip: '76049', label: 'Granbury E' },
@@ -341,6 +363,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Cooke / Montague County',
+    region: 'extended' as const,
     zips: [
       { zip: '76238', label: 'Era' },
       { zip: '76240', label: 'Gainesville' },
@@ -354,6 +377,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Collin County North',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75407', label: 'Princeton' },
       { zip: '75454', label: 'Melissa' },
@@ -366,6 +390,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Grayson County',
+    region: 'extended' as const,
     zips: [
       { zip: '75020', label: 'Denison' },
       { zip: '75021', label: 'Denison E' },
@@ -394,6 +419,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Fanin County',
+    region: 'extended' as const,
     zips: [
       { zip: '75418', label: 'Bonham' },
       { zip: '75438', label: 'Dodd City' },
@@ -406,6 +432,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Hunt County',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75401', label: 'Greenville' },
       { zip: '75402', label: 'Greenville S' },
@@ -420,6 +447,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Kaufman County',
+    region: 'core_msa' as const,
     zips: [
       { zip: '75142', label: 'Kaufman' },
       { zip: '75143', label: 'Kemp' },
@@ -429,6 +457,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Van Zandt / Rains County',
+    region: 'extended' as const,
     zips: [
       { zip: '75103', label: 'Canton' },
       { zip: '75117', label: 'Edgewood' },
@@ -446,6 +475,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Henderson County',
+    region: 'extended' as const,
     zips: [
       { zip: '75148', label: 'Malakoff' },
       { zip: '75156', label: 'Mabank' },
@@ -456,6 +486,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Navarro County',
+    region: 'extended' as const,
     zips: [
       { zip: '75102', label: 'Barry' },
       { zip: '75105', label: 'Chatfield' },
@@ -479,6 +510,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Hill County',
+    region: 'extended' as const,
     zips: [
       { zip: '76055', label: 'Itasca' },
       { zip: '76621', label: 'Abbott' },
@@ -498,6 +530,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Hopkins / Wood County',
+    region: 'extended' as const,
     zips: [
       { zip: '75410', label: 'Alba' },
       { zip: '75420', label: 'Brashear' },
@@ -507,6 +540,7 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
   {
     label: 'Suburban Fill',
+    region: 'core_msa' as const,
     zips: [
       { zip: '76002', label: 'Arlington SW' },
       { zip: '76039', label: 'Euless' },
@@ -521,8 +555,11 @@ export const ZIP_GROUPS: { label: string; zips: { zip: string; label: string }[]
   },
 ]
 
-export const DFW_ZIPS = ZIP_GROUPS.flatMap(g => g.zips)
+export const DFW_ZIPS = ZIP_GROUPS.flatMap(g => g.zips.map(z => ({ ...z, region: g.region })))
 export type ZipEntry = (typeof DFW_ZIPS)[number]
+
+export const CORE_MSA_ZIPS = DFW_ZIPS.filter(z => z.region === 'core_msa')
+export const CORE_MSA_ZIP_SET = new Set(CORE_MSA_ZIPS.map(z => z.zip))
 
 // Lakepointe campus presence — keyed by ZIP
 export const CAMPUS_ZIPS: Record<string, 'existing' | 'soon'> = {

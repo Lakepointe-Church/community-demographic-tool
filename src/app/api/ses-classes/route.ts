@@ -1,15 +1,16 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { ZIP_GROUPS } from '@/lib/zips'
+import { ZIP_GROUPS, CORE_MSA_ZIP_SET } from '@/lib/zips'
 
 const ZIP_LABEL: Record<string, string> = {}
 for (const group of ZIP_GROUPS) {
   for (const z of group.zips) ZIP_LABEL[z.zip] = z.label
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const rows = await sql`
+    const coverage = req.nextUrl.searchParams.get('coverage') ?? 'core'
+    const allRows = await sql`
       SELECT
         zip, name, ses_label, ses_score,
         median_household_income, bachelors_rate, unemployment_rate,
@@ -18,6 +19,9 @@ export async function GET() {
       WHERE ses_label IS NOT NULL
       ORDER BY ses_score DESC NULLS LAST
     `
+    const rows = coverage === 'core'
+      ? allRows.filter(d => CORE_MSA_ZIP_SET.has(d.zip))
+      : allRows
 
     const tiers = ['Upper', 'Upper Middle', 'Middle', 'Lower Middle', 'Lower Income']
     const countByTier: Record<string, number> = Object.fromEntries(tiers.map(t => [t, 0]))

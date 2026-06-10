@@ -1,17 +1,22 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
-import { DFW_ZIPS } from '@/lib/zips'
+import { DFW_ZIPS, CORE_MSA_ZIP_SET } from '@/lib/zips'
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
-    const rows = await sql`SELECT * FROM zip_demographics ORDER BY zip`
+    const coverage = req.nextUrl.searchParams.get('coverage') ?? 'core'
+    const allRows = await sql`SELECT * FROM zip_demographics ORDER BY zip`
 
-    if (!rows.length) {
+    if (!allRows.length) {
       return NextResponse.json(
         { error: 'No data. Run POST /api/refresh first.' },
         { status: 404 }
       )
     }
+
+    const rows = coverage === 'core'
+      ? allRows.filter(d => CORE_MSA_ZIP_SET.has(d.zip))
+      : allRows
 
     const pf = (v: unknown) => v != null ? parseFloat(String(v)) : 0
 

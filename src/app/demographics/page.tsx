@@ -772,13 +772,18 @@ export default function DemographicsPage() {
           </div>
 
           {/* Footer */}
-          <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
-              Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · api.census.gov
-            </span>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
-              Lakepointe Church · Community Intelligence Platform · Internal Use Only
-            </span>
+          <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+                Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · api.census.gov
+              </span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+                Lakepointe Church · Community Intelligence Platform · Internal Use Only
+              </span>
+            </div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', letterSpacing: '0.06em' }}>
+              Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
+            </div>
           </div>
 
         </div>

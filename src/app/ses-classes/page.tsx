@@ -222,13 +222,21 @@ export default function SesClassesPage() {
   const [filter, setFilter] = useState<string>('All')
   const [sortCol, setSortCol] = useState<'sesScore' | 'medianHouseholdIncome' | 'bachelorsRate' | 'unemploymentRate' | 'occMgmtProfPct'>('sesScore')
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc')
+  const [coverage, setCoverage] = useState<'core' | 'all'>('core')
 
   useEffect(() => {
-    fetch('/api/ses-classes')
+    const params = new URLSearchParams(window.location.search)
+    const c = params.get('coverage') === 'all' ? 'all' : 'core'
+    setCoverage(c)
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/ses-classes?coverage=${coverage}`)
       .then(r => r.json())
       .then(d => { setZips(d.zips ?? []); setSummary(d.summary ?? null); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
+  }, [coverage])
 
   const filtered = useMemo(() => {
     const base = filter === 'All' ? zips : zips.filter(z => z.sesLabel === filter)
@@ -270,13 +278,13 @@ export default function SesClassesPage() {
           </h1>
           <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #E8B84B, rgba(232,184,75,0))', marginTop: '16px' }} />
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.08em', marginTop: '12px', textTransform: 'uppercase' as const }}>
-            ACS-Derived Class Classification · {summary?.total ?? 370} DFW ZIPs
+            ACS-Derived Class Classification · {summary?.total ?? '—'} {coverage === 'core' ? 'Core MSA' : 'All DFW'} ZIPs
           </div>
         </div>
 
         {/* Stat cards */}
         <div className="fade-up-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '24px' }}>
-          <StatCard label="Avg SES Score" value={loading ? '—' : String(summary?.avgScore ?? '—')} sub="DFW Metro" color="#E8B84B" loading={loading} />
+          <StatCard label="Avg SES Score" value={loading ? '—' : String(summary?.avgScore ?? '—')} sub={coverage === 'core' ? 'Core MSA avg' : 'All DFW avg'} color="#E8B84B" loading={loading} />
           <StatCard label="Upper Middle+" value={loading ? '—' : String(upper)} sub={`of ${summary?.total ?? '—'} ZIPs`} color="#4EAEFF" loading={loading} />
           <StatCard label="Middle Class" value={loading ? '—' : String(middle)} sub="score 40–57" color="#2DD4BF" loading={loading} />
           <StatCard label="Lower Middle & Below" value={loading ? '—' : String(lower)} sub="score below 40" color="#FF6B6B" loading={loading} />
@@ -286,7 +294,7 @@ export default function SesClassesPage() {
         <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
           <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const, marginBottom: '4px' }}>SES Class Distribution</div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#5a6478', letterSpacing: '0.08em', marginBottom: '16px' }}>Count of DFW ZIPs per tier</div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#5a6478', letterSpacing: '0.08em', marginBottom: '16px' }}>Count of {coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs per tier</div>
             {loading
               ? <div style={{ height: '200px', background: 'rgba(255,255,255,0.03)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
               : <DistributionChart countByTier={summary?.countByTier ?? {}} total={summary?.total ?? 0} />
@@ -426,7 +434,10 @@ export default function SesClassesPage() {
             )}
           </div>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', marginTop: '16px', letterSpacing: '0.06em' }}>
-            Showing {filtered.length} of {zips.length} ZIPs · Source: U.S. Census Bureau ACS 5-Year 2023 · Click column headers to sort
+            Showing {filtered.length} of {zips.length} {coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs · Source: U.S. Census Bureau ACS 5-Year 2023 · Click column headers to sort
+          </div>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '4px', letterSpacing: '0.06em' }}>
+            Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
           </div>
         </div>
 

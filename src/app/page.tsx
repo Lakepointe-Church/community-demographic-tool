@@ -187,13 +187,21 @@ const CARD_SURFACE = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(25
 export default function OverviewPage() {
   const [data, setData]       = useState<OverviewData | null>(null)
   const [loading, setLoading] = useState(true)
+  const [coverage, setCoverage] = useState<'core' | 'all'>('core')
 
   useEffect(() => {
-    fetch('/api/overview')
+    const params = new URLSearchParams(window.location.search)
+    const c = params.get('coverage') === 'all' ? 'all' : 'core'
+    setCoverage(c)
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/overview?coverage=${coverage}`)
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
+  }, [coverage])
 
   const ageBands = data?.ageDistribution ? [
     { label: '0–17',  pct: data.ageDistribution.age0_17 },
@@ -217,7 +225,7 @@ export default function OverviewPage() {
               Community Intelligence Platform — Lakepointe Church
             </div>
             <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px, 5vw, 58px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#F0F2F7' }}>
-              DFW Metroplex<br />Overview
+              {coverage === 'core' ? 'DFW Core MSA' : 'DFW Metro (All)'}<br />Overview
             </h1>
             <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #E8B84B, rgba(232,184,75,0))', marginTop: '16px' }} />
           </div>
@@ -242,7 +250,7 @@ export default function OverviewPage() {
           <StatCard
             label="ZIP Codes Tracked"
             value={data ? String(data.totals.zipCount) : '—'}
-            sub="DFW Metro Area"
+            sub={coverage === 'core' ? 'Core MSA (11 counties)' : 'All DFW coverage area'}
             accent="blue" loading={loading}
           />
           <StatCard
@@ -332,13 +340,19 @@ export default function OverviewPage() {
         </div>
 
         {/* Footer */}
-        <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px', display: 'flex', justifyContent: 'space-between' }}>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
-            Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · BLS LAUS · FRED
-          </span>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
-            Lakepointe Church · Community Intelligence Platform · Internal Use Only
-          </span>
+        <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+              Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · BLS LAUS · FRED
+            </span>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+              Lakepointe Church · Community Intelligence Platform · Internal Use Only
+            </span>
+          </div>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', letterSpacing: '0.06em' }}>
+            Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
+            {coverage === 'core' && ' · Averages computed over Core MSA (11 counties). Toggle to "All ZIPs" to include extended coverage area.'}
+          </div>
         </div>
 
       </div>

@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
-import { ZIP_GROUPS } from '@/lib/zips'
+import { ZIP_GROUPS, DFW_ZIPS, CORE_MSA_ZIPS } from '@/lib/zips'
 
 interface ZipHealth {
   zip: string
@@ -215,13 +215,21 @@ export default function CommunityNeedsPage() {
   const [selectedZip, setSelectedZip] = useState('')
   const [loading, setLoading] = useState(true)
   const [zipLoading, setZipLoading] = useState(false)
+  const [coverage, setCoverage] = useState<'core' | 'all'>('core')
 
   useEffect(() => {
-    fetch('/api/community-needs')
+    const params = new URLSearchParams(window.location.search)
+    const c = params.get('coverage') === 'all' ? 'all' : 'core'
+    setCoverage(c)
+  }, [])
+
+  useEffect(() => {
+    setLoading(true)
+    fetch(`/api/community-needs?coverage=${coverage}`)
       .then(r => r.json())
       .then(d => { setOverview(d); setLoading(false) })
       .catch(() => setLoading(false))
-  }, [])
+  }, [coverage])
 
   function handleZipChange(zip: string) {
     setSelectedZip(zip)
@@ -248,14 +256,14 @@ export default function CommunityNeedsPage() {
           <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#F0F2F7' }}>Community<br />Health & Needs</h1>
           <div style={{ width:'48px', height:'2px', background:'linear-gradient(90deg,#E8B84B,rgba(232,184,75,0))', marginTop:'16px' }} />
           <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#8A98AE', letterSpacing:'0.08em', marginTop:'12px', textTransform:'uppercase' }}>
-            CDC PLACES 2023 · CFPB Consumer Complaints · {loading ? '—' : overview?.zipCount ?? '—'} DFW ZIPs
+            CDC PLACES 2023 · CFPB Consumer Complaints · {overview?.zipCount ?? DFW_ZIPS.length} DFW ZIPs
           </div>
         </div>
 
         {/* DFW Overview Cards */}
         <div className="fade-up-2" style={{ marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid #232940' }}>
-          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'28px', letterSpacing:'0.08em', color:'#F0F2F7', lineHeight:1, marginBottom:'6px' }}>DFW Metro Averages</div>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#8A98AE', letterSpacing:'0.08em' }}>Across all {loading ? '—' : overview?.zipCount ?? '—'} ZIP codes in the DFW coverage area · CDC PLACES 2023</div>
+          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'28px', letterSpacing:'0.08em', color:'#F0F2F7', lineHeight:1, marginBottom:'6px' }}>{coverage === 'core' ? 'DFW Core MSA' : 'DFW Metro (All)'} Averages</div>
+          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#8A98AE', letterSpacing:'0.08em' }}>Across {overview?.zipCount ?? (coverage === 'core' ? CORE_MSA_ZIPS.length : DFW_ZIPS.length)} ZIP codes{coverage === 'core' ? ' · Core MSA (11 counties)' : ' · Full coverage area'} · CDC PLACES 2023</div>
         </div>
         <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
           <StatCard label="Avg Diabetes Rate" value={loading ? '—' : fmtPct(overview?.avgDiabetes ?? null)} sub="% adults diagnosed" color="#FF6B6B" loading={loading} />
@@ -269,7 +277,7 @@ export default function CommunityNeedsPage() {
           <StatCard label="Avg Smoking"        value={loading ? '—' : fmtPct(overview?.avgSmoking ?? null)}       sub="current cigarette use" color="#FF6B6B" loading={loading} />
           <StatCard label="Avg Mental Distress" value={loading ? '—' : fmtPct(overview?.avgMentalDistress ?? null)} sub="frequent bad mental health days" color="#A78BFA" loading={loading} />
           <StatCard label="Avg High Blood Pressure" value={loading ? '—' : fmtPct(overview?.avgHighBP ?? null)}   sub="% adults" color="#E8B84B" loading={loading} />
-          <StatCard label="CFPB Complaints"    value={loading ? '—' : fmtN(overview?.totalComplaints ?? null)}    sub={`${overview?.complaintsPer1k ?? '—'}/1K residents`} color="#4EAEFF" loading={loading} />
+          <StatCard label="CFPB Complaints"    value={loading ? '—' : fmtN(overview?.totalComplaints ?? null)}    sub={overview?.complaintsPer1k != null ? `${overview.complaintsPer1k}/1K residents` : undefined} color="#4EAEFF" loading={loading} />
         </div>
 
         {/* ZIP Rankings Table */}
@@ -367,6 +375,10 @@ export default function CommunityNeedsPage() {
 
         <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'16px', letterSpacing:'0.06em' }}>
           Health data: CDC PLACES 2023 (age-adjusted prevalence estimates) · Complaints: CFPB Consumer Complaint Database (all-time) · HMDA mortgage denial rates — Phase 2
+        </div>
+        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#3d4a5c', marginTop:'6px', letterSpacing:'0.06em' }}>
+          Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
+          {coverage === 'core' && ' · Averages use Core MSA (11 counties). Toggle to "All ZIPs" to include extended coverage area.'}
         </div>
 
       </div>
