@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, lazy, Suspense } from 'react'
+import { downloadCsv } from '@/lib/csv'
 
 const MapboxChoropleth = lazy(() => import('@/components/MapboxChoropleth'))
 
@@ -339,7 +340,17 @@ export default function OverviewPage() {
 
         {/* Top Growth Table */}
         <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px', marginBottom: '40px' }}>
-          <SectionHeader eyebrow="Sorted by Population Growth" title="Top Growth ZIP Codes" />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <SectionHeader eyebrow="Sorted by Population Growth" title="Top Growth ZIP Codes" />
+            <button
+              disabled={!data?.zips?.length}
+              onClick={() => downloadCsv('lakepointe-growth-zips.csv',
+                ['ZIP', 'Area', 'Population', 'Growth %', 'Median HHI', '% HH w/ Children', 'Avg HH Size', 'SES Class'],
+                (data?.zips ?? []).map(z => [z.zip, z.label, z.population, z.populationGrowth, z.medianHouseholdIncome, z.hhWithChildrenPct, z.avgHouseholdSize, z.sesLabel])
+              )}
+              style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'5px 12px', borderRadius:'3px', cursor:'pointer', border:'1px solid #232940', background:'transparent', color:'#8A98AE', flexShrink:0, marginTop:'4px' }}
+            >↓ CSV</button>
+          </div>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr>

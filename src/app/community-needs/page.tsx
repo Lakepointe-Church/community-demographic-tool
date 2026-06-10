@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { downloadCsv } from '@/lib/csv'
 import { ZIP_GROUPS, DFW_ZIPS, CORE_MSA_ZIPS } from '@/lib/zips'
 
 interface ZipHealth {
@@ -164,6 +165,16 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
   ]
 
   return (
+    <div>
+      <div style={{ display:'flex', justifyContent:'flex-end', marginBottom:'8px' }}>
+        <button
+          onClick={() => downloadCsv('lakepointe-community-health.csv',
+            ['ZIP', 'Area', 'Diabetes %', 'Obesity %', 'Uninsured %', 'Depression %', 'Mental Distress %', 'CFPB Complaints', 'Population'],
+            sorted.map(z => [z.zip, z.name, z.diabetes, z.obesity, z.uninsured, z.depression, z.mentalDistress, z.cfpbComplaints, z.population])
+          )}
+          style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'5px 12px', borderRadius:'3px', cursor:'pointer', border:'1px solid #232940', background:'transparent', color:'#8A98AE' }}
+        >↓ CSV</button>
+      </div>
     <div style={{ maxHeight:'320px', overflowY:'auto', overflowX:'auto', scrollbarGutter:'stable' }}>
       <table style={{ width:'100%', borderCollapse:'collapse' }}>
         <thead style={{ position:'sticky', top:0, background:'#13161f', zIndex:1 }}>
@@ -204,6 +215,7 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
       <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'12px' }}>
         {zips.length} ZIPs · Color: teal = below avg, gold = elevated, red = high · Click headers to sort
       </div>
+    </div>
     </div>
   )
 }

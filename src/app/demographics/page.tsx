@@ -517,6 +517,18 @@ export default function DemographicsPage() {
                 Select ZIP Code
               </div>
               <ZipDropdown value={selectedZip} onChange={setSelectedZip} />
+              {selectedZip && (
+                <div style={{ marginTop: '8px', textAlign: 'right' }}>
+                  <a
+                    href={`/zip/${selectedZip}/print`}
+                    target="_blank"
+                    rel="noreferrer"
+                    style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'5px 12px', borderRadius:'3px', border:'1px solid #232940', background:'transparent', color:'#8A98AE', textDecoration:'none', display:'inline-block', transition:'all 0.15s' }}
+                  >
+                    ↗ Print One-Pager
+                  </a>
+                </div>
+              )}
               {data && (
                 <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.06em', marginTop: '7px' }}>
                   Updated {new Date(data.updatedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

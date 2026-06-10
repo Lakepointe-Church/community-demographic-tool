@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useMemo } from 'react'
+import { downloadCsv } from '@/lib/csv'
 
 interface ZipSes {
   zip: string
@@ -361,8 +362,18 @@ export default function SesClassesPage() {
 
         {/* Table */}
         <div className="fade-up-4" style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const, marginBottom: '16px' }}>
-            All ZIPs by SES Classification
+          <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const }}>
+              All ZIPs by SES Classification
+            </div>
+            <button
+              disabled={!filtered.length}
+              onClick={() => downloadCsv('lakepointe-ses-classes.csv',
+                ['ZIP', 'Area', 'SES Score', 'SES Class', 'Median HHI', '% Bachelor+', '% Mgmt/Prof', 'Unemployment %', 'Pop Growth %'],
+                filtered.map(z => [z.zip, z.name, z.sesScore, z.sesLabel, z.medianHouseholdIncome, z.bachelorsRate, z.occMgmtProfPct, z.unemploymentRate, z.populationGrowth])
+              )}
+              style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'5px 12px', borderRadius:'3px', cursor:'pointer', border:'1px solid #232940', background:'transparent', color:'#8A98AE', flexShrink:0 }}
+            >↓ CSV</button>
           </div>
 
           {/* Filter tabs */}
