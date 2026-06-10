@@ -291,6 +291,18 @@ export default function SiteScorerPage() {
   const [coverage, setCoverage]   = useState<'core' | 'all'>('core')
   const [refreshKey, setRefreshKey] = useState(0)
   const [weights, setWeights]     = useState<Weights>(DEFAULT_WEIGHTS)
+
+  function handleNormalize() {
+    const total = weights.yfi + weights.wfi + weights.ses + weights.growth + weights.saturation
+    if (total === 0) return
+    setWeights({
+      yfi:        Math.round(weights.yfi / total * 100),
+      wfi:        Math.round(weights.wfi / total * 100),
+      ses:        Math.round(weights.ses / total * 100),
+      growth:     Math.round(weights.growth / total * 100),
+      saturation: Math.round(weights.saturation / total * 100),
+    })
+  }
   const [hovered, setHovered]     = useState<ZipScore | null>(null)
   const [sortKey, setSortKey]     = useState<SortKey>('fitScore')
   const [sortAsc, setSortAsc]     = useState(false)
@@ -415,13 +427,19 @@ export default function SiteScorerPage() {
                     Scoring Weights
                   </div>
                   <div style={{ fontSize: 11, color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace" }}>
-                    Adjust relative importance · Percentages auto-normalize to 100%
+                    Adjust sliders, then click Normalize to snap all values to 100%
                   </div>
                 </div>
-                <button
-                  onClick={() => setWeights(DEFAULT_WEIGHTS)}
-                  style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'transparent', border: '1px solid #232940', borderRadius: 4, color: '#8A98AE', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
-                >Reset</button>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <button
+                    onClick={handleNormalize}
+                    style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'rgba(232,184,75,0.08)', border: '1px solid rgba(232,184,75,0.3)', borderRadius: 4, color: '#E8B84B', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                  >Normalize</button>
+                  <button
+                    onClick={() => setWeights(DEFAULT_WEIGHTS)}
+                    style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'transparent', border: '1px solid #232940', borderRadius: 4, color: '#8A98AE', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                  >Reset</button>
+                </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 <WeightSlider label="Young Family Index (YFI)"   color="#4EAEFF" value={weights.yfi}        effPct={eff.yfi}        onChange={v => setWeights(w => ({ ...w, yfi: v }))} />
