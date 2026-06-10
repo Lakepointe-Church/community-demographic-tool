@@ -15,11 +15,11 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/demographics` | ✅ | Per-ZIP: 8 stat cards + Dual-Earner HH + Long Commute cards, YFI/WFI indexes, race donut, education bars, age bars, household type donut, college scorecard |
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | ✅ | SES tier breakdown: 4 stat cards, distribution bar chart, scatter plot (SES score vs income), filterable/sortable table with ZIP/Class/HHI/Bachelor+/Mgmt+Prof/Unemployment/Trend |
-| `/religious` | ✅ | DFW religious landscape: stat cards, faith distribution bar chart, top Islamic ZIPs table, per-ZIP org breakdown, Islamic org panel with ruling year + NEW badge |
+| `/religious` | ✅ | DFW religious landscape: stat cards (incl. Avg Churches/10K), faith distribution bar chart, top Islamic ZIPs table, per-ZIP org breakdown, Islamic org panel with ruling year + NEW badge |
 | `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
-| `/site-scorer` | ✅ | Placeholder — "Coming Phase 2" branded page; prerequisite: church saturation index (Phase 2.1). Fixes dead nav link. |
-| `/methodology` | ✅ | Static data dictionary: all 9 sources with vintage + refresh cadence, SES scoring formula + tier table, YFI/WFI component variables, per-metric definitions (ACS table IDs), known limitations per source |
+| `/site-scorer` | ✅ | Full Site Scorer: 5 adjustable weight sliders (YFI/WFI/SES/Growth/Saturation) with Normalize + Reset, opportunity quadrant scatter (growth vs. churches/10K, target quadrant highlighted), top-10 sidebar, sortable ranked table, CSV export, coverage toggle |
+| `/methodology` | ✅ | Static data dictionary: all 9 sources, SES scoring, YFI/WFI component weights, Site Scorer weights + normalization formulas, church saturation index definition, per-metric definitions, known limitations |
 | `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
 ### Data sources (all routed through Neon DB)
@@ -48,7 +48,8 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
   /api/census?zip=             ← single ZIP read (Demographics page)
   /api/census/batch?zips=      ← multi-ZIP read (Compare page)
   /api/overview?coverage=      ← aggregates all ZIPs + computes weighted averages; ?coverage=core|all (default core)
-  /api/religious               ← DFW overview stats + per-ZIP orgs
+  /api/religious               ← DFW overview stats (incl. saturation) + per-ZIP orgs
+  /api/site-scorer?coverage=   ← per-ZIP: church saturation + YFI + WFI + SES + growth; joins zip_demographics + religious_orgs
   /api/ses-classes?coverage=   ← all ZIPs sorted by SES score with tier counts; ?coverage=core|all
   /api/employers?zip=          ← CBP employer data (overview or per-ZIP)
   /api/community-needs?coverage=&zip= ← CDC PLACES + CFPB health data; ?coverage=core|all for overview mode
@@ -239,7 +240,7 @@ src/components/TopNav.tsx              — Shared nav; renders <CoverageNav /> (
 src/components/CoverageNav.tsx         — Suspense-wrapped nav links; preserves ?coverage=all param across page transitions
 src/components/MapboxChoropleth.tsx    — Mapbox choropleth map component
 src/app/page.tsx                       — Overview page
-src/app/site-scorer/page.tsx           — Placeholder "Coming Phase 2" page
+src/app/site-scorer/page.tsx           — Full Site Scorer: scatter chart, weight sliders, ranked table, CSV export
 src/app/demographics/page.tsx          — Per-ZIP demographics + YFI/WFI + college scorecard
 src/app/compare/page.tsx               — Multi-ZIP comparison
 src/app/ses-classes/page.tsx           — SES tier breakdown: scatter, distribution chart, sortable table
@@ -258,6 +259,7 @@ src/app/api/ses-classes/route.ts       — All ZIPs sorted by SES score + tier c
 src/app/api/religious/route.ts         — DFW overview + per-ZIP orgs from religious_orgs table
 src/app/api/employers/route.ts         — CBP employer data (overview or per-ZIP)
 src/app/api/community-needs/route.ts   — CDC PLACES + CFPB health data (overview or per-ZIP)
+src/app/api/site-scorer/route.ts       — Per-ZIP church saturation (Christian NTEE orgs/pop × 10K) + YFI + WFI scores; joins zip_demographics + religious_orgs
 src/app/api/boundaries/route.ts        — ZCTA polygon GeoJSON from TIGERweb
 scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS publishes monthly)
 scripts/import-places.ts               — CDC PLACES loader (re-run annually)
@@ -275,7 +277,9 @@ Full phased plan lives in `cip-enhancement-spec.md` (repo root).
 - **Phase 1.1** ✅ complete — `/methodology` data dictionary page
 - **Phase 1.2** ✅ complete — CSV export on ranking tables (Overview, SES Classes, Community Needs) + per-ZIP print one-pager (`/zip/[zip]/print`)
 - **Phase 1.3** — ACS margin-of-error guard (dimmed values + tooltip when MOE/estimate > 0.3) — not yet started
-- **Phases 2–5** — church saturation index, Site Scorer, Muslim population estimates, drive-time isochrones, leading indicators
+- **Phase 2** ✅ complete — Church saturation index (churches/10K per ZIP from IRS BMF) + full Site Scorer page (quadrant scatter, adjustable weights, ranked table)
+- **Phase 3** — Religious landscape expansion: 2020 Religion Census county-level adherence data, Muslim population proxy layer (ACS ancestry/birthplace), presentation rules — requires ASARB terms-of-use review and PRRI data access verification before starting
+- **Phases 4–5** — Attendee density overlay (Rock RMS), drive-time isochrones (Mapbox), leading growth indicators (building permits, TEA enrollment)
 
 ## Planned next data sources (ordered by priority)
 These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).
@@ -283,8 +287,8 @@ These are the next APIs to wire in, from Paul's Technical Specification v1.1 (Ap
 ### High — free, no new keys needed
 | Source | What it unlocks | Notes |
 |---|---|---|
-| **YFI (Young Family Index)** | Site Scorer | Composite from ACS already in DB — no refresh needed |
-| **WFI (Working Family Index)** | Site Scorer | Same — all ACS variables already in DB |
+| ~~**YFI (Young Family Index)**~~ | ✅ **Done** | Live in Site Scorer; computed from ACS columns already in DB |
+| ~~**WFI (Working Family Index)**~~ | ✅ **Done** | Live in Site Scorer; computed from ACS columns already in DB |
 | ~~**BLS QCEW**~~ | ✅ **Done via CBP county-level** | Avg wage by sector now computed from Census CBP county data for 4 DFW counties (Dallas/Tarrant/Collin/Denton); stored in `metro_stats.sector_wages` |
 | **IRS SOI** | Site Scorer (tithe potential) | Annual download, no key |
 
@@ -303,13 +307,16 @@ These are the next APIs to wire in, from Paul's Technical Specification v1.1 (Ap
 PRRI, ARDA, Zillow, Data Axle, MissionInsite, County Appraisal Districts, NCTCOG
 
 ## Lakepointe-specific indexes (from spec §9)
-**Young Family Index (YFI)** — composite 0–100
-- Young children share (B09001), family HH rate (B11003), fertility signal (B13016), HH size (B25010)
+**Young Family Index (YFI)** — composite 0–100 ✅ live (Demographics page + Site Scorer)
+- 40% young children share (age_0_17 / 30%), 25% family HH rate (mwKids+single / 40%), 20% fertility (rate×100 / 8%), 15% HH size ((size−1.5)/2.0)
 
-**Working Family Index (WFI)** — composite 0–100
-- Dual-earner rate (B23007), working parent rate (B11003), commute burden (B08303), occupational diversity (C24010)
+**Working Family Index (WFI)** — composite 0–100 ✅ live (Demographics page + Site Scorer)
+- 40% dual-earner rate (/40%), 25% HH with children (/50%), 20% commute burden inverse (100−commute30+%), 15% bachelor's rate proxy (/50%)
 
-**Lakepointe Fit Score** = YFI + WFI + SES alignment → feeds Site Scorer
+**Lakepointe Fit Score** ✅ live on `/site-scorer`
+- Default weights: YFI 25% · WFI 25% · SES 20% · Population Growth 15% · Church Saturation Opportunity 15%
+- User-adjustable via sliders; Normalize button snaps to 100%; all weights documented at `/methodology#site-scorer`
+- Church Saturation Opportunity = 100 − min(100, churches/10K / 30 × 100) — inverts BMF Christian org density so low saturation = high score
 
 ## Notion tracker
 Full task tracker (ordered by priority): https://www.notion.so/e94e55e73b55430bb9646e37600e4998
