@@ -19,7 +19,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
 | `/site-scorer` | ✅ | Full Site Scorer: 5 adjustable weight sliders (YFI/WFI/SES/Growth/Saturation) with Normalize + Reset, opportunity quadrant scatter (growth vs. churches/10K, target quadrant highlighted), top-10 sidebar, sortable ranked table, CSV export, coverage toggle |
-| `/methodology` | ✅ | Static data dictionary: 9 of 10 sources (ASARB + ACS proxy sections not yet written), SES scoring, YFI/WFI component weights, Site Scorer weights + normalization formulas, church saturation index definition, per-metric definitions, known limitations |
+| `/methodology` | ✅ | Static data dictionary: all 10 sources, SES scoring, YFI/WFI component weights, Site Scorer weights + normalization formulas, church saturation index definition, confidence tier framework (MEASURED/ESTIMATE/PROXY), ASARB methodology + country list for ACS proxy, per-metric definitions, known limitations |
 | `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
 ### Data sources (all routed through Neon DB)
@@ -295,7 +295,7 @@ Full phased plan lives in `cip-enhancement-spec.md` (repo root).
 - **Phase 1.2** ✅ complete — CSV export on ranking tables (Overview, SES Classes, Community Needs) + per-ZIP print one-pager (`/zip/[zip]/print`)
 - **Phase 1.3** — ACS margin-of-error guard (dimmed values + tooltip when MOE/estimate > 0.3) — not yet started
 - **Phase 2** ✅ complete — Church saturation index (churches/10K per ZIP from IRS BMF) + full Site Scorer page (quadrant scatter, adjustable weights, ranked table)
-- **Phase 3** — Religious landscape expansion: **3.4 ✅** mosque/congregation BMF layer. **3.1 ✅** 2020 ASARB county adherence panel. **3.2** dropped (PRRI data not publicly downloadable; email drafted to info@prri.org). **3.3 ✅** ACS proxy layer: proxy_born (B05006, 20 countries) + proxy_language (C16001_033E Arabic), PROXY-labeled ranked list on /religious with Iraq/Egypt/Syria overcounting caveat. B16001 (Urdu/Bengali/Somali) not available at ZCTA level — Arabic only for language signal. **3.5** confidence tiers applied throughout. Methodology page update (Phase 3 section) not yet written.
+- **Phase 3** ✅ complete — Religious landscape expansion: **3.4** mosque/congregation BMF layer. **3.1** 2020 ASARB county adherence panel. **3.2** dropped (PRRI data not publicly downloadable; email drafted to info@prri.org). **3.3** ACS proxy layer: proxy_born (B05006, 20 countries) + proxy_language (C16001_033E Arabic), PROXY-labeled ranked list on /religious with Iraq/Egypt/Syria overcounting caveat. **3.5** confidence tiers (MEASURED/ESTIMATE/PROXY) applied throughout. Methodology page updated with all Phase 3 sections.
 - **Phases 4–5** — Attendee density overlay (Rock RMS), drive-time isochrones (Mapbox), leading growth indicators (building permits, TEA enrollment)
 
 ## Planned next data sources (ordered by priority)

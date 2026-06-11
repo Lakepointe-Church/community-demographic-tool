@@ -19,7 +19,7 @@ export default function MethodologyPage() {
       {/* ── DATA SOURCES ─────────────────────────────── */}
       <Section title="Data Sources">
         <p style={bodyStyle}>
-          The platform aggregates nine public data sources, all routed through a Neon PostgreSQL database.
+          The platform aggregates ten public data sources, all routed through a Neon PostgreSQL database.
           Data is not fetched live on page load — it is refreshed on the cadences below and served from the database.
         </p>
         <div style={{ overflowX: 'auto', marginTop: '20px' }}>
@@ -209,6 +209,115 @@ export default function MethodologyPage() {
         </Section>
       </div>
 
+      {/* ── RELIGIOUS LANDSCAPE — DATA & METHODOLOGY ── */}
+      <Section title="Religious Landscape — Data &amp; Methodology">
+        <p style={bodyStyle}>
+          The Religious Landscape page combines three types of data with fundamentally different confidence levels.
+          Each panel carries a labeled chip distinguishing what kind of evidence is being shown. The Census Bureau
+          does not collect religion data — there is no measured &ldquo;% Muslim by ZIP.&rdquo; Everything on this page is either
+          directly counted registrations, congregation-reported estimates, or demographic proxies.
+        </p>
+
+        {/* Confidence chips */}
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', margin: '20px 0' }}>
+          {[
+            { chip: 'MEASURED', color: '#4EAEFF', desc: 'IRS BMF — federal registration records. Directly counted from filing data. Undercounts congregations that operate under a church exemption and never file.' },
+            { chip: 'ESTIMATE', color: '#E8B84B', desc: '2020 U.S. Religion Census (ASARB) — congregation-reported adherent counts, aggregated to county level. Not a Census Bureau product.' },
+            { chip: 'PROXY',    color: '#A78BFA', desc: 'ACS birthplace + language — adjacent demographic signals at ZIP level. Directional only. Overcounts non-Muslims from flagged countries; undercounts U.S.-born Muslims.' },
+          ].map(({ chip, color, desc }) => (
+            <div key={chip} style={{ flex: '1 1 260px', padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: `1px solid ${color}30`, borderRadius: '4px', borderLeft: `3px solid ${color}` }}>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color, letterSpacing: '0.12em', marginBottom: '6px' }}>{chip}</div>
+              <p style={{ ...bodyStyle, margin: 0, fontSize: '12px' }}>{desc}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* ASARB */}
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', margin: '28px 0 12px' }}>
+          2020 U.S. Religion Census (ASARB)
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+          {[
+            { label: 'Source', definition: '2020 U.S. Religion Census, conducted by the Association of Statisticians of American Religious Bodies (ASARB). Published 2022; updated county-level file with RELTRAD tradition variables released January 2024. Distributed via theARDA.com (dataset ID RCMSCY20). Decennial — next release approximately 2030.' },
+            { label: 'What was measured', definition: 'Participating denominations and religious bodies reported congregation counts and adherent counts for each county. The study covered 372 religious bodies. Not all denominations participate — non-participating groups are systematically undercounted. This is not a Census Bureau product and is not based on individual responses.' },
+            { label: 'Tradition classification', definition: 'Traditions follow the Steensland et al. RELTRAD schema: Evangelical Protestant, Mainline Protestant, Black Protestant, Catholic, Orthodox, Jewish, Muslim, Buddhist, Hindu, Other Christian, Other. These are researchers\' classifications of denominations, not self-reported individual identities.' },
+            { label: 'Unclaimed', definition: '"Unclaimed" = county population minus the sum of all reported adherents. It represents people not affiliated with any congregation that participated in the Religion Census. It does not mean "no religion" — it includes the nonreligious, the privately religious, and members of congregations that did not participate in the study. For campus planning, Unclaimed is the most decision-relevant number: it represents the population without a counted congregational home.' },
+            { label: 'Geography', definition: 'County level only. The platform covers 23 DFW counties: 11 core MSA counties (Dallas, Tarrant, Collin, Denton, Rockwall, Ellis, Johnson, Kaufman, Parker, Wise, Hunt) and 12 extended counties. Do not interpret county figures as ZIP-level data.' },
+            { label: 'Attribution', definition: 'All displays of this data carry the required attribution: "2020 U.S. Religion Census (ASARB) · County level · Adherent estimates." Per ASARB terms, this data is not for marketing or commercial purposes. Internal church ministry planning is the intended use.' },
+          ].map(m => (
+            <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid rgba(232,184,75,0.3)' }}>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+              <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* ACS Proxy */}
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#A78BFA', textTransform: 'uppercase', margin: '28px 0 12px' }}>
+          ACS Muslim Community Presence Proxy
+        </div>
+        <p style={bodyStyle}>
+          The only ZIP-level signal available. Two columns are shown separately and are never summed — they capture
+          overlapping but distinct populations.
+        </p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '20px' }}>
+          {[
+            { label: 'proxy_born', definition: 'Sum of ACS B05006 (Place of Birth for the Foreign-Born Population) cells for 20 predominantly Muslim-majority countries. Stored in zip_demographics.proxy_born. Per-1,000-residents figure normalizes for ZIP population.' },
+            { label: 'proxy_language', definition: 'ACS C16001_033E — count of persons age 5+ in households where Arabic is spoken at home (all English proficiency levels). C16001 is the only language table available at the ZCTA level; B16001 (which includes Urdu, Bengali, and Somali separately) is only available at census tract and county geography. Language speakers are not summed with birthplace counts.' },
+          ].map(m => (
+            <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid rgba(167,139,250,0.3)' }}>
+              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+              <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+            </div>
+          ))}
+        </div>
+
+        {/* Country list */}
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase', marginBottom: '10px' }}>
+          Approved country list — proxy_born (B05006)
+        </div>
+        <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px' }}>
+            <thead>
+              <tr>
+                {['Country / Group', 'ACS Variable', 'Notes'].map(h => (
+                  <th key={h} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '1px solid #232940', color: '#5a6478', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '10px' }}>{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {PROXY_COUNTRIES.map((r, i) => (
+                <tr key={i} style={{ borderBottom: '1px solid #1a1f2e' }}>
+                  <td style={{ padding: '7px 12px', color: r.flagged ? '#FF6B6B' : '#A8B4C5' }}>
+                    {r.country}
+                    {r.flagged && <span style={{ fontSize: '9px', color: '#FF6B6B', marginLeft: '6px' }}>★ FLAGGED</span>}
+                  </td>
+                  <td style={{ padding: '7px 12px', color: '#5a6478' }}>{r.variable}</td>
+                  <td style={{ padding: '7px 12px', color: '#8A98AE', fontSize: '11px' }}>{r.note}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p style={{ ...bodyStyle, fontSize: '11px', color: '#5a6478' }}>
+          ★ Flagged countries include significant non-Muslim minority populations in their diaspora communities.
+          Excluded countries: Iran (large secular/non-Muslim DFW diaspora), Lebanon (large Maronite Christian community),
+          India (mixed Hindu/Muslim/Sikh diaspora), Israel (Jewish state).
+        </p>
+
+        {/* Required caveat */}
+        <div style={{ padding: '14px 16px', background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '4px', marginTop: '8px' }}>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#A78BFA', letterSpacing: '0.1em', marginBottom: '6px', textTransform: 'uppercase' }}>Required caveat — always shown on the dashboard</div>
+          <p style={{ ...bodyStyle, margin: 0, fontSize: '13px' }}>
+            This proxy both <strong style={{ color: '#C8D4E4' }}>overcounts</strong> (many people from these countries are Christian or other faiths —
+            Iraq: Chaldean Catholic &amp; Assyrian Christian; Egypt: Coptic Orthodox; Syria: Syrian Christian) and{' '}
+            <strong style={{ color: '#C8D4E4' }}>undercounts</strong> (large shares of American Muslims are U.S.-born, including
+            African American and convert communities, and will not appear in birthplace tables at all).
+            It indicates <em>where communities with cultural ties to the Muslim world live</em>, not a Muslim population count.
+          </p>
+        </div>
+      </Section>
+
       {/* ── METRIC DEFINITIONS ──────────────────────── */}
       <Section title="Metric Definitions">
         {METRIC_GROUPS.map(group => (
@@ -365,6 +474,13 @@ const DATA_SOURCES = [
     refresh: '24-hour server cache',
     usedFor: 'Map boundaries (Mapbox choropleth)',
   },
+  {
+    source: '2020 U.S. Religion Census (ASARB)',
+    geo: 'County (23 DFW counties)',
+    vintage: '2020',
+    refresh: 'Decennial (~2030)',
+    usedFor: 'Religious adherence by tradition: Unclaimed, Evangelical, Catholic, Muslim, Jewish, etc.',
+  },
 ]
 
 const SES_TIERS = [
@@ -452,12 +568,37 @@ const METRIC_GROUPS = [
     ],
   },
   {
-    group: 'Religious Landscape (IRS EO BMF)',
+    group: 'Religious Landscape',
     metrics: [
-      { label: 'Religious Organizations', definition: 'Active tax-exempt organizations from the IRS Exempt Organizations Business Master File filtered to NTEE major group X (Religion-Related). Classified by NTEE subcategory: X20 Christian, X21 Protestant, X22 Roman Catholic, X30 Jewish, X40 Islamic, X50 Buddhist, X70 Hindu. Ruling year is the year the IRS recognized the organization\'s tax-exempt status.' },
+      { label: 'Religious Organizations', definition: 'Active tax-exempt organizations from the IRS Exempt Organizations Business Master File filtered to NTEE major group X (Religion-Related). Classified by NTEE subcategory: X20 Christian, X21 Protestant, X22 Roman Catholic, X30 Jewish, X40 Islamic, X50 Buddhist, X70 Hindu. Ruling year is the year the IRS recognized the organization\'s tax-exempt status. MEASURED confidence — directly counted from federal filings.' },
       { label: 'Churches per 10K', definition: 'Count of NTEE X20/X21/X22-coded organizations in the ZIP ÷ population × 10,000. Used as a church saturation proxy. Treat as a relative ranking tool — see Known Limitations.' },
+      { label: 'Religious Adherence by Tradition', definition: 'County-level adherent estimates from the 2020 U.S. Religion Census (ASARB). Traditions follow the Steensland et al. RELTRAD schema. "Unclaimed" = county population minus all reported adherents — represents people not affiliated with any counted congregation. ESTIMATE confidence — congregation-reported counts, not individual survey responses. County level only; do not interpret as ZIP-level data.' },
+      { label: 'Muslim Community Presence Proxy', definition: 'ZIP-level proxy computed from two ACS 5-Year 2023 signals: (1) proxy_born — sum of B05006 foreign-born from 20 predominantly Muslim-majority countries; (2) proxy_language — C16001_033E Arabic speakers. Shown as raw count and per-1,000 residents. PROXY confidence — directional signal only, not a Muslim population count. See the Religious Landscape — Data & Methodology section for the full country list and required caveats.' },
     ],
   },
+]
+
+const PROXY_COUNTRIES = [
+  { country: 'Afghanistan',                                       variable: 'B05006_057E', flagged: false, note: '' },
+  { country: 'Bangladesh',                                        variable: 'B05006_058E', flagged: false, note: '' },
+  { country: 'Pakistan',                                          variable: 'B05006_064E', flagged: false, note: '' },
+  { country: 'Uzbekistan',                                        variable: 'B05006_066E', flagged: false, note: '' },
+  { country: 'Iraq',                                              variable: 'B05006_083E', flagged: true,  note: 'Chaldean Catholic & Assyrian Christian minority' },
+  { country: 'Jordan',                                            variable: 'B05006_085E', flagged: false, note: '' },
+  { country: 'Kuwait',                                            variable: 'B05006_086E', flagged: false, note: '' },
+  { country: 'Saudi Arabia',                                      variable: 'B05006_088E', flagged: false, note: '' },
+  { country: 'Syria',                                             variable: 'B05006_089E', flagged: true,  note: 'Syrian Christian & Alawi minority' },
+  { country: 'Turkey',                                            variable: 'B05006_090E', flagged: false, note: '' },
+  { country: 'UAE',                                               variable: 'B05006_091E', flagged: false, note: '' },
+  { country: 'Yemen',                                             variable: 'B05006_092E', flagged: false, note: '' },
+  { country: 'Other Western Asia (Bahrain, Qatar, Oman, W. Bank/Gaza)', variable: 'B05006_093E', flagged: false, note: 'Grouped — cannot isolate individually' },
+  { country: 'Somalia',                                           variable: 'B05006_100E', flagged: false, note: '' },
+  { country: 'Algeria',                                           variable: 'B05006_111E', flagged: false, note: '' },
+  { country: 'Egypt',                                             variable: 'B05006_112E', flagged: true,  note: 'Coptic Orthodox community (~10% of Egyptian diaspora)' },
+  { country: 'Morocco',                                           variable: 'B05006_113E', flagged: false, note: '' },
+  { country: 'Sudan',                                             variable: 'B05006_114E', flagged: false, note: '' },
+  { country: 'Other Northern Africa (Libya, Tunisia, others)',    variable: 'B05006_115E', flagged: false, note: 'Grouped — Libya & Tunisia not individually listed in B05006' },
+  { country: 'Senegal',                                           variable: 'B05006_125E', flagged: false, note: '' },
 ]
 
 const LIMITATIONS = [
@@ -496,5 +637,13 @@ const LIMITATIONS = [
   {
     source: 'SES Class Score',
     limitation: 'The SES composite is sensitive to the income and home value caps ($200K and $800K). ZIPs above these caps are all scored identically on those components. The score is designed to differentiate the middle of the DFW distribution — it is not intended to rank the wealthiest ZIPs against each other.',
+  },
+  {
+    source: '2020 U.S. Religion Census (ASARB)',
+    limitation: 'County-level data only — figures cannot be disaggregated to ZIP codes. Muslim adherence estimates are modeled from congregation-reported counts for participating Islamic bodies; mosques that did not participate are not counted. Non-participating denominations across all traditions are systematically undercounted. "Unclaimed" does not mean irreligious — it captures both the nonreligious and members of non-participating congregations. The 2020 vintage reflects pre-pandemic religious affiliation patterns; post-2020 congregation changes are not captured until the next decennial release (~2030).',
+  },
+  {
+    source: 'ACS Proxy — Muslim Community Presence',
+    limitation: 'The proxy_born column overcounts non-Muslims from Iraq (Chaldean Catholic, Assyrian Christian), Egypt (Coptic Orthodox), and Syria (Syrian Christian), who may represent 5–20% of those countries\' DFW diaspora populations. The proxy undercounts U.S.-born Muslims of all backgrounds — including African American Muslims and converts — who will not appear in ACS birthplace tables. The Arabic-speaker column (C16001) is limited to Arabic because B16001 (which includes Urdu, Bengali, and Somali separately) is not released at the ZCTA level. Use these figures only as a directional geographic signal for community planning, not as a population estimate.',
   },
 ]
