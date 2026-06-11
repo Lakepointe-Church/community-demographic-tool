@@ -454,6 +454,27 @@ function HouseholdTypeChart({ householdTypes, loading }: {
   )
 }
 
+// ── Types for Phase 5 Leading Indicators ────────────────────────
+interface LeadingIndicators {
+  county: string
+  permits: {
+    available: boolean
+    trend: { year: number; sfPermits: number; mfPermits: number; totalPermits: number }[]
+    momentumPct: number | null
+  }
+  enrollment: {
+    available: boolean
+    trend: { year: number; enrollment: number }[]
+    cagrPct: number | null
+  }
+  projection: {
+    available: boolean
+    base2020?: number | null
+    proj2030?: number | null
+    proj2040?: number | null
+  }
+}
+
 // ── Page ─────────────────────────────────────────────────────────
 export default function DemographicsPage() {
   const [selectedZip, setSelectedZip] = useState<string>(DFW_ZIPS[0].zip)
@@ -461,6 +482,8 @@ export default function DemographicsPage() {
   const [loading, setLoading] = useState(true)
   const [colleges, setColleges] = useState<College[]>([])
   const [collegesLoading, setCollegesLoading] = useState(true)
+  const [leadingIndicators, setLeadingIndicators] = useState<LeadingIndicators | null>(null)
+  const [leadingLoading, setLeadingLoading] = useState(true)
 
   useEffect(() => {
     setLoading(true)
@@ -469,6 +492,15 @@ export default function DemographicsPage() {
       .then(r => r.json())
       .then(d => { setData(d); setLoading(false) })
       .catch(() => setLoading(false))
+  }, [selectedZip])
+
+  useEffect(() => {
+    setLeadingLoading(true)
+    setLeadingIndicators(null)
+    fetch(`/api/leading-indicators?zip=${selectedZip}`)
+      .then(r => r.json())
+      .then(d => { if (!d.error) setLeadingIndicators(d); setLeadingLoading(false) })
+      .catch(() => setLeadingLoading(false))
   }, [selectedZip])
 
   useEffect(() => {
@@ -782,6 +814,165 @@ export default function DemographicsPage() {
               </div>
             ) : null}
           </div>
+
+          {/* Leading Indicators — Phase 5 */}
+          {(leadingLoading || (leadingIndicators && (leadingIndicators.permits.available || leadingIndicators.enrollment.available || leadingIndicators.projection.available))) && (
+            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+              <SectionHeader
+                eyebrow={leadingIndicators?.county ? `${leadingIndicators.county} County · Forward-Looking Signals` : 'Forward-Looking Signals'}
+                title="Leading Indicators"
+              />
+
+              {leadingLoading && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {[1, 2, 3].map(i => (
+                    <div key={i} style={{ height: '24px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${i * 0.08}s` }} />
+                  ))}
+                </div>
+              )}
+
+              {!leadingLoading && leadingIndicators && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+
+                  {/* Building Permits */}
+                  <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                      Building Permits
+                    </div>
+                    {!leadingIndicators.permits.available ? (
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#3d4a5c' }}>
+                        Not loaded yet — run<br />
+                        <code style={{ color: '#5a6478' }}>scripts/import-permits.ts</code>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '32px', color: '#F0F2F7', lineHeight: 1 }}>
+                            {leadingIndicators.permits.trend[0]?.totalPermits.toLocaleString() ?? '—'}
+                          </span>
+                          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE' }}>
+                            units · {leadingIndicators.permits.trend[0]?.year}
+                          </span>
+                        </div>
+                        {leadingIndicators.permits.momentumPct != null && (
+                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', marginBottom: '10px' }}>
+                            <span style={{ color: leadingIndicators.permits.momentumPct >= 0 ? '#2DD4BF' : '#FF6B6B' }}>
+                              {leadingIndicators.permits.momentumPct >= 0 ? '+' : ''}{leadingIndicators.permits.momentumPct.toFixed(1)}%
+                            </span>
+                            <span style={{ color: '#5a6478' }}> vs prior year</span>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '36px' }}>
+                          {[...leadingIndicators.permits.trend].reverse().map((p, i, arr) => {
+                            const maxP = Math.max(...arr.map(x => x.totalPermits))
+                            const h = maxP > 0 ? Math.max(4, (p.totalPermits / maxP) * 36) : 4
+                            return (
+                              <div key={p.year} title={`${p.year}: ${p.totalPermits.toLocaleString()}`}
+                                style={{ flex: 1, height: h, borderRadius: '2px 2px 0 0',
+                                  background: i === arr.length - 1 ? '#E8B84B' : 'rgba(232,184,75,0.3)' }} />
+                            )
+                          })}
+                        </div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '6px' }}>
+                          SF: {leadingIndicators.permits.trend[0]?.sfPermits.toLocaleString() ?? '—'} · MF: {leadingIndicators.permits.trend[0]?.mfPermits.toLocaleString() ?? '—'}
+                        </div>
+                      </>
+                    )}
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '8px' }}>
+                      Census BPS · County-level · {leadingIndicators.county} County
+                    </div>
+                  </div>
+
+                  {/* School Enrollment */}
+                  <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                      School Enrollment
+                    </div>
+                    {!leadingIndicators.enrollment.available ? (
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#3d4a5c' }}>
+                        Not loaded yet — run<br />
+                        <code style={{ color: '#5a6478' }}>scripts/import-tea.ts</code>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px' }}>
+                          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '32px', color: '#F0F2F7', lineHeight: 1 }}>
+                            {leadingIndicators.enrollment.trend[leadingIndicators.enrollment.trend.length - 1]?.enrollment.toLocaleString() ?? '—'}
+                          </span>
+                          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE' }}>
+                            students · {leadingIndicators.enrollment.trend[leadingIndicators.enrollment.trend.length - 1]?.year}
+                          </span>
+                        </div>
+                        {leadingIndicators.enrollment.cagrPct != null && (
+                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', marginBottom: '10px' }}>
+                            <span style={{ color: leadingIndicators.enrollment.cagrPct >= 0 ? '#4EAEFF' : '#FF6B6B' }}>
+                              {leadingIndicators.enrollment.cagrPct >= 0 ? '+' : ''}{leadingIndicators.enrollment.cagrPct.toFixed(1)}%
+                            </span>
+                            <span style={{ color: '#5a6478' }}> CAGR</span>
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '36px' }}>
+                          {leadingIndicators.enrollment.trend.map((e, i, arr) => {
+                            const maxE = Math.max(...arr.map(x => x.enrollment))
+                            const h = maxE > 0 ? Math.max(4, (e.enrollment / maxE) * 36) : 4
+                            return (
+                              <div key={e.year} title={`${e.year}: ${e.enrollment.toLocaleString()}`}
+                                style={{ flex: 1, height: h, borderRadius: '2px 2px 0 0',
+                                  background: i === arr.length - 1 ? '#4EAEFF' : 'rgba(78,174,255,0.3)' }} />
+                            )
+                          })}
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '6px' }}>
+                          <span>{leadingIndicators.enrollment.trend[0]?.year}</span>
+                          <span>{leadingIndicators.enrollment.trend[leadingIndicators.enrollment.trend.length - 1]?.year}</span>
+                        </div>
+                      </>
+                    )}
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '8px' }}>
+                      TEA PEIMS · County aggregate · {leadingIndicators.county} County ISDs
+                    </div>
+                  </div>
+
+                  {/* County Projection */}
+                  <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                      Population Projection
+                    </div>
+                    {!leadingIndicators.projection.available ? (
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#3d4a5c' }}>
+                        Not loaded yet — run<br />
+                        <code style={{ color: '#5a6478' }}>scripts/import-tdc.ts</code>
+                      </div>
+                    ) : (
+                      <>
+                        {[
+                          { label: '2020 Base', value: leadingIndicators.projection.base2020 },
+                          { label: '2030 Proj.', value: leadingIndicators.projection.proj2030 },
+                          { label: '2040 Proj.', value: leadingIndicators.projection.proj2040 },
+                        ].map(({ label, value }) => (
+                          <div key={label} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0', borderBottom: '1px solid #1a1f2e' }}>
+                            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE' }}>{label}</span>
+                            <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#F0F2F7', fontWeight: 600 }}>
+                              {value != null ? fmtK(value) : '—'}
+                            </span>
+                          </div>
+                        ))}
+                        {leadingIndicators.projection.base2020 && leadingIndicators.projection.proj2040 && (
+                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#A78BFA', marginTop: '10px' }}>
+                            +{fmtK(leadingIndicators.projection.proj2040 - leadingIndicators.projection.base2020)} projected 2020→2040
+                          </div>
+                        )}
+                      </>
+                    )}
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '8px' }}>
+                      Texas Demographic Center Vintage 2024 · Mid scenario · County level
+                    </div>
+                  </div>
+
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Footer */}
           <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>

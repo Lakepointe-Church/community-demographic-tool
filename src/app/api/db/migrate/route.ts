@@ -110,6 +110,46 @@ export async function POST() {
       )
     `
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS county_permits (
+        fips          TEXT NOT NULL,
+        county        TEXT NOT NULL,
+        year          INT  NOT NULL,
+        sf_permits    INT  NOT NULL DEFAULT 0,
+        mf_permits    INT  NOT NULL DEFAULT 0,
+        total_permits INT  NOT NULL DEFAULT 0,
+        updated_at    TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (fips, year)
+      )
+    `
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS isd_enrollment (
+        district_id   TEXT NOT NULL,
+        district_name TEXT NOT NULL,
+        county        TEXT NOT NULL,
+        year          INT  NOT NULL,
+        enrollment    INT  NOT NULL DEFAULT 0,
+        updated_at    TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (district_id, year)
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS idx_isd_enrollment_county ON isd_enrollment(county)`
+
+    await sql`
+      CREATE TABLE IF NOT EXISTS county_projections (
+        fips       TEXT PRIMARY KEY,
+        county     TEXT NOT NULL,
+        base_2020  INT,
+        proj_2025  INT,
+        proj_2030  INT,
+        proj_2035  INT,
+        proj_2040  INT,
+        proj_2050  INT,
+        updated_at TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

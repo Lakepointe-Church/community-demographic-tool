@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { downloadCsv } from '@/lib/csv'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -16,6 +16,8 @@ interface ZipScore {
   wfi: number
   totalChurches: number
   churchesPer10k: number
+  enrollmentGrowthScore: number
+  county: string | null
 }
 
 interface Weights {
@@ -24,20 +26,22 @@ interface Weights {
   ses: number
   growth: number
   saturation: number
+  enrollment: number
 }
 
 // ── Scoring helpers ───────────────────────────────────────────────────────────
 
-const DEFAULT_WEIGHTS: Weights = { yfi: 25, wfi: 25, ses: 20, growth: 15, saturation: 15 }
+const DEFAULT_WEIGHTS: Weights = { yfi: 23, wfi: 23, ses: 18, growth: 14, saturation: 12, enrollment: 10 }
 
 function effectivePct(w: Weights): Weights {
-  const total = w.yfi + w.wfi + w.ses + w.growth + w.saturation || 1
+  const total = w.yfi + w.wfi + w.ses + w.growth + w.saturation + w.enrollment || 1
   return {
     yfi:        (w.yfi / total) * 100,
     wfi:        (w.wfi / total) * 100,
     ses:        (w.ses / total) * 100,
     growth:     (w.growth / total) * 100,
     saturation: (w.saturation / total) * 100,
+    enrollment: (w.enrollment / total) * 100,
   }
 }
 
@@ -57,7 +61,8 @@ function computeFitScore(z: ZipScore, eff: Weights): number {
     z.wfi * eff.wfi / 100 +
     z.sesScore * eff.ses / 100 +
     satOpportunityScore(z.churchesPer10k) * eff.saturation / 100 +
-    growthScore(z.populationGrowth) * eff.growth / 100
+    growthScore(z.populationGrowth) * eff.growth / 100 +
+    z.enrollmentGrowthScore * eff.enrollment / 100
   )
 }
 
@@ -282,7 +287,7 @@ function WeightSlider({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type SortKey = 'fitScore' | 'populationGrowth' | 'churchesPer10k' | 'sesScore' | 'yfi' | 'wfi' | 'population'
+type SortKey = 'fitScore' | 'populationGrowth' | 'churchesPer10k' | 'sesScore' | 'yfi' | 'wfi' | 'population' | 'enrollmentGrowthScore'
 
 export default function SiteScorerPage() {
   const [data, setData]           = useState<ZipScore[]>([])
@@ -293,7 +298,7 @@ export default function SiteScorerPage() {
   const [weights, setWeights]     = useState<Weights>(DEFAULT_WEIGHTS)
 
   function handleNormalize() {
-    const total = weights.yfi + weights.wfi + weights.ses + weights.growth + weights.saturation
+    const total = weights.yfi + weights.wfi + weights.ses + weights.growth + weights.saturation + weights.enrollment
     if (total === 0) return
     setWeights({
       yfi:        Math.round(weights.yfi / total * 100),
@@ -301,6 +306,7 @@ export default function SiteScorerPage() {
       ses:        Math.round(weights.ses / total * 100),
       growth:     Math.round(weights.growth / total * 100),
       saturation: Math.round(weights.saturation / total * 100),
+      enrollment: Math.round(weights.enrollment / total * 100),
     })
   }
   const [hovered, setHovered]     = useState<ZipScore | null>(null)
@@ -352,14 +358,14 @@ export default function SiteScorerPage() {
 
   function handleExport() {
     downloadCsv('site-scorer.csv', [
-      'ZIP', 'Area', 'Fit Score', 'Growth %', 'Churches/10K', 'SES Score', 'SES Class', 'YFI', 'WFI', 'Population', 'Total Churches',
+      'ZIP', 'Area', 'County', 'Fit Score', 'Growth %', 'Churches/10K', 'SES Score', 'SES Class', 'YFI', 'WFI', 'Enrollment Growth Score', 'Population', 'Total Churches',
     ], sorted.map(z => [
-      z.zip, z.label, z.fitScore, z.populationGrowth ?? '', z.churchesPer10k, z.sesScore, z.sesLabel, z.yfi, z.wfi, z.population, z.totalChurches,
+      z.zip, z.label, z.county ?? '', z.fitScore, z.populationGrowth ?? '', z.churchesPer10k, z.sesScore, z.sesLabel, z.yfi, z.wfi, z.enrollmentGrowthScore, z.population, z.totalChurches,
     ]))
   }
 
   const thStyle = (key: SortKey): React.CSSProperties => ({
-    textAlign: key === 'fitScore' || key === 'population' || key === 'yfi' || key === 'wfi' || key === 'sesScore' || key === 'populationGrowth' || key === 'churchesPer10k' ? 'right' : 'left',
+    textAlign: key === 'fitScore' || key === 'population' || key === 'yfi' || key === 'wfi' || key === 'sesScore' || key === 'populationGrowth' || key === 'churchesPer10k' || key === 'enrollmentGrowthScore' ? 'right' : 'left',
     padding: '6px 10px 10px',
     color: sortKey === key ? '#E8B84B' : '#5a6478',
     fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
@@ -447,9 +453,10 @@ export default function SiteScorerPage() {
                 <WeightSlider label="SES Score"                  color="#A78BFA" value={weights.ses}        effPct={eff.ses}        onChange={v => setWeights(w => ({ ...w, ses: v }))} />
                 <WeightSlider label="Population Growth"          color="#FF6B6B" value={weights.growth}     effPct={eff.growth}     onChange={v => setWeights(w => ({ ...w, growth: v }))} />
                 <WeightSlider label="Church Saturation Opp."     color="#E8B84B" value={weights.saturation} effPct={eff.saturation} onChange={v => setWeights(w => ({ ...w, saturation: v }))} />
+                <WeightSlider label="School Enrollment Growth"   color="#2DD4BF" value={weights.enrollment} effPct={eff.enrollment} onChange={v => setWeights(w => ({ ...w, enrollment: v }))} />
               </div>
               <div style={{ marginTop: 16, fontSize: 10, color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace" }}>
-                Church Saturation Opportunity = inverse of churches/10K — lower saturation = higher score. Source: IRS BMF Christian orgs (NTEE X20–X22). See <a href="/methodology#site-scorer" style={{ color: '#5a6478', textDecoration: 'underline' }}>/methodology</a> for full formulas.
+                Church Saturation Opportunity = inverse of churches/10K — lower saturation = higher score. School Enrollment Growth = TEA PEIMS county-level CAGR (0 when data not yet loaded). See <a href="/methodology#site-scorer" style={{ color: '#5a6478', textDecoration: 'underline' }}>/methodology</a> for full formulas.
               </div>
             </div>
 
@@ -516,6 +523,7 @@ export default function SiteScorerPage() {
                       <th style={thStyle('sesScore')} onClick={() => handleSort('sesScore')}>SES <SortArrow k="sesScore" /></th>
                       <th style={thStyle('yfi')} onClick={() => handleSort('yfi')}>YFI <SortArrow k="yfi" /></th>
                       <th style={thStyle('wfi')} onClick={() => handleSort('wfi')}>WFI <SortArrow k="wfi" /></th>
+                      <th style={thStyle('enrollmentGrowthScore')} onClick={() => handleSort('enrollmentGrowthScore')}>Enroll. <SortArrow k="enrollmentGrowthScore" /></th>
                       <th style={thStyle('population')} onClick={() => handleSort('population')}>Pop. <SortArrow k="population" /></th>
                     </tr>
                   </thead>
@@ -548,6 +556,9 @@ export default function SiteScorerPage() {
                           </td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#4EAEFF' }}>{z.yfi}</td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#2DD4BF' }}>{z.wfi}</td>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.enrollmentGrowthScore > 0 ? '#2DD4BF' : '#3d4a5c' }}>
+                            {z.enrollmentGrowthScore > 0 ? z.enrollmentGrowthScore : '—'}
+                          </td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#5a6478' }}>{z.population.toLocaleString()}</td>
                         </tr>
                       )

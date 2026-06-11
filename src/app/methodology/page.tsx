@@ -156,18 +156,19 @@ export default function MethodologyPage() {
       <div id="site-scorer">
         <Section title="Site Scorer">
           <p style={bodyStyle}>
-            The Site Scorer combines five signals into a single 0–100 Fit Score per ZIP, with user-adjustable weights visible and editable on the <a href="/site-scorer" style={{ color: '#E8B84B' }}>Site Scorer page</a>. All weights default to the values below and are normalized to sum to 100% before scoring.
+            The Site Scorer combines six signals into a single 0–100 Fit Score per ZIP, with user-adjustable weights visible and editable on the <a href="/site-scorer" style={{ color: '#E8B84B' }}>Site Scorer page</a>. All weights default to the values below and are normalized to sum to 100% before scoring.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '20px' }}>
             <div style={cardStyle}>
               <div style={cardLabelStyle}>Default weights</div>
               <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-                <div><span style={{ color: '#4EAEFF' }}>25%</span> — Young Family Index (YFI)</div>
-                <div><span style={{ color: '#2DD4BF' }}>25%</span> — Working Family Index (WFI)</div>
-                <div><span style={{ color: '#A78BFA' }}>20%</span> — SES Score</div>
-                <div><span style={{ color: '#FF6B6B' }}>15%</span> — Population Growth</div>
-                <div><span style={{ color: '#E8B84B' }}>15%</span> — Church Saturation Opportunity</div>
+                <div><span style={{ color: '#4EAEFF' }}>23%</span> — Young Family Index (YFI)</div>
+                <div><span style={{ color: '#2DD4BF' }}>23%</span> — Working Family Index (WFI)</div>
+                <div><span style={{ color: '#A78BFA' }}>18%</span> — SES Score</div>
+                <div><span style={{ color: '#FF6B6B' }}>14%</span> — Population Growth</div>
+                <div><span style={{ color: '#E8B84B' }}>12%</span> — Church Saturation Opportunity</div>
+                <div><span style={{ color: '#2DD4BF' }}>10%</span> — School Enrollment Growth</div>
               </div>
             </div>
 
@@ -176,6 +177,7 @@ export default function MethodologyPage() {
               <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
                 <div>Growth score: <span style={{ color: '#5a6478' }}>(growth + 10) / 50 × 100, capped 0–100</span></div>
                 <div>Saturation opp.: <span style={{ color: '#5a6478' }}>100 − min(100, churches/10K / 30 × 100)</span></div>
+                <div>Enrollment growth: <span style={{ color: '#5a6478' }}>county ISD CAGR × 12, capped 0–100</span></div>
                 <div>YFI / WFI / SES: <span style={{ color: '#5a6478' }}>already 0–100 (see above)</span></div>
               </div>
             </div>
@@ -315,6 +317,78 @@ export default function MethodologyPage() {
             African American and convert communities, and will not appear in birthplace tables at all).
             It indicates <em>where communities with cultural ties to the Muslim world live</em>, not a Muslim population count.
           </p>
+        </div>
+      </Section>
+
+      {/* ── PHASE 5 — LEADING INDICATORS ───────────── */}
+      <Section title="Leading Indicators (Phase 5)">
+        <p style={bodyStyle}>
+          ACS 5-year data lags reality by 1–3 years in fast-growth DFW exurbs. Phase 5 adds three county-level forward-looking signals to the Demographics page. These supplement — but do not replace — the ACS data that drives all other scoring.
+        </p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginTop: '20px' }}>
+
+          {/* BPS */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.1 · Building Permits (Census BPS)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'U.S. Census Bureau Building Permits Survey (BPS). Annual county-level file downloaded directly from www2.census.gov/programs-surveys/bps/data/annual/{year}/county/. Import script: scripts/import-permits.ts (automated — run annually after May release).' },
+                { label: 'Geography', definition: 'County level only. No ZIP granularity is available from BPS. All ZIPs in a county display the same county-level permit count.' },
+                { label: 'Metric', definition: 'Total units authorized by permit in the most recent year available (2025 annual, released May 2026), split by single-family (1-unit structures) and multifamily (2+ unit structures). Momentum badge shows year-over-year % change from the prior year.' },
+                { label: 'Site Scorer use', definition: 'Not directly scored. Shown as a context indicator on the Demographics page only.' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* TEA */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#4EAEFF', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.2 · School Enrollment Trends (TEA PEIMS)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'Texas Education Agency PEIMS (Public Education Information Management System) district-level enrollment reports. Data covers 2020-21 through 2024-25 school years. Downloaded manually from tea.texas.gov/reports-and-data/student-data/standard-reports/peims-standard-reports and processed via scripts/import-tea.ts.' },
+                { label: 'Geography', definition: 'Individual school districts (ISDs), aggregated to county for display and scoring. Each district record includes the county it primarily serves. Some districts span county lines — they are assigned to their primary county.' },
+                { label: 'CAGR metric', definition: 'Compound Annual Growth Rate across the full available enrollment period. Formula: (lastEnrollment / firstEnrollment)^(1/years) − 1, expressed as a percentage. Positive CAGR = growing ISD base = young families moving in.' },
+                { label: 'Enrollment Growth Score (Site Scorer)', definition: 'The county-level enrollment CAGR is converted to a 0–100 score via: min(100, max(0, cagr × 12)). A CAGR of ~8.3% yields a score of 100. This score feeds the 6th Site Scorer slider (default weight: 10%). Scores show as "—" until TEA data is loaded.' },
+                { label: 'Rationale', definition: 'School enrollment is one of the best public leading indicators of young-family settlement — families move to areas with good schools, and enrollment growth precedes ACS population growth by 1–2 years in fast-growth suburbs.' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* TDC */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#A78BFA', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.3 · County Population Projections (Texas Demographic Center)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'Texas Demographic Center (TDC) Vintage 2024 county population projections. Download: https://demographics.texas.gov/Projections/. Import script: scripts/import-tdc.ts (manual download required — save bulk CSV to data/tdc-projections-2024.csv).' },
+                { label: 'Scenarios', definition: 'TDC provides three scenarios based on migration assumptions: low, mid, and high. The platform loads the mid (baseline) scenario only. The mid scenario uses Census Bureau 2023 national projection assumptions as a migration input.' },
+                { label: 'Years displayed', definition: 'Base year 2020, plus projections at 2030 and 2040 on the Demographics page. The underlying table also stores 2025, 2035, and 2050.' },
+                { label: 'Site Scorer use', definition: 'County projections are shown as context only on the Demographics page. They are not incorporated into the Site Scorer scoring formula — projections carry significant uncertainty, especially past 2035.' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </Section>
 
@@ -481,6 +555,27 @@ const DATA_SOURCES = [
     refresh: 'Decennial (~2030)',
     usedFor: 'Religious adherence by tradition: Unclaimed, Evangelical, Catholic, Muslim, Jewish, etc.',
   },
+  {
+    source: 'Census BPS (Building Permits Survey)',
+    geo: 'County',
+    vintage: '2025 annual (released May 2026)',
+    refresh: 'Annually',
+    usedFor: 'Building permit momentum on Demographics page; leading indicator for new residential construction',
+  },
+  {
+    source: 'TEA PEIMS (Texas Education Agency)',
+    geo: 'ISD (county-aggregated)',
+    vintage: '2020-21 → 2024-25',
+    refresh: 'Annually (~March for prior fall)',
+    usedFor: 'School district enrollment trend on Demographics page; enrollment growth score in Site Scorer',
+  },
+  {
+    source: 'Texas Demographic Center Projections',
+    geo: 'County',
+    vintage: 'Vintage 2024 (2020–2060)',
+    refresh: 'Every ~2 years',
+    usedFor: '2030/2040 county population projections on Demographics page (context only, not scored)',
+  },
 ]
 
 const SES_TIERS = [
@@ -645,5 +740,17 @@ const LIMITATIONS = [
   {
     source: 'ACS Proxy — Muslim Community Presence',
     limitation: 'The proxy_born column overcounts non-Muslims from Iraq (Chaldean Catholic, Assyrian Christian), Egypt (Coptic Orthodox), and Syria (Syrian Christian), who may represent 5–20% of those countries\' DFW diaspora populations. The proxy undercounts U.S.-born Muslims of all backgrounds — including African American Muslims and converts — who will not appear in ACS birthplace tables. The Arabic-speaker column (C16001) is limited to Arabic because B16001 (which includes Urdu, Bengali, and Somali separately) is not released at the ZCTA level. Use these figures only as a directional geographic signal for community planning, not as a population estimate.',
+  },
+  {
+    source: 'Census BPS — Building Permits',
+    limitation: 'BPS permit data is available only at the county level (no ZIP granularity). A county\'s permit total is mapped to all ZIPs in that county equally — the permit momentum shown on the Demographics page reflects the county as a whole, not the specific ZIP. Single-family and multifamily units are reported separately; the momentum badge uses total units. Permits authorized do not always correspond to units built (projects may be cancelled or delayed). The 2025 annual file (released May 2026) is the most recent vintage loaded.',
+  },
+  {
+    source: 'TEA PEIMS — School Enrollment',
+    limitation: 'Enrollment figures are aggregated to the county level from individual ISDs. A county with both a fast-growing suburban ISD and a declining urban ISD will show a blended CAGR that may not reflect the ZIP\'s specific ISD. The TEA October enrollment snapshot is used; it reflects enrollment at the start of the school year, not the full-year average. Some districts straddle county lines — they are assigned to their primary county in this dataset.',
+  },
+  {
+    source: 'Texas Demographic Center Projections',
+    limitation: 'Projections use the mid-migration scenario from TDC Vintage 2024. They are county-level only and cannot be disaggregated to ZIP codes. Projections become less reliable further from the base year — the 2040 figure has substantially more uncertainty than the 2030 figure. Projections do not account for economic shocks, major policy changes, or unforeseen demographic shifts. The platform uses these figures for context only; they are not incorporated into the Site Scorer.',
   },
 ]

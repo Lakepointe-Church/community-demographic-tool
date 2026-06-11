@@ -18,11 +18,14 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/religious` | ✅ | DFW religious landscape: stat cards, faith distribution bar, top Islamic ZIPs table, county comparison (Islamic vs Christian BMF), 2020 Religion Census county adherence panel (Unclaimed/tradition breakdown, ESTIMATE-labeled), **ACS proxy layer** (PROXY-labeled ranked list: foreign-born from 20 Muslim-majority countries + Arabic speakers, per-1K, sortable, caveat callout with Iraq/Egypt/Syria flags), per-ZIP org breakdown, Islamic org panel |
 | `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
-| `/site-scorer` | ✅ | Full Site Scorer: 5 adjustable weight sliders (YFI/WFI/SES/Growth/Saturation) with Normalize + Reset, opportunity quadrant scatter (growth vs. churches/10K, target quadrant highlighted), top-10 sidebar, sortable ranked table, CSV export, coverage toggle |
-| `/methodology` | ✅ | Static data dictionary: all 10 sources, SES scoring, YFI/WFI component weights, Site Scorer weights + normalization formulas, church saturation index definition, confidence tier framework (MEASURED/ESTIMATE/PROXY), ASARB methodology + country list for ACS proxy, per-metric definitions, known limitations |
+| `/site-scorer` | ✅ | Full Site Scorer: **6** adjustable weight sliders (YFI/WFI/SES/Growth/Saturation/**Enrollment Growth**) with Normalize + Reset, opportunity quadrant scatter, top-10 sidebar, sortable ranked table (incl. Enroll. column), CSV export, coverage toggle |
+| `/methodology` | ✅ | Static data dictionary: all 13 sources (incl. BPS/TEA/TDC Phase 5), SES scoring, YFI/WFI weights, Site Scorer weights (6 sliders) + normalization formulas, Phase 5 leading indicators section, church saturation index, ASARB methodology, per-metric definitions, known limitations |
 | `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
 ### Data sources (all routed through Neon DB)
+- **Census BPS (Building Permits Survey)** — county-level annual permit counts (SF + MF), 3 years. Loaded via `scripts/import-permits.ts` (automated). Shows on Demographics page as momentum badge.
+- **TEA PEIMS** — ISD district enrollment 2020-21→2024-25, county-aggregated. Loaded via `scripts/import-tea.ts` (manual download). Drives enrollment growth score in Site Scorer + trend chart on Demographics.
+- **Texas Demographic Center Projections (Vintage 2024)** — county-level 2030/2040/2050 projections (mid scenario). Loaded via `scripts/import-tdc.ts` (manual download). Context panel on Demographics only.
 - **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %, proxy_born (B05006 foreign-born from 20 Muslim-majority countries), proxy_language (C16001 Arabic speakers)
 - **Census CBP 2022 (County Business Patterns)** — per-ZIP: total establishments, employment, payroll, sector breakdown (20 NAICS sectors, now includes emp+payroll per sector), employer size distribution. Also fetches county-level CBP for 4 DFW core counties (Dallas/Tarrant/Collin/Denton) to compute avg wages by sector. Loaded via `/api/refresh`
 - **BLS LAUS** — DFW metro unemployment + labor force
@@ -88,6 +91,18 @@ Columns: `zip` (PK), `diabetes`, `obesity`, `smoking`, `uninsured`, `high_blood_
 **`attendee_density`** — one row per ZIP, uploaded via `/admin/attendee-upload` from Rock RMS export
 Columns: `zip` (PK), `total_households` (INT), `campus_breakdown` (JSONB — `{campusLabel: count}`), `source_date` (TEXT), `updated_at`
 Privacy rule: ZIPs with `total_households < 5` are suppressed in API responses (`households: -1`); never displayed on map.
+
+**`county_permits`** — one row per county per year, loaded via `scripts/import-permits.ts`
+Columns: `fips` (TEXT), `county` (TEXT), `year` (INT), `sf_permits` (INT), `mf_permits` (INT), `total_permits` (INT), `updated_at`
+PK: `(fips, year)`. 3 years of data (2023–2025).
+
+**`isd_enrollment`** — one row per ISD per year, loaded via `scripts/import-tea.ts`
+Columns: `district_id` (TEXT), `district_name` (TEXT), `county` (TEXT — matches ZIP_COUNTY values), `year` (INT), `enrollment` (INT), `updated_at`
+PK: `(district_id, year)`. Index on `county`. 5 years of data (2020–2024).
+
+**`county_projections`** — one row per county, loaded via `scripts/import-tdc.ts`
+Columns: `fips` (PK), `county` (TEXT), `base_2020`, `proj_2025`, `proj_2030`, `proj_2035`, `proj_2040`, `proj_2050` (all INT), `updated_at`
+TDC Vintage 2024, mid-migration scenario, 23 DFW counties.
 
 ## SES class scoring
 Composite 0–100 score: income (50%) + bachelor's rate (30%) + home value (20%)
@@ -234,6 +249,9 @@ Run cadence:
 - **CFPB complaints** — monthly (cumulative all-time counts)
 - **CDC PLACES** — annually (releases once/year)
 - **IRS BMF** — monthly (IRS publishes updates monthly)
+- **Census BPS** — annually after May release: `npx tsx scripts/import-permits.ts`
+- **TEA PEIMS** — annually after ~March release: download CSVs from TEA, then `npx tsx scripts/import-tea.ts`
+- **TDC Projections** — every ~2 years on new vintage: download from demographics.texas.gov/Projections/, then `npx tsx scripts/import-tdc.ts`
 
 ## DB migration (adding new columns)
 If new columns are needed, add them to both the `zip_demographics` schema in `src/app/api/db/migrate/route.ts` AND run an `ALTER TABLE` directly:
@@ -290,6 +308,10 @@ scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS p
 scripts/import-places.ts               — CDC PLACES loader (re-run annually)
 scripts/import-religion-census.ts      — 2020 ASARB Religion Census loader (decennial; re-run only on new release ~2030)
 data/religion-census-dfw.json          — Static processed county adherence data (23 DFW counties, extracted from ASARB Excel)
+scripts/import-permits.ts              — Census BPS county annual permits loader (automated; re-run annually after May release)
+scripts/import-tea.ts                  — TEA PEIMS enrollment loader (manual download; re-run annually; expects data/tea-enrollment-{YYYY}.csv)
+scripts/import-tdc.ts                  — TDC county projections loader (manual download; re-run on new vintage; expects data/tdc-projections-2024.csv)
+src/app/api/leading-indicators/route.ts — GET /api/leading-indicators?zip= — returns permits + enrollment + projection for a ZIP's county
 scripts/find-missing-zips.ts           — Census Gazetteer-based ZIP radius discovery tool
 scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs via zippopotam.us
 ```
@@ -307,7 +329,7 @@ Full phased plan lives in `cip-enhancement-spec.md` (repo root).
 - **Phase 2** ✅ complete — Church saturation index (churches/10K per ZIP from IRS BMF) + full Site Scorer page (quadrant scatter, adjustable weights, ranked table)
 - **Phase 3** ✅ complete — Religious landscape expansion: **3.4** mosque/congregation BMF layer. **3.1** 2020 ASARB county adherence panel. **3.2** dropped (PRRI data not publicly downloadable; email drafted to info@prri.org). **3.3** ACS proxy layer: proxy_born (B05006, 20 countries) + proxy_language (C16001_033E Arabic), PROXY-labeled ranked list on /religious with Iraq/Egypt/Syria overcounting caveat. **3.5** confidence tiers (MEASURED/ESTIMATE/PROXY) applied throughout. Methodology page updated with all Phase 3 sections.
 - **Phase 4** ✅ complete (scaffold) — **4.1** Attendee density: `attendee_density` table, `/api/attendee-density` (GET + CSV upload POST), `/admin/attendee-upload` UI. Awaiting Rock RMS aggregate ZIP export to activate map overlay. **4.2** Drive-time isochrones: campus markers on Overview map, `/api/isochrone` Mapbox proxy, 15/20/30-min polygon rendering, candidate-pin drop mode. Deferred: per-isochrone population/growth stats (requires spatial intersection logic).
-- **Phase 5** — Leading growth indicators: residential building permits (Census BPS), TEA school enrollment trends, optional county population projections (Texas Demographic Center)
+- **Phase 5** ✅ complete (scaffold) — **5.1** Building permits: `county_permits` table, `scripts/import-permits.ts` (automated BPS fetch), `/api/leading-indicators` endpoint, momentum badge on Demographics. **5.2** School enrollment: `isd_enrollment` table, `scripts/import-tea.ts` (manual download processor), county CAGR → enrollment growth score in Site Scorer (6th slider, default 10%), trend sparkline on Demographics. **5.3** TDC projections: `county_projections` table, `scripts/import-tdc.ts` (manual download processor), 2030/2040 context panel on Demographics. All three data sources need first-time data load; UI degrades gracefully with "not loaded yet" state.
 
 ## Planned next data sources (ordered by priority)
 These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).
@@ -342,9 +364,10 @@ PRRI, ARDA, Zillow, Data Axle, MissionInsite, County Appraisal Districts, NCTCOG
 - 40% dual-earner rate (/40%), 25% HH with children (/50%), 20% commute burden inverse (100−commute30+%), 15% bachelor's rate proxy (/50%)
 
 **Lakepointe Fit Score** ✅ live on `/site-scorer`
-- Default weights: YFI 25% · WFI 25% · SES 20% · Population Growth 15% · Church Saturation Opportunity 15%
+- Default weights: YFI 23% · WFI 23% · SES 18% · Population Growth 14% · Church Saturation Opportunity 12% · **School Enrollment Growth 10%**
 - User-adjustable via sliders; Normalize button snaps to 100%; all weights documented at `/methodology#site-scorer`
 - Church Saturation Opportunity = 100 − min(100, churches/10K / 30 × 100) — inverts BMF Christian org density so low saturation = high score
+- School Enrollment Growth = county ISD CAGR (TEA PEIMS) × 12, capped 0–100; shows "—" until TEA data loaded (graceful degradation)
 
 ## Notion tracker
 Full task tracker (ordered by priority): https://www.notion.so/e94e55e73b55430bb9646e37600e4998
