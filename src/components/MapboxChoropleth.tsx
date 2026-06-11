@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useRef } from 'react'
+import type { CampusInfo } from '@/lib/campuses'
 
 interface ZipRow {
   zip: string
@@ -11,9 +12,21 @@ interface ZipRow {
   hhWithChildrenPct: number | null
 }
 
+export interface AttendeeZip {
+  zip: string
+  households: number  // -1 = suppressed (<5 households)
+}
+
 interface Props {
-  zipData: ZipRow[]
-  loading: boolean
+  zipData:          ZipRow[]
+  loading:          boolean
+  campuses?:        CampusInfo[]
+  attendeeData?:    AttendeeZip[]
+  showAttendees?:   boolean
+  isochroneGeoJson?: GeoJSON.FeatureCollection | null
+  isochroneMinutes?: number
+  candidatePin?:    { lng: number; lat: number } | null
+  onMapClick?:      (coords: { lng: number; lat: number }) => void
 }
 
 function growthColor(g: number | null): string {
@@ -24,13 +37,40 @@ function growthColor(g: number | null): string {
   return '#FF6B6B'
 }
 
-export default function MapboxChoropleth({ zipData, loading }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null)
-  const mapRef       = useRef<unknown>(null)
+// ── Compute simple centroid from a GeoJSON Polygon/MultiPolygon ───────────────
+function computeCentroid(geometry: GeoJSON.Geometry): [number, number] | null {
+  let coords: number[][] = []
+  if (geometry.type === 'Polygon') {
+    coords = geometry.coordinates[0]
+  } else if (geometry.type === 'MultiPolygon') {
+    coords = geometry.coordinates[0][0]
+  }
+  if (!coords.length) return null
+  const lng = coords.reduce((s, c) => s + c[0], 0) / coords.length
+  const lat = coords.reduce((s, c) => s + c[1], 0) / coords.length
+  return [lng, lat]
+}
 
+export default function MapboxChoropleth({
+  zipData,
+  loading,
+  campuses       = [],
+  attendeeData   = [],
+  showAttendees  = false,
+  isochroneGeoJson = null,
+  isochroneMinutes,
+  candidatePin   = null,
+  onMapClick,
+}: Props) {
+  const containerRef  = useRef<HTMLDivElement>(null)
+  const mapRef        = useRef<unknown>(null)
+  const markersRef    = useRef<mapboxgl.Marker[]>([])
+  const pinMarkerRef  = useRef<mapboxgl.Marker | null>(null)
+
+  // ── Main map initialization (runs once after data loads) ────────────────────
   useEffect(() => {
     if (!containerRef.current || loading || !zipData.length) return
-    if (mapRef.current) return // already initialized
+    if (mapRef.current) return
 
     const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN
     if (!token) return
@@ -55,14 +95,13 @@ export default function MapboxChoropleth({ zipData, loading }: Props) {
       mapRef.current = map
 
       map.on('load', async () => {
-        // Fetch ZCTA boundary polygons
+        // ── ZCTA choropleth ───────────────────────────────────────────────────
         const res     = await fetch('/api/boundaries')
         const geojson = await res.json()
 
-        // Join growth + demographic data to GeoJSON features
         const zipMap = Object.fromEntries(zipData.map(z => [z.zip, z]))
 
-        const enriched = {
+        const enriched: GeoJSON.FeatureCollection = {
           ...geojson,
           features: (geojson.features ?? []).map((f: GeoJSON.Feature) => {
             const zcta = f.properties?.ZCTA5 as string
@@ -83,64 +122,107 @@ export default function MapboxChoropleth({ zipData, loading }: Props) {
 
         map.addSource('zctas', { type: 'geojson', data: enriched })
 
-        // Fill — color by growth rate
         map.addLayer({
-          id: 'zcta-fill',
-          type: 'fill',
+          id:     'zcta-fill',
+          type:   'fill',
           source: 'zctas',
-          paint: {
+          paint:  {
             'fill-color': [
               'case',
               ['==', ['get', 'growth'], null], '#2a3044',
               ['>=', ['get', 'growth'], 20],   '#2DD4BF',
-              ['>=', ['get', 'growth'], 8],    '#4EAEFF',
-              ['>=', ['get', 'growth'], 0],    '#3a4561',
+              ['>=', ['get', 'growth'], 8],     '#4EAEFF',
+              ['>=', ['get', 'growth'], 0],     '#3a4561',
               '#FF6B6B',
             ],
             'fill-opacity': 0.72,
           },
         })
 
-        // Hover highlight
         map.addLayer({
-          id: 'zcta-fill-hover',
-          type: 'fill',
+          id:     'zcta-fill-hover',
+          type:   'fill',
           source: 'zctas',
-          paint: {
-            'fill-color': '#ffffff',
+          paint:  {
+            'fill-color':   '#ffffff',
             'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.15, 0],
           },
         })
 
-        // Borders
         map.addLayer({
-          id: 'zcta-border',
-          type: 'line',
+          id:     'zcta-border',
+          type:   'line',
           source: 'zctas',
-          paint: { 'line-color': '#0d0f14', 'line-width': 1.5 },
+          paint:  { 'line-color': '#0d0f14', 'line-width': 1.5 },
         })
 
-        // ZIP label layer
         map.addLayer({
-          id: 'zcta-label',
-          type: 'symbol',
+          id:     'zcta-label',
+          type:   'symbol',
           source: 'zctas',
           layout: {
-            'text-field': ['concat', ['get', 'ZCTA5'], '\n', ['get', 'label']],
-            'text-size': 9,
-            'text-font': ['DIN Pro Medium', 'Arial Unicode MS Regular'],
+            'text-field':       ['concat', ['get', 'ZCTA5'], '\n', ['get', 'label']],
+            'text-size':        9,
+            'text-font':        ['DIN Pro Medium', 'Arial Unicode MS Regular'],
             'text-line-height': 1.3,
-            'text-anchor': 'center',
+            'text-anchor':      'center',
           },
           paint: {
-            'text-color': 'rgba(255,255,255,0.65)',
-            'text-halo-color': 'rgba(0,0,0,0.3)',
-            'text-halo-width': 1,
+            'text-color':       'rgba(255,255,255,0.65)',
+            'text-halo-color':  'rgba(0,0,0,0.3)',
+            'text-halo-width':  1,
           },
           minzoom: 9,
         })
 
-        // Popup on hover
+        // ── Isochrone placeholder layer (populated via separate effect) ───────
+        map.addSource('isochrone', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        })
+        map.addLayer({
+          id:     'isochrone-fill',
+          type:   'fill',
+          source: 'isochrone',
+          paint:  {
+            'fill-color':   ['get', 'color'],
+            'fill-opacity': 0.18,
+          },
+        })
+        map.addLayer({
+          id:     'isochrone-border',
+          type:   'line',
+          source: 'isochrone',
+          paint:  {
+            'line-color':   ['get', 'color'],
+            'line-width':   2,
+            'line-opacity': 0.7,
+          },
+        })
+
+        // ── Attendee circles placeholder layer ────────────────────────────────
+        map.addSource('attendees', {
+          type: 'geojson',
+          data: { type: 'FeatureCollection', features: [] },
+        })
+        map.addLayer({
+          id:     'attendee-circles',
+          type:   'circle',
+          source: 'attendees',
+          paint:  {
+            'circle-color':       '#E8B84B',
+            'circle-opacity':     0.75,
+            'circle-stroke-color': '#E8B84B',
+            'circle-stroke-width': 1,
+            'circle-radius': [
+              'interpolate', ['linear'], ['get', 'households'],
+              5, 6, 50, 14, 200, 28, 500, 44,
+            ],
+          },
+          layout: { visibility: 'none' },
+        })
+
+        // ── Hover popup ───────────────────────────────────────────────────────
         const popup = new mapboxgl.Popup({
           closeButton: false,
           closeOnClick: false,
@@ -151,7 +233,7 @@ export default function MapboxChoropleth({ zipData, loading }: Props) {
 
         map.on('mousemove', 'zcta-fill', (e) => {
           if (!e.features?.length) return
-          map.getCanvas().style.cursor = 'pointer'
+          map.getCanvas().style.cursor = onMapClick ? 'crosshair' : 'pointer'
 
           const f  = e.features[0]
           const id = f.id
@@ -164,8 +246,8 @@ export default function MapboxChoropleth({ zipData, loading }: Props) {
             map.setFeatureState({ source: 'zctas', id: hoveredId }, { hover: true })
           }
 
-          const g     = f.properties?.growth
-          const color = growthColor(g)
+          const g        = f.properties?.growth
+          const color    = growthColor(g)
           const growthStr = g != null ? `${g > 0 ? '↑' : '↓'} ${Math.abs(g)}% since 2020` : '—'
 
           popup.setLngLat(e.lngLat).setHTML(`
@@ -191,10 +273,22 @@ export default function MapboxChoropleth({ zipData, loading }: Props) {
             hoveredId = null
           }
         })
+
+        // ── Click-to-drop pin ─────────────────────────────────────────────────
+        map.on('click', (e) => {
+          onMapClick?.({ lng: e.lngLat.lng, lat: e.lngLat.lat })
+        })
+
+        // ── Campus markers (added here so they render after load) ─────────────
+        addCampusMarkers(map, mapboxgl)
       })
     })
 
     return () => {
+      markersRef.current.forEach(m => m.remove())
+      markersRef.current = []
+      pinMarkerRef.current?.remove()
+      pinMarkerRef.current = null
       if (mapRef.current) {
         (mapRef.current as mapboxgl.Map).remove()
         mapRef.current = null
@@ -202,6 +296,140 @@ export default function MapboxChoropleth({ zipData, loading }: Props) {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loading])
+
+  // ── Campus markers helper ───────────────────────────────────────────────────
+  function addCampusMarkers(map: mapboxgl.Map, mapboxgl: typeof import('mapbox-gl').default) {
+    markersRef.current.forEach(m => m.remove())
+    markersRef.current = []
+
+    campuses.forEach(campus => {
+      const isExisting = campus.status === 'existing'
+      const el = document.createElement('div')
+      el.style.cssText = `
+        width: ${isExisting ? 14 : 12}px;
+        height: ${isExisting ? 14 : 12}px;
+        border-radius: 50%;
+        background: ${isExisting ? '#E8B84B' : '#8A98AE'};
+        border: 2px solid ${isExisting ? '#fff' : 'rgba(255,255,255,0.4)'};
+        cursor: pointer;
+        box-shadow: 0 0 ${isExisting ? '8px' : '4px'} ${isExisting ? 'rgba(232,184,75,0.6)' : 'rgba(0,0,0,0.5)'};
+      `
+
+      const popup = new mapboxgl.Popup({ closeButton: false, offset: 14 }).setHTML(`
+        <div style="font-family:'IBM Plex Mono',monospace">
+          <div style="font-size:11px;color:${isExisting ? '#E8B84B' : '#8A98AE'};font-weight:600;margin-bottom:4px">
+            ${isExisting ? '● EXISTING CAMPUS' : '◌ COMING SOON'}
+          </div>
+          <div style="font-size:13px;color:#F0F2F7">Lakepointe · ${campus.label}</div>
+          <div style="font-size:10px;color:#9BA5B7;margin-top:2px">ZIP ${campus.zip}</div>
+        </div>
+      `)
+
+      const marker = new mapboxgl.Marker({ element: el })
+        .setLngLat([campus.lng, campus.lat])
+        .setPopup(popup)
+        .addTo(map)
+
+      markersRef.current.push(marker)
+    })
+  }
+
+  // ── Isochrone layer update ──────────────────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current as mapboxgl.Map | null
+    if (!map || !map.isStyleLoaded?.()) return
+    const src = map.getSource('isochrone') as mapboxgl.GeoJSONSource | undefined
+    if (!src) return
+
+    if (!isochroneGeoJson) {
+      src.setData({ type: 'FeatureCollection', features: [] })
+      return
+    }
+
+    // Assign colors based on drive-time order (outermost = lightest)
+    const colors = ['#4EAEFF', '#2DD4BF', '#E8B84B']
+    const features = isochroneGeoJson.features.map((f, i) => ({
+      ...f,
+      properties: { ...f.properties, color: colors[i % colors.length] },
+    }))
+
+    src.setData({ ...isochroneGeoJson, features })
+  }, [isochroneGeoJson])
+
+  // ── Attendee circles update ─────────────────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current as mapboxgl.Map | null
+    if (!map || !map.isStyleLoaded?.()) return
+    const src = map.getSource('attendees') as mapboxgl.GeoJSONSource | undefined
+    if (!src) return
+
+    map.setLayoutProperty('attendee-circles', 'visibility', showAttendees ? 'visible' : 'none')
+
+    if (!showAttendees || !attendeeData.length) return
+
+    // Build centroid points from ZCTA features if possible; otherwise skip ZIPs with no boundary
+    const boundariesSrc = map.getSource('zctas') as mapboxgl.GeoJSONSource | undefined
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const boundaryData = (boundariesSrc as any)?._data as GeoJSON.FeatureCollection | null
+
+    if (!boundaryData?.features?.length) return
+
+    const zctaCentroids: Record<string, [number, number]> = {}
+    for (const f of boundaryData.features) {
+      const zcta = f.properties?.ZCTA5 as string
+      if (!zcta || !f.geometry) continue
+      const centroid = computeCentroid(f.geometry as GeoJSON.Geometry)
+      if (centroid) zctaCentroids[zcta] = centroid
+    }
+
+    const features: GeoJSON.Feature[] = attendeeData
+      .filter(a => a.households !== -1)  // skip suppressed ZIPs
+      .map(a => {
+        const coords = zctaCentroids[a.zip]
+        if (!coords) return null
+        return {
+          type: 'Feature',
+          geometry: { type: 'Point', coordinates: coords },
+          properties: { zip: a.zip, households: a.households },
+        } as GeoJSON.Feature
+      })
+      .filter(Boolean) as GeoJSON.Feature[]
+
+    src.setData({ type: 'FeatureCollection', features })
+  }, [attendeeData, showAttendees])
+
+  // ── Candidate pin update ────────────────────────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current as mapboxgl.Map | null
+    if (!map) return
+
+    import('mapbox-gl').then(({ default: mapboxgl }) => {
+      pinMarkerRef.current?.remove()
+      pinMarkerRef.current = null
+
+      if (!candidatePin) return
+
+      const el = document.createElement('div')
+      el.style.cssText = `
+        width: 16px; height: 16px; border-radius: 50%;
+        background: #A78BFA; border: 2px solid #fff;
+        box-shadow: 0 0 10px rgba(167,139,250,0.7);
+        cursor: pointer;
+      `
+
+      const popup = new mapboxgl.Popup({ closeButton: false, offset: 14 }).setHTML(`
+        <div style="font-family:'IBM Plex Mono',monospace">
+          <div style="font-size:11px;color:#A78BFA;font-weight:600;margin-bottom:4px">◎ CANDIDATE SITE</div>
+          <div style="font-size:10px;color:#9BA5B7">${candidatePin.lat.toFixed(4)}°N, ${Math.abs(candidatePin.lng).toFixed(4)}°W</div>
+        </div>
+      `)
+
+      pinMarkerRef.current = new mapboxgl.Marker({ element: el })
+        .setLngLat([candidatePin.lng, candidatePin.lat])
+        .setPopup(popup)
+        .addTo(map)
+    })
+  }, [candidatePin])
 
   return (
     <>
@@ -243,6 +471,7 @@ export default function MapboxChoropleth({ zipData, loading }: Props) {
           padding: '10px 14px',
           display: 'flex', gap: '16px', alignItems: 'center',
           backdropFilter: 'blur(8px)',
+          flexWrap: 'wrap',
         }}>
           {[
             { label: 'Declining',    color: '#FF6B6B' },
@@ -255,10 +484,42 @@ export default function MapboxChoropleth({ zipData, loading }: Props) {
               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{label}</span>
             </div>
           ))}
+          {campuses.some(c => c.status === 'existing') && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#E8B84B', border: '2px solid #fff' }} />
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Campus</span>
+            </div>
+          )}
+          {showAttendees && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(232,184,75,0.75)', border: '1px solid #E8B84B' }} />
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Attendees</span>
+            </div>
+          )}
+          {isochroneGeoJson && isochroneMinutes && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: 16, height: 3, background: '#4EAEFF' }} />
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{isochroneMinutes}-min drive</span>
+            </div>
+          )}
           <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '8px', color: '#3a4154', marginLeft: '8px' }}>
             Zoom in to see ZIP labels
           </span>
         </div>
+
+        {/* Click-to-pin hint */}
+        {onMapClick && (
+          <div style={{
+            position: 'absolute', top: 12, left: 12,
+            background: 'rgba(13,15,20,0.88)', border: '1px solid rgba(167,139,250,0.4)',
+            padding: '6px 12px',
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px',
+            color: '#A78BFA', letterSpacing: '0.08em',
+            backdropFilter: 'blur(8px)',
+          }}>
+            CLICK MAP TO PLACE CANDIDATE SITE
+          </div>
+        )}
       </div>
     </>
   )

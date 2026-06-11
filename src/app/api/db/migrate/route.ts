@@ -100,6 +100,16 @@ export async function POST() {
       )
     `
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS attendee_density (
+        zip                TEXT PRIMARY KEY,
+        total_households   INT NOT NULL DEFAULT 0,
+        campus_breakdown   JSONB,
+        source_date        TEXT,
+        updated_at         TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

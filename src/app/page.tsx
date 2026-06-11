@@ -2,8 +2,12 @@
 
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { downloadCsv } from '@/lib/csv'
+import { CAMPUSES } from '@/lib/campuses'
+import type { AttendeeZip } from '@/components/MapboxChoropleth'
 
 const MapboxChoropleth = lazy(() => import('@/components/MapboxChoropleth'))
+
+const DRIVE_MINUTES_OPTIONS = [15, 20, 30]
 
 interface ZipRow {
   zip: string
@@ -186,10 +190,25 @@ const CARD_SURFACE = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(25
 
 // ── Page ─────────────────────────────────────────────────────────
 export default function OverviewPage() {
-  const [data, setData]       = useState<OverviewData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [coverage, setCoverage] = useState<'core' | 'all'>('core')
+  const [data, setData]           = useState<OverviewData | null>(null)
+  const [loading, setLoading]     = useState(true)
+  const [coverage, setCoverage]   = useState<'core' | 'all'>('core')
   const [refreshKey, setRefreshKey] = useState(0)
+
+  // Phase 4.1 — attendee overlay
+  const [attendeeData, setAttendeeData]   = useState<AttendeeZip[]>([])
+  const [showAttendees, setShowAttendees] = useState(false)
+  const [attendeeLoaded, setAttendeeLoaded] = useState(false)
+
+  // Phase 4.2 — isochrones + candidate pin
+  const [selectedCampusZip, setSelectedCampusZip] = useState<string>('')
+  const [driveMinutes, setDriveMinutes]           = useState<number>(20)
+  const [isochroneGeoJson, setIsochroneGeoJson]   = useState<GeoJSON.FeatureCollection | null>(null)
+  const [isochroneLoading, setIsochroneLoading]   = useState(false)
+  const [pinMode, setPinMode]                     = useState(false)
+  const [candidatePin, setCandidatePin]           = useState<{ lng: number; lat: number } | null>(null)
+  const [candidateIsochrone, setCandidateIsochrone] = useState<GeoJSON.FeatureCollection | null>(null)
+  const [candidateIsoLoading, setCandidateIsoLoading] = useState(false)
 
   // Read initial coverage from URL on mount
   useEffect(() => {
@@ -197,7 +216,7 @@ export default function OverviewPage() {
     if (params.get('coverage') === 'all') setCoverage('all')
   }, [])
 
-  // Fetch whenever coverage or refresh button changes
+  // Fetch overview data whenever coverage or refresh changes
   useEffect(() => {
     setLoading(true)
     fetch(`/api/overview?coverage=${coverage}`)
@@ -206,12 +225,62 @@ export default function OverviewPage() {
       .catch(() => setLoading(false))
   }, [coverage, refreshKey])
 
+  // Fetch attendee density once (data changes rarely)
+  useEffect(() => {
+    if (attendeeLoaded) return
+    fetch('/api/attendee-density')
+      .then(r => r.json())
+      .then(d => {
+        setAttendeeData(d.data ?? [])
+        setAttendeeLoaded(true)
+      })
+      .catch(() => setAttendeeLoaded(true))
+  }, [attendeeLoaded])
+
+  // Fetch isochrone when campus selection or drive time changes
+  useEffect(() => {
+    if (!selectedCampusZip) {
+      setIsochroneGeoJson(null)
+      return
+    }
+    const campus = CAMPUSES.find(c => c.zip === selectedCampusZip)
+    if (!campus) return
+
+    setIsochroneLoading(true)
+    fetch(`/api/isochrone?lng=${campus.lng}&lat=${campus.lat}&minutes=${driveMinutes}`)
+      .then(r => r.json())
+      .then(d => { setIsochroneGeoJson(d); setIsochroneLoading(false) })
+      .catch(() => setIsochroneLoading(false))
+  }, [selectedCampusZip, driveMinutes])
+
+  // Fetch isochrone for candidate pin when dropped
+  useEffect(() => {
+    if (!candidatePin || !pinMode) {
+      setCandidateIsochrone(null)
+      return
+    }
+    setCandidateIsoLoading(true)
+    fetch(`/api/isochrone?lng=${candidatePin.lng}&lat=${candidatePin.lat}&minutes=${driveMinutes}`)
+      .then(r => r.json())
+      .then(d => { setCandidateIsochrone(d); setCandidateIsoLoading(false) })
+      .catch(() => setCandidateIsoLoading(false))
+  }, [candidatePin, driveMinutes, pinMode])
+
   function handleCoverageChange(val: 'core' | 'all') {
     setCoverage(val)
     const url = new URL(window.location.href)
     val === 'all' ? url.searchParams.set('coverage', 'all') : url.searchParams.delete('coverage')
     window.history.replaceState(null, '', url.toString())
   }
+
+  function handleMapClick(coords: { lng: number; lat: number }) {
+    if (!pinMode) return
+    setCandidatePin(coords)
+  }
+
+  // Merge campus + candidate isochrones for map display
+  const activeIsochrone: GeoJSON.FeatureCollection | null =
+    candidateIsochrone ?? isochroneGeoJson ?? null
 
   const ageBands = data?.ageDistribution ? [
     { label: '0–17',  pct: data.ageDistribution.age0_17 },
@@ -310,15 +379,155 @@ export default function OverviewPage() {
           />
         </div>
 
-        {/* Mapbox Choropleth Map */}
+        {/* Mapbox Choropleth Map — Phase 4 */}
         <div className="fade-up-3" style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px', marginBottom: '20px' }}>
           <SectionHeader eyebrow="Population Growth · 2020 to 2023 · Hover for Details" title="ZIP Code Growth Map" />
+
+          {/* Phase 4 map controls */}
+          <div style={{
+            display: 'flex', flexWrap: 'wrap', gap: '8px', alignItems: 'center',
+            marginBottom: '16px', paddingBottom: '16px', borderBottom: '1px solid #1e2b3c',
+          }}>
+            {/* Campus isochrone selector */}
+            <select
+              value={selectedCampusZip}
+              onChange={e => { setSelectedCampusZip(e.target.value); setCandidatePin(null); setCandidateIsochrone(null) }}
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.06em',
+                background: '#0d0f14', color: '#C8D4E4', border: '1px solid #232940',
+                borderRadius: '3px', padding: '5px 8px', cursor: 'pointer', outline: 'none',
+                appearance: 'none' as const,
+              }}
+            >
+              <option value="">Drive-time: select campus…</option>
+              {CAMPUSES.map(c => (
+                <option key={c.zip} value={c.zip}>
+                  {c.status === 'existing' ? '● ' : '◌ '}{c.label}
+                </option>
+              ))}
+            </select>
+
+            {/* Drive time minutes */}
+            <select
+              value={driveMinutes}
+              onChange={e => setDriveMinutes(Number(e.target.value))}
+              disabled={!selectedCampusZip && !candidatePin}
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
+                background: '#0d0f14', color: !selectedCampusZip && !candidatePin ? '#3a4154' : '#C8D4E4',
+                border: '1px solid #232940', borderRadius: '3px',
+                padding: '5px 8px', cursor: 'pointer', outline: 'none',
+                appearance: 'none' as const,
+              }}
+            >
+              {DRIVE_MINUTES_OPTIONS.map(m => (
+                <option key={m} value={m}>{m}-min drive</option>
+              ))}
+            </select>
+
+            {/* Isochrone status */}
+            {isochroneLoading || candidateIsoLoading ? (
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#4EAEFF', letterSpacing: '0.1em' }}>
+                FETCHING ISOCHRONE…
+              </span>
+            ) : (isochroneGeoJson || candidateIsochrone) ? (
+              <button
+                onClick={() => { setSelectedCampusZip(''); setIsochroneGeoJson(null); setCandidatePin(null); setCandidateIsochrone(null) }}
+                style={{
+                  fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', letterSpacing: '0.1em',
+                  background: 'rgba(78,174,255,0.1)', color: '#4EAEFF',
+                  border: '1px solid rgba(78,174,255,0.3)', borderRadius: '3px',
+                  padding: '4px 10px', cursor: 'pointer',
+                }}
+              >
+                ✕ Clear Isochrone
+              </button>
+            ) : null}
+
+            {/* Attendee overlay toggle */}
+            <button
+              onClick={() => setShowAttendees(v => !v)}
+              title={!attendeeLoaded || !attendeeData.length ? 'No attendee data loaded — upload via /admin/attendee-upload' : undefined}
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', letterSpacing: '0.1em',
+                background: showAttendees ? 'rgba(232,184,75,0.12)' : 'transparent',
+                color: showAttendees ? '#E8B84B' : (!attendeeData.length ? '#3a4154' : '#8A98AE'),
+                border: `1px solid ${showAttendees ? 'rgba(232,184,75,0.4)' : '#232940'}`,
+                borderRadius: '3px', padding: '4px 10px', cursor: 'pointer',
+              }}
+            >
+              {showAttendees ? '● ' : '○ '}Attendees
+              {!attendeeData.length && <span style={{ color: '#5a6478' }}> (no data)</span>}
+            </button>
+
+            {/* Candidate pin mode toggle */}
+            <button
+              onClick={() => {
+                setPinMode(v => {
+                  if (v) { setCandidatePin(null); setCandidateIsochrone(null) }
+                  return !v
+                })
+                setSelectedCampusZip('')
+                setIsochroneGeoJson(null)
+              }}
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', letterSpacing: '0.1em',
+                background: pinMode ? 'rgba(167,139,250,0.12)' : 'transparent',
+                color: pinMode ? '#A78BFA' : '#8A98AE',
+                border: `1px solid ${pinMode ? 'rgba(167,139,250,0.4)' : '#232940'}`,
+                borderRadius: '3px', padding: '4px 10px', cursor: 'pointer',
+              }}
+            >
+              {pinMode ? '◎ ' : '◌ '}Drop Candidate Pin
+            </button>
+          </div>
+
+          {/* Isochrone stats bar */}
+          {(isochroneGeoJson || candidateIsochrone) && (() => {
+            const activeCampus = CAMPUSES.find(c => c.zip === selectedCampusZip)
+            const label = candidatePin ? 'Candidate Site' : (activeCampus?.label ?? '')
+            const geoProps = (activeIsochrone?.features?.[0]?.properties ?? {}) as Record<string, unknown>
+            const contourMins = geoProps['contour'] as number | undefined
+            const minutes = contourMins ?? driveMinutes
+            return (
+              <div style={{
+                display: 'flex', gap: '24px', alignItems: 'center',
+                marginBottom: '12px', padding: '10px 14px',
+                background: 'rgba(78,174,255,0.06)', border: '1px solid rgba(78,174,255,0.15)',
+                fontFamily: "'IBM Plex Mono', monospace",
+              }}>
+                <div>
+                  <div style={{ fontSize: '9px', color: '#4EAEFF', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '2px' }}>
+                    Drive-time Isochrone
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#F0F2F7' }}>
+                    {label} · {minutes}-min
+                  </div>
+                </div>
+                <div style={{ fontSize: '9px', color: '#8A98AE', lineHeight: 1.6 }}>
+                  Polygon shows approximate drive-time coverage area.{' '}
+                  Population & ZIP stats within the isochrone coming in a future update.
+                </div>
+              </div>
+            )
+          })()}
+
           <Suspense fallback={
             <div style={{ height: 500, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.12em' }}>LOADING MAP...</span>
             </div>
           }>
-            <MapboxChoropleth zipData={data?.zips ?? []} loading={loading} />
+            <MapboxChoropleth
+              zipData={data?.zips ?? []}
+              loading={loading}
+              campuses={CAMPUSES}
+              attendeeData={attendeeData}
+              showAttendees={showAttendees}
+              isochroneGeoJson={activeIsochrone}
+              isochroneMinutes={driveMinutes}
+              candidatePin={candidatePin}
+              onMapClick={pinMode ? handleMapClick : undefined}
+            />
           </Suspense>
         </div>
 

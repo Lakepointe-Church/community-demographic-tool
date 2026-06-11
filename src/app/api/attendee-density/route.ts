@@ -1,0 +1,113 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { sql } from '@/lib/db'
+
+const PRIVACY_THRESHOLD = 5
+
+// ── GET /api/attendee-density ──────────────────────────────────────────────────
+// Returns per-ZIP household counts with privacy masking.
+// ZIPs with fewer than PRIVACY_THRESHOLD households are returned with households = -1.
+export async function GET() {
+  try {
+    const rows = await sql`
+      SELECT zip, total_households, campus_breakdown, source_date, updated_at
+      FROM attendee_density
+      ORDER BY total_households DESC
+    `
+
+    const masked = rows.map(r => ({
+      zip:              r.zip as string,
+      households:       (r.total_households as number) < PRIVACY_THRESHOLD ? -1 : (r.total_households as number),
+      campusBreakdown:  (r.total_households as number) < PRIVACY_THRESHOLD ? null : r.campus_breakdown,
+      sourceDate:       r.source_date as string | null,
+    }))
+
+    return NextResponse.json({ data: masked, updatedAt: rows[0]?.updated_at ?? null })
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 })
+  }
+}
+
+// ── POST /api/attendee-density ─────────────────────────────────────────────────
+// Accepts a CSV file upload. Expected format (header row required):
+//
+//   zip,campus,households
+//   75087,Rockwall,42
+//   75150,Mesquite,18
+//
+// If no campus column is present, a simpler two-column format is accepted:
+//   zip,households
+//
+// All rows for the same ZIP are aggregated by campus into campus_breakdown JSONB.
+// Rows are upserted — existing rows are overwritten on conflict.
+export async function POST(req: NextRequest) {
+  try {
+    const form = await req.formData()
+    const file = form.get('file')
+    const sourceDate = (form.get('source_date') as string | null) ?? new Date().toISOString().slice(0, 10)
+
+    if (!file || typeof file === 'string') {
+      return NextResponse.json({ error: 'No file provided' }, { status: 400 })
+    }
+
+    const text = await (file as File).text()
+    const lines = text.split(/\r?\n/).filter(l => l.trim())
+
+    if (lines.length < 2) {
+      return NextResponse.json({ error: 'CSV must have a header row and at least one data row' }, { status: 400 })
+    }
+
+    const header = lines[0].toLowerCase().split(',').map(h => h.trim())
+    const hasZip = header.includes('zip')
+    const hasHH  = header.includes('households')
+    if (!hasZip || !hasHH) {
+      return NextResponse.json({ error: 'CSV must have "zip" and "households" columns' }, { status: 400 })
+    }
+
+    const zipIdx     = header.indexOf('zip')
+    const hhIdx      = header.indexOf('households')
+    const campusIdx  = header.indexOf('campus')
+
+    // Aggregate rows by ZIP
+    const byZip = new Map<string, { total: number; campuses: Record<string, number> }>()
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(',').map(c => c.trim())
+      const zip  = cols[zipIdx]?.replace(/^0+/, '').padStart(5, '0') ?? ''
+      const hh   = parseInt(cols[hhIdx] ?? '0', 10)
+      if (!zip || isNaN(hh) || hh < 0) continue
+
+      const campus = campusIdx >= 0 ? (cols[campusIdx] ?? 'Unknown') : null
+
+      if (!byZip.has(zip)) byZip.set(zip, { total: 0, campuses: {} })
+      const entry = byZip.get(zip)!
+      entry.total += hh
+      if (campus) {
+        entry.campuses[campus] = (entry.campuses[campus] ?? 0) + hh
+      }
+    }
+
+    if (byZip.size === 0) {
+      return NextResponse.json({ error: 'No valid rows found in CSV' }, { status: 400 })
+    }
+
+    // Upsert all rows
+    let upserted = 0
+    for (const [zip, { total, campuses }] of byZip) {
+      const breakdown = Object.keys(campuses).length > 0 ? JSON.stringify(campuses) : null
+      await sql`
+        INSERT INTO attendee_density (zip, total_households, campus_breakdown, source_date, updated_at)
+        VALUES (${zip}, ${total}, ${breakdown}::jsonb, ${sourceDate}, NOW())
+        ON CONFLICT (zip) DO UPDATE SET
+          total_households  = EXCLUDED.total_households,
+          campus_breakdown  = EXCLUDED.campus_breakdown,
+          source_date       = EXCLUDED.source_date,
+          updated_at        = NOW()
+      `
+      upserted++
+    }
+
+    return NextResponse.json({ ok: true, upserted, sourceDate })
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 })
+  }
+}
