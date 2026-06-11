@@ -72,6 +72,9 @@ export async function POST(req: NextRequest) {
 
     const campusIdx = ['campus'].map(n => header.indexOf(n)).find(i => i >= 0) ?? -1
 
+    // Campuses to exclude from geographic analysis (online-only, no physical location)
+    const EXCLUDED_CAMPUSES = /online|church online|digital|streaming/i
+
     // Aggregate rows by ZIP
     const byZip = new Map<string, { total: number; campuses: Record<string, number> }>()
 
@@ -82,6 +85,9 @@ export async function POST(req: NextRequest) {
       if (!zip || isNaN(hh) || hh < 0) continue
 
       const campus = campusIdx >= 0 ? (cols[campusIdx] ?? 'Unknown') : null
+
+      // Skip online/non-physical campuses
+      if (campus && EXCLUDED_CAMPUSES.test(campus)) continue
 
       if (!byZip.has(zip)) byZip.set(zip, { total: 0, campuses: {} })
       const entry = byZip.get(zip)!
