@@ -19,7 +19,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
 | `/site-scorer` | ✅ | Full Site Scorer: 5 adjustable weight sliders (YFI/WFI/SES/Growth/Saturation) with Normalize + Reset, opportunity quadrant scatter (growth vs. churches/10K, target quadrant highlighted), top-10 sidebar, sortable ranked table, CSV export, coverage toggle |
-| `/methodology` | ✅ | Static data dictionary: all 9 sources, SES scoring, YFI/WFI component weights, Site Scorer weights + normalization formulas, church saturation index definition, per-metric definitions, known limitations |
+| `/methodology` | ✅ | Static data dictionary: 9 of 10 sources (ASARB + ACS proxy sections not yet written), SES scoring, YFI/WFI component weights, Site Scorer weights + normalization formulas, church saturation index definition, per-metric definitions, known limitations |
 | `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
 ### Data sources (all routed through Neon DB)
@@ -187,9 +187,14 @@ Each group has a `region: 'core_msa' | 'extended'` field. Pages with a coverage 
 
 `src/lib/zips.ts` exports:
 ```ts
+ZIP_GROUPS        // 30 group objects with { label, region, zips[] } — used by ZIP dropdown components
 DFW_ZIPS          // all 370 entries with { zip, label, region }
 CORE_MSA_ZIPS     // 273 core MSA entries
 CORE_MSA_ZIP_SET  // Set<string> for O(1) lookup
+CAMPUS_ZIPS       // Record<zip, 'existing'|'soon'> — drives gold dot indicators in ZIP dropdowns
+                  // existing: Rockwall 75087, Mesquite 75150, Firewheel 75044, Forney 75126,
+                  //           N. Dallas 75251, E. Dallas 75218, Sunnyvale 75182, Royse City 75189
+                  // soon:     Lucas/Allen 75002, Greenville 75401
 ```
 
 To add ZIPs: append to `src/lib/zips.ts`, then run `POST /api/refresh` from the dev server or production URL.
@@ -238,8 +243,9 @@ DATABASE_URL=$(grep '^DATABASE_URL=' .env.local | cut -d'"' -f2) node -e "
 
 ## Key files
 ```
-src/lib/zips.ts                        — ZIP list (edit here to add/remove ZIPs)
-src/lib/census.ts                      — Census ACS fetch logic (all variables); handles sentinel values
+src/lib/zips.ts                        — ZIP list (edit here to add/remove ZIPs); exports ZIP_GROUPS, DFW_ZIPS, CORE_MSA_ZIPS, CORE_MSA_ZIP_SET, CAMPUS_ZIPS
+src/lib/census.ts                      — Census ACS fetch logic (all variables + proxy); exports fetchZipData, fetchZipProxy
+src/lib/zip-county.ts                  — Static ZIP→county map for all 370 DFW ZIPs; exports ZIP_COUNTY (Record<zip,county>) and CORE_MSA_COUNTIES (Set<string>)
 src/lib/cbp.ts                         — Census CBP fetch logic: 20 NAICS sectors (exported as SECTORS) + size distribution; sectors include emp+payroll per sector
 src/lib/db.ts                          — Neon client
 src/components/TopNav.tsx              — Shared nav; renders <CoverageNav /> (do NOT also render in page files)
