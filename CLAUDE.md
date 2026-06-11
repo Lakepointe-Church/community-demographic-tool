@@ -11,7 +11,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 ### Pages (all live)
 | Route | Status | Description |
 |---|---|---|
-| `/` | ✅ | Overview: aggregate stats, Mapbox choropleth growth map, age/income charts, growth table |
+| `/` | ✅ | Overview: aggregate stats, Mapbox choropleth growth map (campus markers, isochrone controls, attendee overlay toggle, candidate-pin drop mode), age/income charts, growth table |
 | `/demographics` | ✅ | Per-ZIP: 8 stat cards + Dual-Earner HH + Long Commute cards, YFI/WFI indexes, race donut, education bars, age bars, household type donut, college scorecard |
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | ✅ | SES tier breakdown: 4 stat cards, distribution bar chart, scatter plot (SES score vs income), filterable/sortable table with ZIP/Class/HHI/Bachelor+/Mgmt+Prof/Unemployment/Trend |
@@ -58,6 +58,8 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
   /api/community-needs?coverage=&zip= ← CDC PLACES + CFPB health data; ?coverage=core|all for overview mode
   /api/scorecard?zip=&radius=  ← College Scorecard (direct, not cached in Neon)
   /api/boundaries              ← ZCTA polygon GeoJSON from TIGERweb (24hr cache)
+  /api/attendee-density        ← GET: per-ZIP Rock RMS household counts (privacy-masked); POST: CSV upload
+  /api/isochrone               ← Mapbox Isochrone API proxy; ?lng=&lat=&minutes=&profile= (6hr in-memory cache)
         ↓
   Next.js pages (client components fetch on load)
 ```
@@ -82,6 +84,10 @@ Columns: `fips` (PK), `county`, `region` (core_msa|extended), `population`, `tot
 
 **`community_health`** — one row per ZIP, loaded via scripts + `/api/refresh-community`
 Columns: `zip` (PK), `diabetes`, `obesity`, `smoking`, `uninsured`, `high_blood_pressure`, `depression`, `mental_distress`, `phys_inactivity`, `gen_poor_health` (all NUMERIC(5,1), % of adults), `cfpb_complaints` (INT), `updated_at`
+
+**`attendee_density`** — one row per ZIP, uploaded via `/admin/attendee-upload` from Rock RMS export
+Columns: `zip` (PK), `total_households` (INT), `campus_breakdown` (JSONB — `{campusLabel: count}`), `source_date` (TEXT), `updated_at`
+Privacy rule: ZIPs with `total_households < 5` are suppressed in API responses (`households: -1`); never displayed on map.
 
 ## SES class scoring
 Composite 0–100 score: income (50%) + bachelor's rate (30%) + home value (20%)
@@ -248,9 +254,10 @@ src/lib/census.ts                      — Census ACS fetch logic (all variables
 src/lib/zip-county.ts                  — Static ZIP→county map for all 370 DFW ZIPs; exports ZIP_COUNTY (Record<zip,county>) and CORE_MSA_COUNTIES (Set<string>)
 src/lib/cbp.ts                         — Census CBP fetch logic: 20 NAICS sectors (exported as SECTORS) + size distribution; sectors include emp+payroll per sector
 src/lib/db.ts                          — Neon client
+src/lib/campuses.ts                    — All 10 campus locations with lat/lng + status (existing|soon); used for map markers + isochrone fetch
 src/components/TopNav.tsx              — Shared nav; renders <CoverageNav /> (do NOT also render in page files)
 src/components/CoverageNav.tsx         — Suspense-wrapped nav links; preserves ?coverage=all param across page transitions
-src/components/MapboxChoropleth.tsx    — Mapbox choropleth map component
+src/components/MapboxChoropleth.tsx    — Mapbox choropleth map; props: zipData, campuses, attendeeData/showAttendees, isochroneGeoJson, candidatePin, onMapClick
 src/app/page.tsx                       — Overview page
 src/app/site-scorer/page.tsx           — Full Site Scorer: scatter chart, weight sliders, ranked table, CSV export
 src/app/demographics/page.tsx          — Per-ZIP demographics + YFI/WFI + college scorecard
@@ -276,6 +283,9 @@ src/app/api/employers/route.ts         — CBP employer data (overview or per-ZI
 src/app/api/community-needs/route.ts   — CDC PLACES + CFPB health data (overview or per-ZIP)
 src/app/api/site-scorer/route.ts       — Per-ZIP church saturation (Christian NTEE orgs/pop × 10K) + YFI + WFI scores; joins zip_demographics + religious_orgs
 src/app/api/boundaries/route.ts        — ZCTA polygon GeoJSON from TIGERweb
+src/app/api/attendee-density/route.ts  — GET (privacy-masked counts) + POST (CSV upload: zip,households or zip,campus,households)
+src/app/api/isochrone/route.ts         — Mapbox Isochrone API proxy; 6hr in-memory cache; ?lng=&lat=&minutes=&profile=
+src/app/admin/attendee-upload/page.tsx — Rock RMS upload UI: format docs, privacy callout, source date picker, file upload
 scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS publishes monthly)
 scripts/import-places.ts               — CDC PLACES loader (re-run annually)
 scripts/import-religion-census.ts      — 2020 ASARB Religion Census loader (decennial; re-run only on new release ~2030)
@@ -296,7 +306,8 @@ Full phased plan lives in `cip-enhancement-spec.md` (repo root).
 - **Phase 1.3** — ACS margin-of-error guard (dimmed values + tooltip when MOE/estimate > 0.3) — not yet started
 - **Phase 2** ✅ complete — Church saturation index (churches/10K per ZIP from IRS BMF) + full Site Scorer page (quadrant scatter, adjustable weights, ranked table)
 - **Phase 3** ✅ complete — Religious landscape expansion: **3.4** mosque/congregation BMF layer. **3.1** 2020 ASARB county adherence panel. **3.2** dropped (PRRI data not publicly downloadable; email drafted to info@prri.org). **3.3** ACS proxy layer: proxy_born (B05006, 20 countries) + proxy_language (C16001_033E Arabic), PROXY-labeled ranked list on /religious with Iraq/Egypt/Syria overcounting caveat. **3.5** confidence tiers (MEASURED/ESTIMATE/PROXY) applied throughout. Methodology page updated with all Phase 3 sections.
-- **Phases 4–5** — Attendee density overlay (Rock RMS), drive-time isochrones (Mapbox), leading growth indicators (building permits, TEA enrollment)
+- **Phase 4** ✅ complete (scaffold) — **4.1** Attendee density: `attendee_density` table, `/api/attendee-density` (GET + CSV upload POST), `/admin/attendee-upload` UI. Awaiting Rock RMS aggregate ZIP export to activate map overlay. **4.2** Drive-time isochrones: campus markers on Overview map, `/api/isochrone` Mapbox proxy, 15/20/30-min polygon rendering, candidate-pin drop mode. Deferred: per-isochrone population/growth stats (requires spatial intersection logic).
+- **Phase 5** — Leading growth indicators: residential building permits (Census BPS), TEA school enrollment trends, optional county population projections (Texas Demographic Center)
 
 ## Planned next data sources (ordered by priority)
 These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).
