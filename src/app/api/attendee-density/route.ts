@@ -57,15 +57,20 @@ export async function POST(req: NextRequest) {
     }
 
     const header = lines[0].toLowerCase().split(',').map(h => h.trim())
-    const hasZip = header.includes('zip')
-    const hasHH  = header.includes('households')
-    if (!hasZip || !hasHH) {
-      return NextResponse.json({ error: 'CSV must have "zip" and "households" columns' }, { status: 400 })
+
+    // Accept Rock RMS column names (PostalCodeLeft5, FamilyCount) alongside generic names
+    const zipIdx = ['zip', 'postalcodeleft5', 'postalcode', 'postal_code', 'zip_code']
+      .map(n => header.indexOf(n)).find(i => i >= 0) ?? -1
+    const hhIdx  = ['households', 'familycount', 'family_count', 'count', 'hh_count']
+      .map(n => header.indexOf(n)).find(i => i >= 0) ?? -1
+
+    if (zipIdx < 0 || hhIdx < 0) {
+      return NextResponse.json({
+        error: 'CSV must have a ZIP column (zip / postalcodeleft5 / postalcode) and a count column (households / familycount)',
+      }, { status: 400 })
     }
 
-    const zipIdx     = header.indexOf('zip')
-    const hhIdx      = header.indexOf('households')
-    const campusIdx  = header.indexOf('campus')
+    const campusIdx = ['campus'].map(n => header.indexOf(n)).find(i => i >= 0) ?? -1
 
     // Aggregate rows by ZIP
     const byZip = new Map<string, { total: number; campuses: Record<string, number> }>()

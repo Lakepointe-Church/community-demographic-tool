@@ -82,13 +82,33 @@ export default function AttendeeUploadPage() {
           Expected CSV Format
         </div>
         <p style={{ ...MONO, fontSize: '11px', color: '#8A98AE', marginBottom: '12px' }}>
-          Header row required. Two formats are accepted:
+          Header row required. Rock RMS export format is accepted directly — no reformatting needed.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
             <div style={{ ...MONO, fontSize: '10px', color: '#E8B84B', marginBottom: '6px', letterSpacing: '0.08em' }}>
-              WITH PER-CAMPUS BREAKDOWN
+              ROCK RMS EXPORT (Jeff&apos;s query)
+            </div>
+            <div style={{
+              background: '#0d0f14', border: '1px solid #1e2b3c',
+              padding: '12px 14px', fontSize: '11px',
+              ...MONO, color: '#4EAEFF', lineHeight: 1.8,
+              whiteSpace: 'pre',
+            }}>
+{`Campus,PostalCodeLeft5,FamilyCount
+Rockwall,75087,42
+Rockwall,75032,18
+Mesquite,75150,31`}
+            </div>
+            <div style={{ ...MONO, fontSize: '10px', color: '#5a6478', marginTop: '6px' }}>
+              Direct output from Rock RMS. No renaming needed.
+            </div>
+          </div>
+
+          <div>
+            <div style={{ ...MONO, fontSize: '10px', color: '#E8B84B', marginBottom: '6px', letterSpacing: '0.08em' }}>
+              GENERIC FORMAT (also accepted)
             </div>
             <div style={{
               background: '#0d0f14', border: '1px solid #1e2b3c',
@@ -98,31 +118,10 @@ export default function AttendeeUploadPage() {
             }}>
 {`zip,campus,households
 75087,Rockwall,42
-75150,Mesquite,18
-75087,Rockwall,12`}
+75150,Mesquite,18`}
             </div>
             <div style={{ ...MONO, fontSize: '10px', color: '#5a6478', marginTop: '6px' }}>
-              Rows for the same ZIP are aggregated. Campus column is optional.
-            </div>
-          </div>
-
-          <div>
-            <div style={{ ...MONO, fontSize: '10px', color: '#E8B84B', marginBottom: '6px', letterSpacing: '0.08em' }}>
-              TOTAL ONLY (SIMPLER)
-            </div>
-            <div style={{
-              background: '#0d0f14', border: '1px solid #1e2b3c',
-              padding: '12px 14px', fontSize: '11px',
-              ...MONO, color: '#4EAEFF', lineHeight: 1.8,
-              whiteSpace: 'pre',
-            }}>
-{`zip,households
-75087,54
-75150,18
-75044,31`}
-            </div>
-            <div style={{ ...MONO, fontSize: '10px', color: '#5a6478', marginTop: '6px' }}>
-              One row per ZIP, total household count only.
+              Campus column optional. Rows for the same ZIP are aggregated.
             </div>
           </div>
         </div>
