@@ -561,6 +561,15 @@ export type ZipEntry = (typeof DFW_ZIPS)[number]
 export const CORE_MSA_ZIPS = DFW_ZIPS.filter(z => z.region === 'core_msa')
 export const CORE_MSA_ZIP_SET = new Set(CORE_MSA_ZIPS.map(z => z.zip))
 
+// ZIPs where the ZCTA boundary changed between the 2020 Census and 2023 ACS.
+// Growth comparisons for these ZIPs are invalid (boundary artifact, not real decline).
+// Confirmed splits: 75070 (McKinney W → 75071/75072), 75034 (Frisco W → 75033/75036)
+// Needs verification vs. Census ZCTA relationship file: 75132, 76061, 76623, 76490, 75157
+export const BOUNDARY_CHANGED = new Set([
+  '75070', '75034',
+  '75132', '76061', '76623', '76490', '75157',
+])
+
 // Lakepointe campus presence — keyed by ZIP
 export const CAMPUS_ZIPS: Record<string, 'existing' | 'soon'> = {
   '75087': 'existing', // Rockwall

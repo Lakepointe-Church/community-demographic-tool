@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { DFW_ZIPS } from '@/lib/zips'
 import { fetchZipData, fetchZipProxy } from '@/lib/census'
@@ -106,7 +106,11 @@ async function fetchMetroStats() {
   }
 }
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const auth = req.headers.get('authorization') ?? ''
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   const errors: string[] = []
   let zipsRefreshed = 0
 

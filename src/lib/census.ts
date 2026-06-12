@@ -1,3 +1,5 @@
+import { BOUNDARY_CHANGED } from './zips'
+
 const CENSUS_BASE = 'https://api.census.gov/data'
 
 // B05006 birthplace proxy — Muslim-majority country origins (excludes Iran, Lebanon, Israel, India)
@@ -96,7 +98,7 @@ export async function fetchZipData(zip: string) {
 
   const [res, res2020, resAge] = await Promise.all([
     fetch(`${base}?get=NAME,${VARS}&${geo}`),
-    fetch(`${CENSUS_BASE}/2020/acs/acs5?get=B01001_001E&${geo}`),
+    fetch(`${CENSUS_BASE}/2020/dec/dhc?get=P1_001N&${geo}`),
     fetch(`${base}?get=${AGE_VARS}&${geo}`),
   ])
 
@@ -161,8 +163,11 @@ export async function fetchZipData(zip: string) {
   const rawGrowth = population2020 && population2020 > 0
     ? parseFloat(((population - population2020) / population2020 * 100).toFixed(1))
     : null
-  // Cap at ±9999.9 — tiny base populations produce meaningless extremes
-  const populationGrowth = rawGrowth !== null ? Math.max(-9999.9, Math.min(9999.9, rawGrowth)) : null
+  // Null out ZIPs with known ZCTA boundary changes — comparison is invalid (not a real decline)
+  // Cap at ±9999.9 for tiny base populations
+  const populationGrowth = (rawGrowth !== null && !BOUNDARY_CHANGED.has(zip))
+    ? Math.max(-9999.9, Math.min(9999.9, rawGrowth))
+    : null
 
   // Labor
   const laborForce = i(r['B23025_002E'])

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { downloadCsv } from '@/lib/csv'
+import { BOUNDARY_CHANGED } from '@/lib/zips'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -45,8 +46,7 @@ function effectivePct(w: Weights): Weights {
   }
 }
 
-function growthScore(g: number | null): number {
-  if (g == null) return 0
+function growthScore(g: number): number {
   return Math.min(100, Math.max(0, (g + 10) / 50 * 100))
 }
 
@@ -56,14 +56,19 @@ function satOpportunityScore(cper10k: number): number {
 }
 
 function computeFitScore(z: ZipScore, eff: Weights): number {
-  return Math.round(
-    z.yfi * eff.yfi / 100 +
-    z.wfi * eff.wfi / 100 +
-    z.sesScore * eff.ses / 100 +
-    satOpportunityScore(z.churchesPer10k) * eff.saturation / 100 +
-    growthScore(z.populationGrowth) * eff.growth / 100 +
-    z.enrollmentGrowthScore * eff.enrollment / 100
-  )
+  // When growth is null (boundary change or no 2020 data), redistribute that weight
+  // proportionally across the other components rather than counting it as 0.
+  const growthW = z.populationGrowth != null ? eff.growth : 0
+  const otherSum = eff.yfi + eff.wfi + eff.ses + eff.saturation + eff.enrollment
+  const scale = (otherSum + growthW) > 0 ? 100 / (otherSum + growthW) : 1
+  return Math.round((
+    z.yfi * eff.yfi +
+    z.wfi * eff.wfi +
+    z.sesScore * eff.ses +
+    satOpportunityScore(z.churchesPer10k) * eff.saturation +
+    (z.populationGrowth != null ? growthScore(z.populationGrowth) * growthW : 0) +
+    z.enrollmentGrowthScore * eff.enrollment
+  ) * scale / 100)
 }
 
 function scoreColor(score: number): string {
@@ -544,7 +549,10 @@ export default function SiteScorerPage() {
                           <td style={{ padding: '7px 10px', textAlign: 'right' }}>
                             <span style={{ color, fontWeight: 600, fontSize: 13 }}>{z.fitScore}</span>
                           </td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: (z.populationGrowth ?? 0) > 0 ? '#2DD4BF' : '#FF6B6B' }}>
+                          <td
+                            style={{ padding: '7px 10px', textAlign: 'right', color: (z.populationGrowth ?? 0) > 0 ? '#2DD4BF' : '#FF6B6B' }}
+                            title={z.populationGrowth == null && BOUNDARY_CHANGED.has(z.zip) ? 'ZCTA boundary changed 2020→2023 — growth comparison invalid' : undefined}
+                          >
                             {z.populationGrowth != null ? `${z.populationGrowth.toFixed(1)}%` : '—'}
                           </td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#8A98AE' }}>

@@ -1,7 +1,11 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 
-export async function POST() {
+export async function POST(req: NextRequest) {
+  const auth = req.headers.get('authorization') ?? ''
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   try {
     await sql`
       CREATE TABLE IF NOT EXISTS zip_demographics (

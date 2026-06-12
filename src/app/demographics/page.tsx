@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { DFW_ZIPS, ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
+import { DFW_ZIPS, ZIP_GROUPS, CAMPUS_ZIPS, BOUNDARY_CHANGED } from '@/lib/zips'
 import { InfoTooltip } from '@/components/InfoTooltip'
 
 interface CensusData {
@@ -584,9 +584,11 @@ export default function DemographicsPage() {
               value={data ? fmtK(data.population) : '—'}
               sub={data?.populationGrowth != null
                 ? `↑ ${data.populationGrowth}% since 2020`
-                : `ZIP ${selectedZip} · ${selectedLabel}`}
+                : BOUNDARY_CHANGED.has(selectedZip)
+                  ? 'Growth unavailable — ZCTA boundary changed'
+                  : `ZIP ${selectedZip} · ${selectedLabel}`}
               accent="gold" loading={loading}
-              tooltip={"ACS 5-Year 2023 population estimate. Growth % is vs. the 2020 Census count.\n\nSource: Census B01001."}
+              tooltip={"ACS 5-Year 2023 population estimate. Growth % is vs. the 2020 Decennial Census count.\n\nSource: Census B01001 (2023 ACS) + DHC P1_001N (2020 Decennial)."}
             />
             <StatCard
               label="Median HH Income"

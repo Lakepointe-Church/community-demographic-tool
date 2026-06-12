@@ -6,7 +6,11 @@ const PRIVACY_THRESHOLD = 5
 // ── GET /api/attendee-density ──────────────────────────────────────────────────
 // Returns per-ZIP household counts with privacy masking.
 // ZIPs with fewer than PRIVACY_THRESHOLD households are returned with households = -1.
-export async function GET() {
+export async function GET(req: NextRequest) {
+  const auth = req.headers.get('authorization') ?? ''
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   try {
     const rows = await sql`
       SELECT zip, total_households, campus_breakdown, source_date, updated_at
@@ -40,6 +44,10 @@ export async function GET() {
 // All rows for the same ZIP are aggregated by campus into campus_breakdown JSONB.
 // Rows are upserted — existing rows are overwritten on conflict.
 export async function POST(req: NextRequest) {
+  const auth = req.headers.get('authorization') ?? ''
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
   try {
     const form = await req.formData()
     const file = form.get('file')

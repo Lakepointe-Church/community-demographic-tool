@@ -3,6 +3,7 @@
 import { useState, useEffect, lazy, Suspense } from 'react'
 import { downloadCsv } from '@/lib/csv'
 import { CAMPUSES } from '@/lib/campuses'
+import { BOUNDARY_CHANGED } from '@/lib/zips'
 import type { AttendeeZip } from '@/components/MapboxChoropleth'
 
 const MapboxChoropleth = lazy(() => import('@/components/MapboxChoropleth'))
@@ -588,7 +589,10 @@ export default function OverviewPage() {
                     <td style={{ padding: '13px 12px 13px 0', borderBottom: '1px solid #1e2b3c', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#2DD4BF' }}>{z.zip}</td>
                     <td style={{ padding: '13px 12px 13px 0', borderBottom: '1px solid #1e2b3c', fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#F0F2F7' }}>{z.label}</td>
                     <td style={{ padding: '13px 12px 13px 0', borderBottom: '1px solid #1e2b3c', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#C8D4E4' }}>{z.population.toLocaleString()}</td>
-                    <td style={{ padding: '13px 12px 13px 0', borderBottom: '1px solid #1e2b3c', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: growthColor(z.populationGrowth), fontWeight: 600 }}>
+                    <td
+                      style={{ padding: '13px 12px 13px 0', borderBottom: '1px solid #1e2b3c', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: growthColor(z.populationGrowth), fontWeight: 600 }}
+                      title={z.populationGrowth == null && BOUNDARY_CHANGED.has(z.zip) ? 'ZCTA boundary changed 2020→2023 — growth comparison invalid' : undefined}
+                    >
                       {z.populationGrowth != null ? `${z.populationGrowth}%` : '—'}
                     </td>
                     <td style={{ padding: '13px 12px 13px 0', borderBottom: '1px solid #1e2b3c', fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#E8B84B' }}>${z.medianHouseholdIncome.toLocaleString()}</td>
