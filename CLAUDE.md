@@ -26,7 +26,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 - **Census BPS (Building Permits Survey)** — county-level annual permit counts (SF + MF), 3 years. Loaded via `scripts/import-permits.ts` (automated). Shows on Demographics page as momentum badge.
 - **TEA PEIMS** — ISD district enrollment 2020-21→2024-25, county-aggregated. Loaded via `scripts/import-tea.ts` (manual download). Drives enrollment growth score in Site Scorer + trend chart on Demographics.
 - **Texas Demographic Center Projections (Vintage 2024)** — county-level 2030/2040/2050 projections (mid scenario). Loaded via `scripts/import-tdc.ts` (manual download). Context panel on Demographics only.
-- **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %, proxy_born (B05006 foreign-born from 20 Muslim-majority countries), proxy_language (C16001 Arabic speakers)
+- **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %, proxy_born (B05006 foreign-born from 20 Muslim-majority countries), proxy_language (C16001 Arabic speakers). **2020 baseline** (`population_2020`) uses Decennial 2020 DHC (`P1_001N`), not ACS — true point-in-time count on exact 2020 boundaries.
 - **Census CBP 2022 (County Business Patterns)** — per-ZIP: total establishments, employment, payroll, sector breakdown (20 NAICS sectors, now includes emp+payroll per sector), employer size distribution. Also fetches county-level CBP for 4 DFW core counties (Dallas/Tarrant/Collin/Denton) to compute avg wages by sector. Loaded via `/api/refresh`
 - **BLS LAUS** — DFW metro unemployment + labor force
 - **FRED** — DFW metro population + housing permits
@@ -216,6 +216,9 @@ CAMPUS_ZIPS       // Record<zip, 'existing'|'soon'> — drives gold dot indicato
                   // existing: Rockwall 75087, Mesquite 75150, Firewheel 75044, Forney 75126,
                   //           N. Dallas 75251, E. Dallas 75218, Sunnyvale 75182, Royse City 75189
                   // soon:     Lucas/Allen 75002, Greenville 75401
+BOUNDARY_CHANGED  // Set<string> — 7 ZIPs with known 2020→2023 ZCTA boundary splits; growth nulled
+                  // confirmed: 75070 (McKinney W), 75034 (Frisco W)
+                  // needs verification: 75132, 76061, 76623, 76490, 75157
 ```
 
 To add ZIPs: append to `src/lib/zips.ts`, then run `POST /api/refresh` from the dev server or production URL.
@@ -229,12 +232,14 @@ vercel env pull       # sync Neon + API keys from Vercel
 ```
 
 ## Refreshing data
+All mutating endpoints require `Authorization: Bearer $CRON_SECRET`. Set `CRON_SECRET` in your shell or substitute the value directly.
+
 ```bash
 # Step 1: ACS + CBP + BLS/FRED (~8 min for 370 ZIPs — runs from production, Vercel timeout is 300s)
-curl -X POST https://community-demographic-tool.vercel.app/api/refresh
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://community-demographic-tool.vercel.app/api/refresh
 
 # Step 2: CFPB complaints (separate endpoint to avoid timeout)
-curl -X POST https://community-demographic-tool.vercel.app/api/refresh-community
+curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://community-demographic-tool.vercel.app/api/refresh-community
 
 # Step 3: CDC PLACES health data (annual, run from local dev server)
 npx tsx scripts/import-places.ts
@@ -267,8 +272,8 @@ DATABASE_URL=$(grep '^DATABASE_URL=' .env.local | cut -d'"' -f2) node -e "
 
 ## Key files
 ```
-src/lib/zips.ts                        — ZIP list (edit here to add/remove ZIPs); exports ZIP_GROUPS, DFW_ZIPS, CORE_MSA_ZIPS, CORE_MSA_ZIP_SET, CAMPUS_ZIPS
-src/lib/census.ts                      — Census ACS fetch logic (all variables + proxy); exports fetchZipData, fetchZipProxy
+src/lib/zips.ts                        — ZIP list (edit here to add/remove ZIPs); exports ZIP_GROUPS, DFW_ZIPS, CORE_MSA_ZIPS, CORE_MSA_ZIP_SET, CAMPUS_ZIPS, BOUNDARY_CHANGED
+src/lib/census.ts                      — Census ACS fetch logic (all variables + proxy); exports fetchZipData, fetchZipProxy. 2020 baseline uses DHC P1_001N; nulls growth for BOUNDARY_CHANGED ZIPs
 src/lib/zip-county.ts                  — Static ZIP→county map for all 370 DFW ZIPs; exports ZIP_COUNTY (Record<zip,county>) and CORE_MSA_COUNTIES (Set<string>)
 src/lib/cbp.ts                         — Census CBP fetch logic: 20 NAICS sectors (exported as SECTORS) + size distribution; sectors include emp+payroll per sector
 src/lib/db.ts                          — Neon client
@@ -304,6 +309,8 @@ src/app/api/boundaries/route.ts        — ZCTA polygon GeoJSON from TIGERweb
 src/app/api/attendee-density/route.ts  — GET (privacy-masked counts) + POST (CSV upload: zip,households or zip,campus,households)
 src/app/api/isochrone/route.ts         — Mapbox Isochrone API proxy; 6hr in-memory cache; ?lng=&lat=&minutes=&profile=
 src/app/admin/attendee-upload/page.tsx — Rock RMS upload UI: format docs, privacy callout, source date picker, file upload
+src/app/admin/layout.tsx               — Temporary 404 for all /admin/* routes until site-wide middleware is verified; remove after Phase 0.2b confirmed
+src/middleware.ts                      — Site-wide Basic auth (BASIC_AUTH_USER/BASIC_AUTH_PASS) + Bearer CRON_SECRET for automation; noindex via next.config.ts headers
 scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS publishes monthly)
 scripts/import-places.ts               — CDC PLACES loader (re-run annually)
 scripts/import-religion-census.ts      — 2020 ASARB Religion Census loader (decennial; re-run only on new release ~2030)
@@ -321,15 +328,34 @@ scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs
 - `/doc` — review key files and update this CLAUDE.md to reflect current state
 
 ## Enhancement roadmap
-Full phased plan lives in `cip-enhancement-spec.md` (repo root).
-- **Phase 0** ✅ complete — UX fixes, coverage toggle, ZCTA footnotes, site-scorer placeholder
-- **Phase 1.1** ✅ complete — `/methodology` data dictionary page
-- **Phase 1.2** ✅ complete — CSV export on ranking tables (Overview, SES Classes, Community Needs) + per-ZIP print one-pager (`/zip/[zip]/print`)
-- **Phase 1.3** — ACS margin-of-error guard (dimmed values + tooltip when MOE/estimate > 0.3) — not yet started
-- **Phase 2** ✅ complete — Church saturation index (churches/10K per ZIP from IRS BMF) + full Site Scorer page (quadrant scatter, adjustable weights, ranked table)
-- **Phase 3** ✅ complete — Religious landscape expansion: **3.4** mosque/congregation BMF layer. **3.1** 2020 ASARB county adherence panel. **3.2** dropped (PRRI data not publicly downloadable; email drafted to info@prri.org). **3.3** ACS proxy layer: proxy_born (B05006, 20 countries) + proxy_language (C16001_033E Arabic), PROXY-labeled ranked list on /religious with Iraq/Egypt/Syria overcounting caveat. **3.5** confidence tiers (MEASURED/ESTIMATE/PROXY) applied throughout. Methodology page updated with all Phase 3 sections.
-- **Phase 4** ✅ complete (scaffold) — **4.1** Attendee density: `attendee_density` table, `/api/attendee-density` (GET + CSV upload POST), `/admin/attendee-upload` UI. Awaiting Rock RMS aggregate ZIP export to activate map overlay. **4.2** Drive-time isochrones: campus markers on Overview map, `/api/isochrone` Mapbox proxy, 15/20/30-min polygon rendering, candidate-pin drop mode. Deferred: per-isochrone population/growth stats (requires spatial intersection logic).
-- **Phase 5** ✅ complete (scaffold) — **5.1** Building permits: `county_permits` table, `scripts/import-permits.ts` (automated BPS fetch), `/api/leading-indicators` endpoint, momentum badge on Demographics. **5.2** School enrollment: `isd_enrollment` table, `scripts/import-tea.ts` (manual download processor), county CAGR → enrollment growth score in Site Scorer (6th slider, default 10%), trend sparkline on Demographics. **5.3** TDC projections: `county_projections` table, `scripts/import-tdc.ts` (manual download processor), 2030/2040 context panel on Demographics. All three data sources need first-time data load; UI degrades gracefully with "not loaded yet" state.
+
+### Original build phases (complete)
+- **Phase 0** ✅ — UX fixes, coverage toggle, ZCTA footnotes, site-scorer placeholder
+- **Phase 1.1** ✅ — `/methodology` data dictionary page
+- **Phase 1.2** ✅ — CSV export on ranking tables + per-ZIP print one-pager (`/zip/[zip]/print`)
+- **Phase 2** ✅ — Church saturation index + full Site Scorer (quadrant scatter, adjustable weights, ranked table)
+- **Phase 3** ✅ — Religious landscape: BMF layer, 2020 ASARB adherence, ACS proxy layer (PROXY-labeled), confidence tiers
+- **Phase 4** ✅ (scaffold) — Attendee density (`attendee_density` table, CSV upload, privacy masking, map overlay toggle). Drive-time isochrones (campus markers, Mapbox proxy, 15/20/30-min polygons, candidate-pin mode).
+- **Phase 5** ✅ (scaffold) — Building permits (`county_permits`), TEA enrollment (`isd_enrollment`, 6th Site Scorer slider), TDC projections (`county_projections`). All three need first data load; UI degrades gracefully.
+
+### CIP Spec v2 phases (active — spec lives in `cip-spec-2.md`)
+- **Spec v2 Phase 0** — Security hardening
+  - **0.2a** ✅ — Bearer `CRON_SECRET` guard on `/api/refresh`, `/api/db/migrate`, `/api/attendee-density` (GET + POST)
+  - **0.2b** ✅ — Site-wide Basic auth middleware (`src/middleware.ts`); `X-Robots-Tag: noindex` via `next.config.ts`; `robots.txt`; admin routes temporarily 404'd
+  - **0.1** ⏳ [HUMAN] — Enable Vercel Deployment Protection for preview URLs in Vercel dashboard
+  - **0.3** ⏳ [HUMAN] — Mapbox token: move to church-owned account, add URL restrictions, separate server-only token for isochrone route
+  - **0.4** ⏳ — `npm uninstall xlsx` (unused, CVE)
+  - **0.5** ⏳ — Add cron schedule to `vercel.json` for `/api/refresh` + `/api/refresh-community`
+  - **0.6** ⏳ — Attendee data: diagnose which DB env received prior upload, truncate + re-upload after auth live, add upload-status indicator
+- **Spec v2 Phase 1** — Data integrity
+  - **1.1** ✅ — Growth metric fixed: 2020 base swapped to Decennial DHC (`P1_001N`); `BOUNDARY_CHANGED` set nulls 7 split ZIPs; Site Scorer redistributes null-growth weight; tooltip + Demographics sub-label explain unavailability
+  - **1.2** ⏳ — Reliability flags: `hhi_moe` + `low_reliability` columns, fetch `B19013_001M`, CV threshold filter in ranked tables
+  - **1.3** ⏳ — CFPB trailing 36-month window per 1K residents (replace all-time cumulative)
+  - **1.4** ⏳ — Verify + ingest ACS 2024 5-year and CDC PLACES 2024 if released
+  - **1.5** ⏳ [HUMAN] — Reconcile SES model: docs say percentile/6-class; code uses absolute/5-class. Recommend keeping absolute thresholds.
+- **Spec v2 Phase 2** ⏳ — Attendee layer activation (after Phase 0 verified): penetration metrics, campus draw areas, underserved clusters, cannibalization check
+- **Spec v2 Phase 3** ⏳ — Executive decision layer: shareable scenario URLs, score percentile anchoring, insights panel, distance-to-campus slider, Vercel Analytics, boardroom UX improvements
+- **Spec v2 Phase 4** ⏳ — New data sources: HUD/USPS address counts, BPS place-level, TEA campus-level, IRS SOI, LEHD LODES, Zillow ZHVI, Google Places (shortlist only)
 
 ## Planned next data sources (ordered by priority)
 These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).
@@ -368,6 +394,7 @@ PRRI, ARDA, Zillow, Data Axle, MissionInsite, County Appraisal Districts, NCTCOG
 - User-adjustable via sliders; Normalize button snaps to 100%; all weights documented at `/methodology#site-scorer`
 - Church Saturation Opportunity = 100 − min(100, churches/10K / 30 × 100) — inverts BMF Christian org density so low saturation = high score
 - School Enrollment Growth = county ISD CAGR (TEA PEIMS) × 12, capped 0–100; shows "—" until TEA data loaded (graceful degradation)
+- **Null growth handling**: ZIPs with `populationGrowth = null` (ZCTA boundary splits or missing 2020 data) have their growth weight redistributed proportionally across the other 5 components — they are not penalized with a 0. Growth column shows "—" with hover tooltip.
 
 ## Notion tracker
 Full task tracker (ordered by priority): https://www.notion.so/e94e55e73b55430bb9646e37600e4998
