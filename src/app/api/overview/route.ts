@@ -68,7 +68,7 @@ export async function GET(req: NextRequest) {
 
     // Per-ZIP data
     const labelMap = Object.fromEntries(DFW_ZIPS.map(z => [z.zip, z.label]))
-    const zips = rows.map(d => ({
+    const toZipRow = (d: typeof allRows[number]) => ({
       zip:                   d.zip,
       label:                 labelMap[d.zip] ?? d.name?.replace('ZCTA5 ', '') ?? d.zip,
       population:            d.population,
@@ -78,7 +78,11 @@ export async function GET(req: NextRequest) {
       avgHouseholdSize:      d.avg_household_size   != null ? pf(d.avg_household_size)   : null,
       sesLabel:              d.ses_label,
       sesScore:              d.ses_score,
-    })).sort((a, b) => (b.populationGrowth ?? -99) - (a.populationGrowth ?? -99))
+    })
+    // coverage-filtered: used for the table and CSV export
+    const zips = rows.map(toZipRow).sort((a, b) => (b.populationGrowth ?? -99) - (a.populationGrowth ?? -99))
+    // always all ZIPs: used for the choropleth map so outer ZIPs stay colored regardless of coverage toggle
+    const mapZips = allRows.map(toZipRow)
 
     const updatedAt = rows.reduce((latest: string | null, d) =>
       !latest || String(d.updated_at) > latest ? String(d.updated_at) : latest, null)
@@ -88,6 +92,7 @@ export async function GET(req: NextRequest) {
       ageDistribution,
       incomeDistribution,
       zips,
+      mapZips,
       updatedAt,
     })
   } catch (error) {

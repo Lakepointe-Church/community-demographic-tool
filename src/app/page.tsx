@@ -33,6 +33,7 @@ interface OverviewData {
   ageDistribution: { age0_17: number; age18_34: number; age35_54: number; age55_74: number; age75plus: number } | null
   incomeDistribution: { label: string; pct: number }[]
   zips: ZipRow[]
+  mapZips: ZipRow[]
   updatedAt: string
 }
 
@@ -518,7 +519,7 @@ export default function OverviewPage() {
             </div>
           }>
             <MapboxChoropleth
-              zipData={data?.zips ?? []}
+              zipData={data?.mapZips ?? data?.zips ?? []}
               loading={loading}
               campuses={CAMPUSES}
               attendeeData={attendeeData}
