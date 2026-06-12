@@ -36,6 +36,7 @@ export async function GET(req: NextRequest) {
           WHERE ntee_category = 'Christian'
           GROUP BY zip
         ) c ON d.zip = c.zip
+        WHERE COALESCE(d.low_reliability, FALSE) = FALSE
         ORDER BY d.zip
       `,
       // County enrollment CAGR — 2020→2024 where available

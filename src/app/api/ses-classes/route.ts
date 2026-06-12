@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
       SELECT
         zip, name, ses_label, ses_score,
         median_household_income, bachelors_rate, unemployment_rate,
-        occ_mgmt_prof_pct, population_growth
+        occ_mgmt_prof_pct, population_growth, low_reliability
       FROM zip_demographics
       WHERE ses_label IS NOT NULL
       ORDER BY ses_score DESC NULLS LAST
@@ -41,6 +41,7 @@ export async function GET(req: NextRequest) {
         unemploymentRate:     d.unemployment_rate != null ? parseFloat(d.unemployment_rate) : null,
         occMgmtProfPct:       d.occ_mgmt_prof_pct != null ? parseFloat(d.occ_mgmt_prof_pct) : null,
         populationGrowth:     d.population_growth != null ? parseFloat(d.population_growth) : null,
+        lowReliability:       d.low_reliability === true,
       }
     })
 

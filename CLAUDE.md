@@ -70,7 +70,7 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
 ## Database schema
 
 **`zip_demographics`** — one row per ZIP, upserted on refresh
-Key columns: `zip`, `population`, `population_2020`, `population_growth` (NUMERIC(8,1) — widened to handle extreme rural growth rates), `median_household_income`, `median_home_value`, `total_households`, `avg_household_size`, `hh_with_children_pct`, `unemployment_rate`, `bachelors_rate`, `ses_label`, `ses_score`, `race_*`, `edu_*`, `age_*`, `hh_married_with_children`, `hh_married_no_children`, `hh_single_parent`, `hh_living_alone`, `hh_other_type`, `income_lt25k` through `income_150k_plus`, `fertility_rate`, `dual_earner_pct`, `commute_30plus_pct`, `occ_mgmt_prof_pct`, `proxy_born` (INT — sum of B05006 foreign-born from 20 Muslim-majority countries), `proxy_language` (INT — C16001_033E Arabic speakers), `updated_at`
+Key columns: `zip`, `population`, `population_2020`, `population_growth` (NUMERIC(8,1) — widened to handle extreme rural growth rates), `median_household_income`, `median_home_value`, `total_households`, `avg_household_size`, `hh_with_children_pct`, `unemployment_rate`, `bachelors_rate`, `ses_label`, `ses_score`, `race_*`, `edu_*`, `age_*`, `hh_married_with_children`, `hh_married_no_children`, `hh_single_parent`, `hh_living_alone`, `hh_other_type`, `income_lt25k` through `income_150k_plus`, `fertility_rate`, `dual_earner_pct`, `commute_30plus_pct`, `occ_mgmt_prof_pct`, `proxy_born` (INT — sum of B05006 foreign-born from 20 Muslim-majority countries), `proxy_language` (INT — C16001_033E Arabic speakers), `hhi_moe` (INT — B19013_001M margin of error at 90% CI), `low_reliability` (BOOLEAN DEFAULT FALSE — true when population < 2,500 or income = 0 or CV > 30%; hidden by default in SES Classes table, excluded from Site Scorer rankings), `updated_at`
 
 **`metro_stats`** — single row (id=1), BLS + FRED metro data
 Columns: `bls_unemployment_rate`, `bls_employed_persons`, `bls_labor_force`, `bls_period`, `bls_year`, `fred_population`, `fred_population_date`, `fred_housing_permits`, `fred_housing_permits_date`, `sector_wages` (JSONB — `[{label, avgWage}]` from county-level CBP, sorted by avgWage DESC), `updated_at`
@@ -234,6 +234,8 @@ vercel env pull       # sync Neon + API keys from Vercel
 ## Refreshing data
 All mutating endpoints require `Authorization: Bearer $CRON_SECRET`. Set `CRON_SECRET` in your shell or substitute the value directly.
 
+> **⚠ CRON_SECRET not yet set in Vercel** (as of June 2026). Until it is, curl-based refresh calls will return 401. Workaround: DB schema changes can be applied directly via `DATABASE_URL` from `.env.local` using the pattern in the "DB migration" section below. To enable scheduled refresh, create a random secret (`openssl rand -hex 32`), add it as `CRON_SECRET` in Vercel → Settings → Environment Variables (all environments), then `vercel env pull` locally.
+
 ```bash
 # Step 1: ACS + CBP + BLS/FRED (~8 min for 370 ZIPs — runs from production, Vercel timeout is 300s)
 curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://community-demographic-tool.vercel.app/api/refresh
@@ -349,7 +351,7 @@ scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs
   - **0.6** ⏳ — Attendee data: diagnose which DB env received prior upload, truncate + re-upload after auth live, add upload-status indicator
 - **Spec v2 Phase 1** — Data integrity
   - **1.1** ✅ — Growth metric fixed: 2020 base swapped to Decennial DHC (`P1_001N`); `BOUNDARY_CHANGED` set nulls 7 split ZIPs; Site Scorer redistributes null-growth weight; tooltip + Demographics sub-label explain unavailability
-  - **1.2** ⏳ — Reliability flags: `hhi_moe` + `low_reliability` columns, fetch `B19013_001M`, CV threshold filter in ranked tables
+  - **1.2** ✅ — Reliability flags: `hhi_moe` + `low_reliability` columns added to DB and refresh; SES Classes table hides unreliable ZIPs by default (⚠ toggle to show greyed); Site Scorer always excludes them
   - **1.3** ⏳ — CFPB trailing 36-month window per 1K residents (replace all-time cumulative)
   - **1.4** ⏳ — Verify + ingest ACS 2024 5-year and CDC PLACES 2024 if released
   - **1.5** ⏳ [HUMAN] — Reconcile SES model: docs say percentile/6-class; code uses absolute/5-class. Recommend keeping absolute thresholds.

@@ -145,6 +145,7 @@ export async function POST(req: NextRequest) {
           hh_single_parent, hh_living_alone, hh_other_type,
           fertility_rate, dual_earner_pct, commute_30plus_pct, occ_mgmt_prof_pct,
           proxy_born, proxy_language,
+          hhi_moe, low_reliability,
           updated_at
         ) VALUES (
           ${d.zip}, ${d.name}, ${d.population}, ${d.population2020}, ${d.populationGrowth},
@@ -161,6 +162,7 @@ export async function POST(req: NextRequest) {
           ${d.householdTypes.singleParent}, ${d.householdTypes.livingAlone}, ${d.householdTypes.other},
           ${d.fertilityRate}, ${d.dualEarnerPct}, ${d.commute30PlusPct}, ${d.occMgmtProfPct},
           ${p.proxyBorn}, ${p.proxyLanguage},
+          ${d.hhiMoe}, ${d.lowReliability},
           NOW()
         )
         ON CONFLICT (zip) DO UPDATE SET
@@ -208,6 +210,8 @@ export async function POST(req: NextRequest) {
           occ_mgmt_prof_pct          = EXCLUDED.occ_mgmt_prof_pct,
           proxy_born                 = EXCLUDED.proxy_born,
           proxy_language             = EXCLUDED.proxy_language,
+          hhi_moe                    = EXCLUDED.hhi_moe,
+          low_reliability            = EXCLUDED.low_reliability,
           updated_at                 = NOW()
       `
       zipsRefreshed++

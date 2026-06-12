@@ -13,6 +13,7 @@ interface ZipSes {
   unemploymentRate: number | null
   occMgmtProfPct: number | null
   populationGrowth: number | null
+  lowReliability: boolean
 }
 
 interface Summary {
@@ -223,6 +224,7 @@ export default function SesClassesPage() {
   const [filter, setFilter] = useState<string>('All')
   const [sortCol, setSortCol] = useState<'sesScore' | 'medianHouseholdIncome' | 'bachelorsRate' | 'unemploymentRate' | 'occMgmtProfPct'>('sesScore')
   const [sortDir, setSortDir] = useState<'desc' | 'asc'>('desc')
+  const [showUnreliable, setShowUnreliable] = useState(false)
   const [coverage, setCoverage] = useState<'core' | 'all'>('core')
   const [refreshKey, setRefreshKey] = useState(0)
 
@@ -247,13 +249,14 @@ export default function SesClassesPage() {
   }
 
   const filtered = useMemo(() => {
-    const base = filter === 'All' ? zips : zips.filter(z => z.sesLabel === filter)
+    let base = showUnreliable ? zips : zips.filter(z => !z.lowReliability)
+    if (filter !== 'All') base = base.filter(z => z.sesLabel === filter)
     return [...base].sort((a, b) => {
       const va = a[sortCol] ?? -1
       const vb = b[sortCol] ?? -1
       return sortDir === 'desc' ? (vb as number) - (va as number) : (va as number) - (vb as number)
     })
-  }, [zips, filter, sortCol, sortDir])
+  }, [zips, filter, sortCol, sortDir, showUnreliable])
 
   function toggleSort(col: typeof sortCol) {
     if (sortCol === col) setSortDir(d => d === 'desc' ? 'asc' : 'desc')
@@ -290,7 +293,7 @@ export default function SesClassesPage() {
               ACS-Derived Class Classification · {summary?.total ?? '—'} {coverage === 'core' ? 'Core MSA' : 'All DFW'} ZIPs
             </div>
           </div>
-          {/* Coverage + Refresh controls */}
+          {/* Coverage + Reliability + Refresh controls */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginTop: '4px' }}>
             <select
               value={coverage}
@@ -306,6 +309,19 @@ export default function SesClassesPage() {
               <option value="core">Core MSA · 11 counties</option>
               <option value="all">All ZIPs · Full coverage</option>
             </select>
+            <button
+              onClick={() => setShowUnreliable(v => !v)}
+              title="Low-reliability ZIPs: population < 2,500, $0 income, or high Census margin of error (CV > 30%)"
+              style={{
+                fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.06em',
+                background: showUnreliable ? 'rgba(255,107,107,0.12)' : 'transparent',
+                color: showUnreliable ? '#FF6B6B' : '#8A98AE',
+                border: `1px solid ${showUnreliable ? 'rgba(255,107,107,0.4)' : '#232940'}`,
+                borderRadius: '4px', padding: '6px 10px', cursor: 'pointer',
+              }}
+            >
+              ⚠ Unreliable
+            </button>
             <button
               onClick={() => setRefreshKey(k => k + 1)}
               title="Refresh data from database"
@@ -448,9 +464,13 @@ export default function SesClassesPage() {
                   const color = TIER_COLOR[z.sesLabel] ?? '#8A98AE'
                   const rgb   = TIER_RGB[z.sesLabel] ?? '138,152,174'
                   const t = trend(z.populationGrowth)
+                  const dimmed = z.lowReliability
                   return (
-                    <tr key={z.zip} className="ses-row" style={{ borderBottom: '1px solid #1e2b3c', transition: 'background 0.15s' }}>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{z.zip}</td>
+                    <tr key={z.zip} className="ses-row" style={{ borderBottom: '1px solid #1e2b3c', transition: 'background 0.15s', opacity: dimmed ? 0.45 : 1 }}>
+                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>
+                        {dimmed && <span title="Low reliability: small population, zero income, or high Census margin of error (CV > 30%)" style={{ color: '#FF6B6B', marginRight: '5px', cursor: 'help' }}>⚠</span>}
+                        {z.zip}
+                      </td>
                       <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#A8B4C5', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{z.name ?? '—'}</td>
                       <td style={{ padding: '11px 16px 11px 0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -485,7 +505,7 @@ export default function SesClassesPage() {
             )}
           </div>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', marginTop: '16px', letterSpacing: '0.06em' }}>
-            Showing {filtered.length} of {zips.length} {coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs · Source: U.S. Census Bureau ACS 5-Year 2023 · Click column headers to sort
+            Showing {filtered.length} of {zips.length} {coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs{!showUnreliable && zips.some(z => z.lowReliability) ? ` · ${zips.filter(z => z.lowReliability).length} low-reliability ZIPs hidden` : ''} · Source: U.S. Census Bureau ACS 5-Year 2023 · Click column headers to sort
           </div>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '4px', letterSpacing: '0.06em' }}>
             Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.

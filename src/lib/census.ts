@@ -25,6 +25,7 @@ const PROXY_LANG_VARS = [
 const VARS = [
   'B01001_001E', // Total population
   'B19013_001E', // Median household income
+  'B19013_001M', // Median HHI margin of error (90% confidence)
   'B25077_001E', // Median home value
   'B11001_001E', // Total households
   'B23025_005E', // Unemployed
@@ -228,8 +229,14 @@ export async function fetchZipData(zip: string) {
     ? parseFloat((commute30plus / commuteTotal * 100).toFixed(1))
     : null
 
-  // SES class
+  // Reliability flag — Census special codes for MOE are large negatives (not-computed)
   const income      = i(r['B19013_001E'])
+  const rawMoe      = parseInt(r['B19013_001M'] ?? '0')
+  const hhiMoe      = rawMoe > 0 ? rawMoe : 0
+  const cv          = hhiMoe > 0 && income > 0 ? (hhiMoe / 1.645) / income : null
+  const lowReliability = population < 2500 || income <= 0 || (cv !== null && cv > 0.30)
+
+  // SES class
   const homeValue   = i(r['B25077_001E'])
   const bachelorsRate = pct(bachelorsPlus, edTotal)
   const sesScore    = Math.round(
@@ -297,6 +304,8 @@ export async function fetchZipData(zip: string) {
     dualEarnerPct,
     commute30PlusPct,
     occMgmtProfPct,
+    hhiMoe,
+    lowReliability,
   }
 }
 

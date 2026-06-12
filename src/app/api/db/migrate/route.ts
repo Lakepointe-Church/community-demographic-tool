@@ -38,9 +38,15 @@ export async function POST(req: NextRequest) {
         income_75_100k        NUMERIC(5,1),
         income_100_150k       NUMERIC(5,1),
         income_150k_plus      NUMERIC(5,1),
+        hhi_moe               INTEGER,
+        low_reliability       BOOLEAN NOT NULL DEFAULT FALSE,
         updated_at            TIMESTAMPTZ DEFAULT NOW()
       )
     `
+
+    // Add reliability columns to existing tables (idempotent)
+    await sql`ALTER TABLE zip_demographics ADD COLUMN IF NOT EXISTS hhi_moe INTEGER`
+    await sql`ALTER TABLE zip_demographics ADD COLUMN IF NOT EXISTS low_reliability BOOLEAN NOT NULL DEFAULT FALSE`
 
     await sql`
       CREATE TABLE IF NOT EXISTS metro_stats (
