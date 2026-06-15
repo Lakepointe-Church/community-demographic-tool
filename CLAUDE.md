@@ -35,7 +35,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 - **IRS BMF (NTEE X)** — DFW religious orgs from `eo_tx.csv`; 7,040 orgs loaded via `scripts/import-bmf.ts`. Refresh: re-run script (IRS publishes monthly)
 - **2020 U.S. Religion Census (ASARB)** — county-level adherent counts by tradition (Evangelical/Mainline/Black Protestant, Catholic, Orthodox, Muslim, Jewish, Buddhist, Hindu, Other, Unclaimed) for 23 DFW counties. Static data in `data/religion-census-dfw.json`; loaded via `scripts/import-religion-census.ts`. Decennial data (next ~2030). Attribution required: "2020 U.S. Religion Census (ASARB) · County level · Adherent estimates"
 - **CDC PLACES (2023)** — per-ZIP health rates: diabetes, obesity, smoking, uninsured, high BP, depression, mental distress, physical inactivity, poor general health. Loaded via `scripts/import-places.ts` (run annually). ZCTA-level dataset (`qnzd-25i4`) is still 2023 as of June 2026; county-level has a 2025 release but ZIP-level lags — re-check in late 2026.
-- **CFPB Consumer Complaints** — per-ZIP complaint counts. Loaded via `POST /api/refresh-community` (run monthly, separate from main refresh to avoid timeout)
+- **CFPB Consumer Complaints** — per-ZIP complaint counts, trailing 36-month window per 1K residents. Auto-refreshed monthly via vercel.json cron (`GET /api/refresh-community`, 1st at 07:00 UTC).
 
 ## Architecture
 
@@ -61,7 +61,7 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
   /api/community-needs?coverage=&zip= ← CDC PLACES + CFPB health data; ?coverage=core|all for overview mode
   /api/scorecard?zip=&radius=  ← College Scorecard (direct, not cached in Neon)
   /api/boundaries              ← ZCTA polygon GeoJSON from TIGERweb (24hr cache)
-  /api/attendee-density        ← GET: per-ZIP Rock RMS household counts (privacy-masked); POST: CSV upload
+  /api/attendee-density        ← GET: privacy-masked counts + lastUpload metadata; POST: CSV upload; DELETE: truncate
   /api/isochrone               ← Mapbox Isochrone API proxy; ?lng=&lat=&minutes=&profile= (6hr in-memory cache)
         ↓
   Next.js pages (client components fetch on load)
@@ -259,7 +259,7 @@ npx tsx scripts/import-bmf.ts
 Run cadence:
 - **Census ACS + CBP** — annually (ACS data updates once/year; CBP is 2022 vintage)
 - **BLS/FRED** — monthly if you want current metro stats
-- **CFPB complaints** — monthly (trailing 36-month window; run from local dev server)
+- **CFPB complaints** — monthly (trailing 36-month window; runs automatically via vercel.json cron on the 1st at 07:00 UTC)
 - **CDC PLACES** — annually (releases once/year)
 - **IRS BMF** — monthly (IRS publishes updates monthly)
 - **Census BPS** — annually after May release: `npx tsx scripts/import-permits.ts`
@@ -301,7 +301,7 @@ src/app/methodology/page.tsx           — Static data dictionary page (no data 
 src/app/zip/[zip]/print/page.tsx       — Per-ZIP print one-pager; fetches census + community-needs + employers + religious in parallel
 src/lib/csv.ts                         — Client-side CSV download utility: downloadCsv(filename, headers, rows)
 src/app/api/refresh/route.ts           — Main refresh: ACS + CBP + BLS/FRED (~8 min, 370 ZIPs)
-src/app/api/refresh-community/route.ts — CFPB complaint refresh (separate to avoid Vercel timeout)
+src/app/api/refresh-community/route.ts — CFPB complaint refresh; GET handler for vercel.json cron (1st of month), POST for manual trigger; maxDuration = 300
 src/app/api/overview/route.ts          — Aggregates all ZIPs for Overview page
 src/app/api/census/route.ts            — Single ZIP read from DB
 src/app/api/census/batch/route.ts      — Multi-ZIP read (Compare page); uses DFW_ZIPS label map so `name` returns neighborhood label, not Census ZCTA string
@@ -317,7 +317,7 @@ src/app/api/boundaries/route.ts        — ZCTA polygon GeoJSON from TIGERweb
 src/app/api/attendee-density/route.ts  — GET (privacy-masked counts + lastUpload metadata; auth via middleware) + POST (CSV upload; Bearer CRON_SECRET) + DELETE (truncate; Bearer CRON_SECRET)
 src/app/api/isochrone/route.ts         — Mapbox Isochrone API proxy; 6hr in-memory cache; ?lng=&lat=&minutes=&profile=
 src/app/admin/attendee-upload/page.tsx — Rock RMS upload UI: format docs, privacy callout, source date picker, file upload
-src/app/admin/layout.tsx               — Temporary 404 for all /admin/* routes until site-wide middleware is verified; remove after Phase 0.2b confirmed
+src/app/admin/layout.tsx               — Passthrough layout for /admin/* routes; middleware handles auth
 src/middleware.ts                      — Site-wide Basic auth (BASIC_AUTH_USER/BASIC_AUTH_PASS) + Bearer CRON_SECRET for automation; noindex via next.config.ts headers
 scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS publishes monthly)
 scripts/import-places.ts               — CDC PLACES loader (re-run annually)
