@@ -3,6 +3,18 @@ import { sql } from '@/lib/db'
 
 const PRIVACY_THRESHOLD = 5
 
+// Middleware handles site-wide auth. Mutating endpoints additionally verify
+// Bearer token (automation) OR valid Basic credentials (browser users).
+function isAuthorized(req: NextRequest): boolean {
+  const auth = req.headers.get('authorization') ?? ''
+  if (auth === `Bearer ${process.env.CRON_SECRET}`) return true
+  if (auth.startsWith('Basic ')) {
+    const [user, pass] = atob(auth.slice(6)).split(':')
+    return user === process.env.BASIC_AUTH_USER && pass === process.env.BASIC_AUTH_PASS
+  }
+  return false
+}
+
 // ── GET /api/attendee-density ──────────────────────────────────────────────────
 // Returns per-ZIP household counts with privacy masking plus last-upload metadata.
 // Auth is handled by middleware (Basic auth for browsers, Bearer for automation).
@@ -58,8 +70,7 @@ export async function GET() {
 // All rows for the same ZIP are aggregated by campus into campus_breakdown JSONB.
 // Rows are upserted — existing rows are overwritten on conflict.
 export async function POST(req: NextRequest) {
-  const auth = req.headers.get('authorization') ?? ''
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
@@ -157,8 +168,7 @@ export async function POST(req: NextRequest) {
 // ── DELETE /api/attendee-density ───────────────────────────────────────────────
 // Truncates the attendee_density table. Used to reset before a clean re-upload.
 export async function DELETE(req: NextRequest) {
-  const auth = req.headers.get('authorization') ?? ''
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   try {
