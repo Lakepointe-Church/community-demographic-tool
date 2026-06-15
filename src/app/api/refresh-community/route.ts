@@ -2,9 +2,14 @@ import { NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { DFW_ZIPS } from '@/lib/zips'
 
+export const maxDuration = 300
+
 // Separate from /api/refresh to avoid Vercel timeout.
 // Run after /api/refresh completes, or independently on a slower cadence.
 // CFPB data uses a trailing 36-month window — monthly refresh keeps the window current.
+
+// Vercel cron invokes via GET; middleware passes Bearer CRON_SECRET through to auth
+export async function GET() { return POST() }
 
 export async function POST() {
   const zips = [...DFW_ZIPS]

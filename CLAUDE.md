@@ -92,6 +92,10 @@ Columns: `zip` (PK), `diabetes`, `obesity`, `smoking`, `uninsured`, `high_blood_
 Columns: `zip` (PK), `total_households` (INT), `campus_breakdown` (JSONB — `{campusLabel: count}`), `source_date` (TEXT), `updated_at`
 Privacy rule: ZIPs with `total_households < 5` are suppressed in API responses (`households: -1`); never displayed on map.
 
+**`attendee_upload_log`** — one row per successful POST upload
+Columns: `id` (SERIAL PK), `uploaded_at` (TIMESTAMPTZ), `zip_count` (INT), `total_households` (INT), `filename` (TEXT), `source_date` (TEXT)
+Returned as `lastUpload` in GET /api/attendee-density response; drives status indicator on admin page and map toggle.
+
 **`county_permits`** — one row per county per year, loaded via `scripts/import-permits.ts`
 Columns: `fips` (TEXT), `county` (TEXT), `year` (INT), `sf_permits` (INT), `mf_permits` (INT), `total_permits` (INT), `updated_at`
 PK: `(fips, year)`. 3 years of data (2023–2025).
@@ -234,13 +238,15 @@ vercel env pull       # sync Neon + API keys from Vercel
 ## Refreshing data
 All mutating endpoints require `Authorization: Bearer $CRON_SECRET`. Set `CRON_SECRET` in your shell or substitute the value directly.
 
-> **⚠ CRON_SECRET not yet set in Vercel** (as of June 2026). Until it is, curl-based refresh calls will return 401. Workaround: DB schema changes can be applied directly via `DATABASE_URL` from `.env.local` using the pattern in the "DB migration" section below. To enable scheduled refresh, create a random secret (`openssl rand -hex 32`), add it as `CRON_SECRET` in Vercel → Settings → Environment Variables (all environments), then `vercel env pull` locally.
+> **Env vars set in Vercel (June 2026):** `CRON_SECRET`, `BASIC_AUTH_USER`, `BASIC_AUTH_PASS` are all live. `CRON_SECRET` is also in `.env.local` for local curl use. Run `vercel env pull` from the project directory to sync if `.env.local` is ever reset.
 
 ```bash
-# Step 1: ACS + CBP + BLS/FRED (~8 min for 370 ZIPs — runs from production, Vercel timeout is 300s)
+# Step 1: ACS + CBP + BLS/FRED (~8 min for 370 ZIPs — exceeds 300s Hobby timeout, run manually)
+# NOT a cron job on Hobby plan. Upgrade to Pro to enable GET /api/refresh cron.
 curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://community-demographic-tool.vercel.app/api/refresh
 
-# Step 2: CFPB complaints (separate endpoint to avoid timeout)
+# Step 2: CFPB complaints — runs automatically on the 1st of each month via vercel.json cron
+# (GET /api/refresh-community at 07:00 UTC). Can also trigger manually:
 curl -X POST -H "Authorization: Bearer $CRON_SECRET" https://community-demographic-tool.vercel.app/api/refresh-community
 
 # Step 3: CDC PLACES health data (annual, run from local dev server)
@@ -253,7 +259,7 @@ npx tsx scripts/import-bmf.ts
 Run cadence:
 - **Census ACS + CBP** — annually (ACS data updates once/year; CBP is 2022 vintage)
 - **BLS/FRED** — monthly if you want current metro stats
-- **CFPB complaints** — monthly (cumulative all-time counts)
+- **CFPB complaints** — monthly (trailing 36-month window; run from local dev server)
 - **CDC PLACES** — annually (releases once/year)
 - **IRS BMF** — monthly (IRS publishes updates monthly)
 - **Census BPS** — annually after May release: `npx tsx scripts/import-permits.ts`
@@ -308,7 +314,7 @@ src/app/api/employers/route.ts         — CBP employer data (overview or per-ZI
 src/app/api/community-needs/route.ts   — CDC PLACES + CFPB health data (overview or per-ZIP)
 src/app/api/site-scorer/route.ts       — Per-ZIP church saturation (Christian NTEE orgs/pop × 10K) + YFI + WFI scores; joins zip_demographics + religious_orgs
 src/app/api/boundaries/route.ts        — ZCTA polygon GeoJSON from TIGERweb
-src/app/api/attendee-density/route.ts  — GET (privacy-masked counts) + POST (CSV upload: zip,households or zip,campus,households)
+src/app/api/attendee-density/route.ts  — GET (privacy-masked counts + lastUpload metadata; auth via middleware) + POST (CSV upload; Bearer CRON_SECRET) + DELETE (truncate; Bearer CRON_SECRET)
 src/app/api/isochrone/route.ts         — Mapbox Isochrone API proxy; 6hr in-memory cache; ?lng=&lat=&minutes=&profile=
 src/app/admin/attendee-upload/page.tsx — Rock RMS upload UI: format docs, privacy callout, source date picker, file upload
 src/app/admin/layout.tsx               — Temporary 404 for all /admin/* routes until site-wide middleware is verified; remove after Phase 0.2b confirmed
@@ -346,13 +352,13 @@ scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs
   - **0.2b** ✅ — Site-wide Basic auth middleware (`src/middleware.ts`); `X-Robots-Tag: noindex` via `next.config.ts`; `robots.txt`; admin routes temporarily 404'd
   - **0.1** ⏳ [HUMAN] — Enable Vercel Deployment Protection for preview URLs in Vercel dashboard
   - **0.3** ⏳ [HUMAN] — Mapbox token: move to church-owned account, add URL restrictions, separate server-only token for isochrone route
-  - **0.4** ⏳ — `npm uninstall xlsx` (unused, CVE)
-  - **0.5** ⏳ — Add cron schedule to `vercel.json` for `/api/refresh` + `/api/refresh-community`
-  - **0.6** ⏳ — Attendee data: diagnose which DB env received prior upload, truncate + re-upload after auth live, add upload-status indicator
+  - **0.4** ✅ — `npm uninstall xlsx` (unused, CVE)
+  - **0.5** ✅ — CFPB cron in `vercel.json` (`GET /api/refresh-community`, 1st of month 07:00 UTC); ACS refresh excluded (exceeds 300s Hobby timeout — stays manual; GET handler added to `/api/refresh` for Pro-plan readiness)
+  - **0.6** ✅ — Attendee data: diagnosed (2,893 rows of non-DFW test data in prod DB, source 2026-06-12); fixed GET auth bug (route was requiring Bearer, blocking browser map load); added `attendee_upload_log` table + upload status to admin page (last upload date/ZIPs/HH + Truncate button) and map toggle tooltip; admin routes re-enabled (removed `notFound()` from admin/layout.tsx). **[HUMAN]**: truncate bad data via admin page, re-upload `FamilyCountByCampusAndPostalCode_20260611.csv`
 - **Spec v2 Phase 1** — Data integrity
   - **1.1** ✅ — Growth metric fixed: 2020 base swapped to Decennial DHC (`P1_001N`); `BOUNDARY_CHANGED` set nulls 7 split ZIPs; Site Scorer redistributes null-growth weight; tooltip + Demographics sub-label explain unavailability
   - **1.2** ✅ — Reliability flags: `hhi_moe` + `low_reliability` columns added to DB and refresh; SES Classes table hides unreliable ZIPs by default (⚠ toggle to show greyed); Site Scorer always excludes them
-  - **1.3** ⏳ — CFPB trailing 36-month window per 1K residents (replace all-time cumulative)
+  - **1.3** ✅ — CFPB trailing 36-month window per 1K residents; methodology + page labels updated; now runs via cron (see 0.5)
   - **1.4** ⏳ — Verify + ingest ACS 2024 5-year and CDC PLACES 2024 if released
   - **1.5** ⏳ [HUMAN] — Reconcile SES model: docs say percentile/6-class; code uses absolute/5-class. Recommend keeping absolute thresholds.
 - **Spec v2 Phase 2** ⏳ — Attendee layer activation (after Phase 0 verified): penetration metrics, campus draw areas, underserved clusters, cannibalization check

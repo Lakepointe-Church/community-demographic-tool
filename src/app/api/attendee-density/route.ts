@@ -4,28 +4,42 @@ import { sql } from '@/lib/db'
 const PRIVACY_THRESHOLD = 5
 
 // ── GET /api/attendee-density ──────────────────────────────────────────────────
-// Returns per-ZIP household counts with privacy masking.
-// ZIPs with fewer than PRIVACY_THRESHOLD households are returned with households = -1.
-export async function GET(req: NextRequest) {
-  const auth = req.headers.get('authorization') ?? ''
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+// Returns per-ZIP household counts with privacy masking plus last-upload metadata.
+// Auth is handled by middleware (Basic auth for browsers, Bearer for automation).
+export async function GET() {
   try {
-    const rows = await sql`
-      SELECT zip, total_households, campus_breakdown, source_date, updated_at
-      FROM attendee_density
-      ORDER BY total_households DESC
-    `
+    const [rows, logRows] = await Promise.all([
+      sql`
+        SELECT zip, total_households, campus_breakdown, source_date, updated_at
+        FROM attendee_density
+        ORDER BY total_households DESC
+      `,
+      sql`
+        SELECT uploaded_at, zip_count, total_households, filename, source_date
+        FROM attendee_upload_log
+        ORDER BY uploaded_at DESC
+        LIMIT 1
+      `,
+    ])
 
     const masked = rows.map(r => ({
-      zip:              r.zip as string,
-      households:       (r.total_households as number) < PRIVACY_THRESHOLD ? -1 : (r.total_households as number),
-      campusBreakdown:  (r.total_households as number) < PRIVACY_THRESHOLD ? null : r.campus_breakdown,
-      sourceDate:       r.source_date as string | null,
+      zip:             r.zip as string,
+      households:      (r.total_households as number) < PRIVACY_THRESHOLD ? -1 : (r.total_households as number),
+      campusBreakdown: (r.total_households as number) < PRIVACY_THRESHOLD ? null : r.campus_breakdown,
+      sourceDate:      r.source_date as string | null,
     }))
 
-    return NextResponse.json({ data: masked, updatedAt: rows[0]?.updated_at ?? null })
+    const lastUpload = logRows[0]
+      ? {
+          uploadedAt:      logRows[0].uploaded_at as string,
+          zipCount:        logRows[0].zip_count as number,
+          totalHouseholds: logRows[0].total_households as number,
+          filename:        logRows[0].filename as string | null,
+          sourceDate:      logRows[0].source_date as string | null,
+        }
+      : null
+
+    return NextResponse.json({ data: masked, lastUpload })
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }
@@ -57,6 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No file provided' }, { status: 400 })
     }
 
+    const filename = (file as File).name
     const text = await (file as File).text()
     const lines = text.split(/\r?\n/).filter(l => l.trim())
 
@@ -111,6 +126,7 @@ export async function POST(req: NextRequest) {
 
     // Upsert all rows
     let upserted = 0
+    let totalHouseholds = 0
     for (const [zip, { total, campuses }] of byZip) {
       const breakdown = Object.keys(campuses).length > 0 ? JSON.stringify(campuses) : null
       await sql`
@@ -123,9 +139,33 @@ export async function POST(req: NextRequest) {
           updated_at        = NOW()
       `
       upserted++
+      totalHouseholds += total
     }
 
-    return NextResponse.json({ ok: true, upserted, sourceDate })
+    // Log the upload for status display
+    await sql`
+      INSERT INTO attendee_upload_log (zip_count, total_households, filename, source_date)
+      VALUES (${upserted}, ${totalHouseholds}, ${filename}, ${sourceDate})
+    `
+
+    return NextResponse.json({ ok: true, upserted, totalHouseholds, sourceDate })
+  } catch (error) {
+    return NextResponse.json({ error: String(error) }, { status: 500 })
+  }
+}
+
+// ── DELETE /api/attendee-density ───────────────────────────────────────────────
+// Truncates the attendee_density table. Used to reset before a clean re-upload.
+export async function DELETE(req: NextRequest) {
+  const auth = req.headers.get('authorization') ?? ''
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+  try {
+    const result = await sql`SELECT COUNT(*) as count FROM attendee_density`
+    const deleted = parseInt(result[0].count as string, 10)
+    await sql`TRUNCATE TABLE attendee_density`
+    return NextResponse.json({ ok: true, deleted })
   } catch (error) {
     return NextResponse.json({ error: String(error) }, { status: 500 })
   }

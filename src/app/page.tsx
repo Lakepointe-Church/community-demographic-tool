@@ -201,6 +201,7 @@ export default function OverviewPage() {
   const [attendeeData, setAttendeeData]   = useState<AttendeeZip[]>([])
   const [showAttendees, setShowAttendees] = useState(false)
   const [attendeeLoaded, setAttendeeLoaded] = useState(false)
+  const [attendeeUploadDate, setAttendeeUploadDate] = useState<string | null>(null)
 
   // Phase 4.2 — isochrones + candidate pin
   const [selectedCampusZip, setSelectedCampusZip] = useState<string>('')
@@ -234,6 +235,10 @@ export default function OverviewPage() {
       .then(r => r.json())
       .then(d => {
         setAttendeeData(d.data ?? [])
+        if (d.lastUpload?.uploadedAt) {
+          const dt = new Date(d.lastUpload.uploadedAt)
+          setAttendeeUploadDate(dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }))
+        }
         setAttendeeLoaded(true)
       })
       .catch(() => setAttendeeLoaded(true))
@@ -449,7 +454,13 @@ export default function OverviewPage() {
             {/* Attendee overlay toggle */}
             <button
               onClick={() => setShowAttendees(v => !v)}
-              title={!attendeeLoaded || !attendeeData.length ? 'No attendee data loaded — upload via /admin/attendee-upload' : undefined}
+              title={
+                !attendeeLoaded || !attendeeData.length
+                  ? 'No attendee data — upload via /admin/attendee-upload'
+                  : attendeeUploadDate
+                    ? `Last upload: ${attendeeUploadDate}`
+                    : undefined
+              }
               style={{
                 fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', letterSpacing: '0.1em',
                 background: showAttendees ? 'rgba(232,184,75,0.12)' : 'transparent',
@@ -459,7 +470,10 @@ export default function OverviewPage() {
               }}
             >
               {showAttendees ? '● ' : '○ '}Attendees
-              {!attendeeData.length && <span style={{ color: '#5a6478' }}> (no data)</span>}
+              {!attendeeData.length
+                ? <span style={{ color: '#5a6478' }}> (no data)</span>
+                : attendeeUploadDate && <span style={{ color: '#5a6478' }}> · {attendeeUploadDate}</span>
+              }
             </button>
 
             {/* Candidate pin mode toggle */}

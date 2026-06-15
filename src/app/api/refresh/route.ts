@@ -4,6 +4,10 @@ import { DFW_ZIPS } from '@/lib/zips'
 import { fetchZipData, fetchZipProxy } from '@/lib/census'
 import { fetchZipEmployers, SECTORS } from '@/lib/cbp'
 
+// ACS refresh runs ~8 min for 370 ZIPs — exceeds 300s Hobby limit, so not in vercel.json cron.
+// GET handler is here for Pro-plan readiness; run manually on Hobby via curl POST.
+export const maxDuration = 300
+
 const BLS_BASE = 'https://api.bls.gov/publicAPI/v2/timeseries/data/'
 const FRED_BASE = 'https://api.stlouisfed.org/fred/series/observations'
 const CBP_BASE  = 'https://api.census.gov/data/2022/cbp'
@@ -105,6 +109,8 @@ async function fetchMetroStats() {
     fredHousingPermitsDate: housing?.date ?? null,
   }
 }
+
+export async function GET(req: NextRequest) { return POST(req) }
 
 export async function POST(req: NextRequest) {
   const auth = req.headers.get('authorization') ?? ''

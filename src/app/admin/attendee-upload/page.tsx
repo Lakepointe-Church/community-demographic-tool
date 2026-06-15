@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 
 const MONO: React.CSSProperties = { fontFamily: "'IBM Plex Mono', monospace" }
@@ -10,12 +10,33 @@ const SURFACE: React.CSSProperties = {
   padding: '24px',
 }
 
+type UploadStatus = {
+  uploadedAt: string
+  zipCount: number
+  totalHouseholds: number
+  filename: string | null
+  sourceDate: string | null
+} | null
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
 export default function AttendeeUploadPage() {
-  const [file, setFile]           = useState<File | null>(null)
-  const [sourceDate, setSourceDate] = useState(new Date().toISOString().slice(0, 10))
-  const [status, setStatus]       = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
-  const [result, setResult]       = useState<{ upserted?: number; error?: string } | null>(null)
-  const inputRef                  = useRef<HTMLInputElement>(null)
+  const [file, setFile]               = useState<File | null>(null)
+  const [sourceDate, setSourceDate]   = useState(new Date().toISOString().slice(0, 10))
+  const [status, setStatus]           = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
+  const [result, setResult]           = useState<{ upserted?: number; totalHouseholds?: number; error?: string } | null>(null)
+  const [lastUpload, setLastUpload]   = useState<UploadStatus>(undefined as unknown as UploadStatus)
+  const [truncating, setTruncating]   = useState(false)
+  const inputRef                      = useRef<HTMLInputElement>(null)
+
+  useEffect(() => {
+    fetch('/api/attendee-density')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => setLastUpload(d?.lastUpload ?? null))
+      .catch(() => setLastUpload(null))
+  }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
@@ -35,13 +56,39 @@ export default function AttendeeUploadPage() {
         setResult({ error: data.error ?? 'Upload failed' })
       } else {
         setStatus('success')
-        setResult({ upserted: data.upserted })
+        setResult({ upserted: data.upserted, totalHouseholds: data.totalHouseholds })
         setFile(null)
         if (inputRef.current) inputRef.current.value = ''
+        // Refresh status
+        fetch('/api/attendee-density')
+          .then(r => r.ok ? r.json() : null)
+          .then(d => setLastUpload(d?.lastUpload ?? null))
+          .catch(() => {})
       }
     } catch {
       setStatus('error')
       setResult({ error: 'Network error — check console' })
+    }
+  }
+
+  async function handleTruncate() {
+    if (!confirm('Delete all attendee data? This cannot be undone.')) return
+    setTruncating(true)
+    try {
+      const res  = await fetch('/api/attendee-density', { method: 'DELETE' })
+      const data = await res.json()
+      if (res.ok) {
+        setLastUpload(null)
+        setResult(null)
+        setStatus('idle')
+        alert(`Deleted ${data.deleted} rows. Upload a fresh CSV to reload.`)
+      } else {
+        alert(`Truncate failed: ${data.error}`)
+      }
+    } catch {
+      alert('Network error during truncate')
+    } finally {
+      setTruncating(false)
     }
   }
 
@@ -62,6 +109,50 @@ export default function AttendeeUploadPage() {
         <Link href="/" style={{ ...MONO, fontSize: '10px', color: '#4EAEFF', textDecoration: 'none', display: 'inline-block', marginTop: '8px' }}>
           ← Back to Overview
         </Link>
+      </div>
+
+      {/* Last upload status */}
+      <div style={{
+        ...SURFACE,
+        borderColor: lastUpload ? 'rgba(78,174,255,0.3)' : '#232940',
+        marginBottom: '24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '12px',
+      }}>
+        <div>
+          <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.1em', color: '#A8B4C5', textTransform: 'uppercase', marginBottom: '6px' }}>
+            Current Data
+          </div>
+          {lastUpload === (undefined as unknown as UploadStatus) ? (
+            <div style={{ ...MONO, fontSize: '12px', color: '#5a6478' }}>Loading…</div>
+          ) : lastUpload ? (
+            <div style={{ ...MONO, fontSize: '12px', color: '#C8D4E4' }}>
+              Last upload: <span style={{ color: '#4EAEFF' }}>{formatDate(lastUpload.uploadedAt)}</span>
+              {' · '}<span style={{ color: '#E8B84B' }}>{lastUpload.zipCount.toLocaleString()} ZIPs</span>
+              {' · '}<span style={{ color: '#2DD4BF' }}>{lastUpload.totalHouseholds.toLocaleString()} households</span>
+              {lastUpload.filename && <span style={{ color: '#5a6478' }}> · {lastUpload.filename}</span>}
+            </div>
+          ) : (
+            <div style={{ ...MONO, fontSize: '12px', color: '#FF6B6B' }}>No data loaded</div>
+          )}
+        </div>
+        {lastUpload && (
+          <button
+            onClick={handleTruncate}
+            disabled={truncating}
+            style={{
+              ...MONO, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase',
+              background: 'transparent', color: truncating ? '#3a4154' : '#FF6B6B',
+              border: `1px solid ${truncating ? '#232940' : 'rgba(255,107,107,0.4)'}`,
+              padding: '7px 14px', cursor: truncating ? 'not-allowed' : 'pointer',
+            }}
+          >
+            {truncating ? 'Deleting…' : '✕ Truncate All Data'}
+          </button>
+        )}
       </div>
 
       {/* Privacy notice */}
@@ -201,7 +292,7 @@ Mesquite,75150,31`}
             <>
               <div style={{ ...MONO, fontSize: '11px', color: '#2DD4BF', marginBottom: '6px' }}>Upload Complete</div>
               <div style={{ ...MONO, fontSize: '12px', color: '#C8D4E4' }}>
-                {result.upserted} ZIP{result.upserted !== 1 ? 's' : ''} upserted. The Overview map attendee overlay will reflect the new data.
+                {result.upserted} ZIP{result.upserted !== 1 ? 's' : ''} · {result.totalHouseholds?.toLocaleString()} households upserted. The Overview map attendee overlay will reflect the new data.
               </div>
             </>
           )}
@@ -214,6 +305,7 @@ Mesquite,75150,31`}
           Data is stored in the Neon PostgreSQL database under the <code>attendee_density</code> table.
           Uploading a new file overwrites existing rows for matching ZIPs.
           ZIPs not present in the upload are not deleted — re-upload the full export each time.
+          Attendee data lives only in the database, never in the Git repository.
         </div>
       </div>
 
