@@ -94,7 +94,7 @@ function pct(n: number, total: number) {
 
 export async function fetchZipData(zip: string) {
   const key = process.env.CENSUS_API_KEY
-  const base = `${CENSUS_BASE}/2023/acs/acs5`
+  const base = `${CENSUS_BASE}/2024/acs/acs5`
   const geo  = `for=zip%20code%20tabulation%20area:${zip}&key=${key}`
 
   const [res, res2020, resAge] = await Promise.all([
@@ -311,7 +311,7 @@ export async function fetchZipData(zip: string) {
 
 export async function fetchZipProxy(zip: string): Promise<{ proxyBorn: number; proxyLanguage: number }> {
   const key = process.env.CENSUS_API_KEY
-  const base = `${CENSUS_BASE}/2023/acs/acs5`
+  const base = `${CENSUS_BASE}/2024/acs/acs5`
   const geo  = `for=zip%20code%20tabulation%20area:${zip}&key=${key}`
 
   const [resBorn, resLang] = await Promise.all([

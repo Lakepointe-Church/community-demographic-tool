@@ -26,7 +26,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 - **Census BPS (Building Permits Survey)** — county-level annual permit counts (SF + MF), 3 years. Loaded via `scripts/import-permits.ts` (automated). Shows on Demographics page as momentum badge.
 - **TEA PEIMS** — ISD district enrollment 2020-21→2024-25, county-aggregated. Loaded via `scripts/import-tea.ts` (manual download). Drives enrollment growth score in Site Scorer + trend chart on Demographics.
 - **Texas Demographic Center Projections (Vintage 2024)** — county-level 2030/2040/2050 projections (mid scenario). Loaded via `scripts/import-tdc.ts` (manual download). Context panel on Demographics only.
-- **Census ACS 5-Year (2023)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %, proxy_born (B05006 foreign-born from 20 Muslim-majority countries), proxy_language (C16001 Arabic speakers). **2020 baseline** (`population_2020`) uses Decennial 2020 DHC (`P1_001N`), not ACS — true point-in-time count on exact 2020 boundaries.
+- **Census ACS 5-Year (2024)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %, proxy_born (B05006 foreign-born from 20 Muslim-majority countries), proxy_language (C16001 Arabic speakers). **2020 baseline** (`population_2020`) uses Decennial 2020 DHC (`P1_001N`), not ACS — true point-in-time count on exact 2020 boundaries.
 - **Census CBP 2022 (County Business Patterns)** — per-ZIP: total establishments, employment, payroll, sector breakdown (20 NAICS sectors, now includes emp+payroll per sector), employer size distribution. Also fetches county-level CBP for 4 DFW core counties (Dallas/Tarrant/Collin/Denton) to compute avg wages by sector. Loaded via `/api/refresh`
 - **BLS LAUS** — DFW metro unemployment + labor force
 - **FRED** — DFW metro population + housing permits
@@ -34,7 +34,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 - **Census TIGERweb** — ZCTA polygon boundaries for Mapbox map (24hr server cache)
 - **IRS BMF (NTEE X)** — DFW religious orgs from `eo_tx.csv`; 7,040 orgs loaded via `scripts/import-bmf.ts`. Refresh: re-run script (IRS publishes monthly)
 - **2020 U.S. Religion Census (ASARB)** — county-level adherent counts by tradition (Evangelical/Mainline/Black Protestant, Catholic, Orthodox, Muslim, Jewish, Buddhist, Hindu, Other, Unclaimed) for 23 DFW counties. Static data in `data/religion-census-dfw.json`; loaded via `scripts/import-religion-census.ts`. Decennial data (next ~2030). Attribution required: "2020 U.S. Religion Census (ASARB) · County level · Adherent estimates"
-- **CDC PLACES (2023)** — per-ZIP health rates: diabetes, obesity, smoking, uninsured, high BP, depression, mental distress, physical inactivity, poor general health. Loaded via `scripts/import-places.ts` (run annually)
+- **CDC PLACES (2023)** — per-ZIP health rates: diabetes, obesity, smoking, uninsured, high BP, depression, mental distress, physical inactivity, poor general health. Loaded via `scripts/import-places.ts` (run annually). ZCTA-level dataset (`qnzd-25i4`) is still 2023 as of June 2026; county-level has a 2025 release but ZIP-level lags — re-check in late 2026.
 - **CFPB Consumer Complaints** — per-ZIP complaint counts. Loaded via `POST /api/refresh-community` (run monthly, separate from main refresh to avoid timeout)
 
 ## Architecture
@@ -359,7 +359,7 @@ scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs
   - **1.1** ✅ — Growth metric fixed: 2020 base swapped to Decennial DHC (`P1_001N`); `BOUNDARY_CHANGED` set nulls 7 split ZIPs; Site Scorer redistributes null-growth weight; tooltip + Demographics sub-label explain unavailability
   - **1.2** ✅ — Reliability flags: `hhi_moe` + `low_reliability` columns added to DB and refresh; SES Classes table hides unreliable ZIPs by default (⚠ toggle to show greyed); Site Scorer always excludes them
   - **1.3** ✅ — CFPB trailing 36-month window per 1K residents; methodology + page labels updated; now runs via cron (see 0.5)
-  - **1.4** ⏳ — Verify + ingest ACS 2024 5-year and CDC PLACES 2024 if released
+  - **1.4** ✅ — ACS bumped to 2024 5-year (verified: all variables present including C16001_033E, B05006 proxy, HHI MOE); CDC PLACES ZCTA still 2023 (ZCTA-level `qnzd-25i4` dataset lags county release — re-check late 2026)
   - **1.5** ⏳ [HUMAN] — Reconcile SES model: docs say percentile/6-class; code uses absolute/5-class. Recommend keeping absolute thresholds.
 - **Spec v2 Phase 2** ⏳ — Attendee layer activation (after Phase 0 verified): penetration metrics, campus draw areas, underserved clusters, cannibalization check
 - **Spec v2 Phase 3** ⏳ — Executive decision layer: shareable scenario URLs, score percentile anchoring, insights panel, distance-to-campus slider, Vercel Analytics, boardroom UX improvements
