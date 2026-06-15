@@ -4,19 +4,24 @@ import { DFW_ZIPS } from '@/lib/zips'
 
 // Separate from /api/refresh to avoid Vercel timeout.
 // Run after /api/refresh completes, or independently on a slower cadence.
-// CFPB data is cumulative (all-time complaints) — monthly refresh is sufficient.
+// CFPB data uses a trailing 36-month window — monthly refresh keeps the window current.
 
 export async function POST() {
   const zips = [...DFW_ZIPS]
   let refreshed = 0
   const errors: string[] = []
 
+  // Compute trailing 36-month cutoff once for all ZIPs
+  const cutoff = new Date()
+  cutoff.setMonth(cutoff.getMonth() - 36)
+  const dateMin = cutoff.toISOString().split('T')[0]
+
   for (let i = 0; i < zips.length; i += 10) {
     const batch = zips.slice(i, i + 10)
     await Promise.allSettled(batch.map(async ({ zip }) => {
       try {
         const res = await fetch(
-          `https://www.consumerfinance.gov/data-research/consumer-complaints/search/api/v1/?size=0&zip_code=${zip}`
+          `https://www.consumerfinance.gov/data-research/consumer-complaints/search/api/v1/?size=0&zip_code=${zip}&date_received_min=${dateMin}`
         )
         if (!res.ok) return
         const data = await res.json()

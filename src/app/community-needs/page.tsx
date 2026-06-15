@@ -404,7 +404,7 @@ export default function CommunityNeedsPage() {
                     <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
                       <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>CFPB Consumer Complaints</div>
                       <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color: healthColor(zipData.cfpbComplaints, 500, 1500), lineHeight:1 }}>{fmtN(zipData.cfpbComplaints)}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'4px' }}>total · {zipData.cfpbPer1k != null ? zipData.cfpbPer1k + '/1K residents' : ''}</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'4px' }}>trailing 36 mo · {zipData.cfpbPer1k != null ? zipData.cfpbPer1k + '/1K residents' : ''}</div>
                     </div>
 
                     <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
@@ -426,7 +426,7 @@ export default function CommunityNeedsPage() {
         </div>
 
         <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'16px', letterSpacing:'0.06em' }}>
-          Health data: CDC PLACES 2023 (age-adjusted prevalence estimates) · Complaints: CFPB Consumer Complaint Database (all-time) · HMDA mortgage denial rates — Phase 2
+          Health data: CDC PLACES 2023 (age-adjusted prevalence estimates) · Complaints: CFPB Consumer Complaint Database (trailing 36 months) · HMDA mortgage denial rates — Phase 2
         </div>
         <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#3d4a5c', marginTop:'6px', letterSpacing:'0.06em' }}>
           Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.

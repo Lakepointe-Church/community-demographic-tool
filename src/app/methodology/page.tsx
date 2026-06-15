@@ -530,7 +530,7 @@ const DATA_SOURCES = [
   {
     source: 'CFPB Consumer Complaints',
     geo: 'ZIP',
-    vintage: 'Cumulative all-time',
+    vintage: 'Trailing 36 months',
     refresh: 'Monthly',
     usedFor: 'Financial distress proxy on Community Needs page',
   },
@@ -659,7 +659,7 @@ const METRIC_GROUPS = [
   {
     group: 'Financial Stress (CFPB)',
     metrics: [
-      { label: 'Consumer Complaints', definition: 'Cumulative all-time count of consumer complaints submitted to the CFPB Consumer Complaint Database for the ZIP code. Includes complaints on mortgages, credit cards, debt collection, and other financial products. High counts may reflect population size as much as distress — use per-1,000 residents figure for comparison.' },
+      { label: 'Consumer Complaints', definition: 'Count of consumer complaints submitted to the CFPB Consumer Complaint Database for the ZIP code in the trailing 36 months. Includes complaints on mortgages, credit cards, debt collection, and other financial products. High counts may reflect population size as much as distress — use per-1,000 residents figure for comparison.' },
     ],
   },
   {
@@ -723,7 +723,7 @@ const LIMITATIONS = [
   },
   {
     source: 'CFPB Consumer Complaints',
-    limitation: 'Complaint counts are raw totals, not rates. A high-population ZIP will generally generate more complaints than a low-population one regardless of financial distress. The per-1,000-residents normalization shown on the Community Needs page partially corrects for this, but complaint propensity also varies by awareness of the CFPB and by the types of financial products prevalent in the area.',
+    limitation: 'Complaint counts use a trailing 36-month window, which keeps the metric current but means counts will shift as old complaints age out. A high-population ZIP will generally generate more complaints than a low-population one regardless of financial distress. The per-1,000-residents normalization shown on the Community Needs page partially corrects for this, but complaint propensity also varies by awareness of the CFPB and by the types of financial products prevalent in the area.',
   },
   {
     source: 'College Scorecard',
