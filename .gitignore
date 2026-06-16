@@ -42,3 +42,6 @@ next-env.d.ts
 
 # large LODES source caches (re-fetched by scripts/import-lodes.ts; do not commit)
 data/lodes-*.csv.gz
+
+# HUD USPS address vacancy downloads (licensed dataset, gov/nonprofit only — do not commit)
+data/hud-usps-*.csv

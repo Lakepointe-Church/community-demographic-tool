@@ -205,6 +205,21 @@ export async function POST(req: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_commute_flows_home ON commute_flows(home_zip, year)`
 
     // Per-home-ZIP commute headline metrics (computed over the full OD set, not just stored top corridors)
+    // HUD Aggregated USPS address counts — quarterly residential address momentum (Phase 4.1)
+    // res_active is the spec's core field; total/vacant/no-stat are stored when the file provides them.
+    await sql`
+      CREATE TABLE IF NOT EXISTS usps_addresses (
+        zip         TEXT NOT NULL,
+        quarter     TEXT NOT NULL,
+        res_active  INTEGER,
+        res_total   INTEGER,
+        res_vacant  INTEGER,
+        res_nostat  INTEGER,
+        updated_at  TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (zip, quarter)
+      )
+    `
+
     await sql`
       CREATE TABLE IF NOT EXISTS commute_summary (
         home_zip         TEXT NOT NULL,

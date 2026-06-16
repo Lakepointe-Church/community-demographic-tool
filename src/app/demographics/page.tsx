@@ -495,6 +495,18 @@ interface CommuteData {
   corridors?: { zip: string; label: string; jobs: number; highEarnerJobs: number; highPct: number }[]
 }
 
+// ── Types for Address Momentum (HUD USPS, Phase 4.1) ────────────
+interface AddressMomentum {
+  available: boolean
+  zip: string
+  county: string | null
+  latestQuarter?: string
+  resActive?: number
+  momentumPct?: number | null
+  qoqPct?: number | null
+  series?: { quarter: string; resActive: number }[]
+}
+
 // ── Page ─────────────────────────────────────────────────────────
 export default function DemographicsPage() {
   const [selectedZip, setSelectedZip] = useState<string>(DFW_ZIPS[0].zip)
@@ -505,6 +517,7 @@ export default function DemographicsPage() {
   const [leadingIndicators, setLeadingIndicators] = useState<LeadingIndicators | null>(null)
   const [leadingLoading, setLeadingLoading] = useState(true)
   const [commute, setCommute] = useState<CommuteData | null>(null)
+  const [addressMomentum, setAddressMomentum] = useState<AddressMomentum | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -529,6 +542,14 @@ export default function DemographicsPage() {
     fetch(`/api/commute?zip=${selectedZip}`)
       .then(r => r.json())
       .then(d => { if (!d.error) setCommute(d) })
+      .catch(() => {})
+  }, [selectedZip])
+
+  useEffect(() => {
+    setAddressMomentum(null)
+    fetch(`/api/address-momentum?zip=${selectedZip}`)
+      .then(r => r.json())
+      .then(d => { if (!d.error) setAddressMomentum(d) })
       .catch(() => {})
   }, [selectedZip])
 
@@ -1053,6 +1074,87 @@ export default function DemographicsPage() {
                 )}
                 </>
               )}
+            </div>
+          )}
+
+          {/* Address Momentum — HUD USPS (Phase 4.1); renders only when data is loaded */}
+          {addressMomentum?.available && addressMomentum.series && addressMomentum.series.length > 0 && (
+            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+              <SectionHeader
+                eyebrow="Freshest Growth Signal · USPS Residential Addresses"
+                title="Address Momentum"
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {/* Active residential addresses */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#F0F2F7', lineHeight: 1 }}>
+                    {addressMomentum.resActive?.toLocaleString() ?? '—'}
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Active residential addresses
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    {addressMomentum.latestQuarter}
+                  </div>
+                </div>
+
+                {/* Trailing 4-quarter momentum */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  {(() => {
+                    const m = addressMomentum.momentumPct
+                    const fallback = addressMomentum.qoqPct
+                    const val = m ?? fallback
+                    const label = m != null ? 'Trailing 4-quarter' : 'Quarter-over-quarter'
+                    const color = val == null ? '#5a6478' : val >= 0 ? '#2DD4BF' : '#FF6B6B'
+                    return (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color, lineHeight: 1 }}>
+                            {val == null ? '—' : `${val >= 0 ? '+' : ''}${val.toFixed(1)}`}
+                          </span>
+                          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color }}>%</span>
+                        </div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                          {label} change
+                        </div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                          {m != null ? 'vs. same quarter last year' : 'vs. prior quarter'}
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+
+                {/* Sparkline */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                    Quarterly trend
+                  </div>
+                  <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '40px' }}>
+                    {addressMomentum.series.map((s, i, arr) => {
+                      const max = Math.max(...arr.map(x => x.resActive))
+                      const min = Math.min(...arr.map(x => x.resActive))
+                      const range = max - min || 1
+                      // scale to emphasize change while keeping bars visible
+                      const h = 8 + ((s.resActive - min) / range) * 32
+                      return (
+                        <div key={s.quarter} title={`${s.quarter}: ${s.resActive.toLocaleString()}`}
+                          style={{ flex: 1, height: h, borderRadius: '2px 2px 0 0',
+                            background: i === arr.length - 1 ? '#E8B84B' : 'rgba(232,184,75,0.3)' }} />
+                      )
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '6px' }}>
+                    <span>{addressMomentum.series[0]?.quarter}</span>
+                    <span>{addressMomentum.series[addressMomentum.series.length - 1]?.quarter}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
+                HUD Aggregated USPS Administrative Data · ZIP level · active residential = addresses with mail collected in the prior 90 days · updated quarterly
+              </div>
             </div>
           )}
 

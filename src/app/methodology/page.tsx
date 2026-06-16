@@ -411,6 +411,27 @@ export default function MethodologyPage() {
             </div>
           </div>
 
+          {/* HUD USPS Address Momentum */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.5 · Address Momentum (HUD USPS) · pending data load
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'HUD Aggregated USPS Administrative Data on Address Vacancies — quarterly counts of residential addresses (total, vacant, no-stat) compiled by the USPS and released by HUD. This is a licensed dataset available only to governmental and non-profit organizations via registration and a manual quarterly download; it is distinct from the free HUD-USPS ZIP crosswalk API, which returns only allocation ratios (no raw counts). Import script: scripts/import-hud-usps.ts.' },
+                { label: 'Geography', definition: 'ZIP code level (true USPS ZIPs, not ZCTA approximations — this is one of the few genuinely ZIP-native sources in the platform).' },
+                { label: 'Active residential', definition: 'Active residential addresses ≈ total residential addresses − vacant − no-stat: addresses currently receiving mail (mail collected within the prior ~90 days). Rising active addresses signal new occupancy/construction before it appears in ACS.' },
+                { label: 'Address momentum', definition: 'Trailing 4-quarter percentage change in active residential addresses for the ZIP, shown on the Demographics page alongside ACS growth. Until 5 quarters are loaded, a quarter-over-quarter change is shown as a fallback.' },
+                { label: 'Status & scoring', definition: 'Scaffold built; awaiting the first [HUMAN] data download. Context tier — not a Site Scorer input. Per the scoring-governance rules, it would only be considered for scoring after validation against known-growth ZIPs (Celina, Princeton, Forney should light up first).' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </Section>
 
@@ -774,6 +795,10 @@ const LIMITATIONS = [
   {
     source: 'Texas Demographic Center Projections',
     limitation: 'Projections use the mid-migration scenario from TDC Vintage 2024. They are county-level only and cannot be disaggregated to ZIP codes. Projections become less reliable further from the base year — the 2040 figure has substantially more uncertainty than the 2030 figure. Projections do not account for economic shocks, major policy changes, or unforeseen demographic shifts. The platform uses these figures for context only; they are not incorporated into the Site Scorer.',
+  },
+  {
+    source: 'HUD USPS — Address Momentum',
+    limitation: 'Counts addresses, not people or housing units — a single address node serving a gated community or mobile-home park is one record regardless of how many homes sit behind it (HUD now reports "drop counts" for these, but coverage is imperfect). "Active" is defined by recent mail collection, so seasonal/second homes and temporarily-vacant units shift the count. The data is released quarterly with a lag and is a licensed gov/nonprofit dataset (manual download, not an API). It is the freshest growth signal available but is shown as context only and must be validated against known-growth ZIPs before any consideration for scoring. Awaiting first data load as of this writing.',
   },
   {
     source: 'LEHD LODES — Commute Corridors',

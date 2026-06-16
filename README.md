@@ -69,6 +69,7 @@ Both are set in Vercel → Project Settings → Environment Variables. Run `verc
 | TEA PEIMS enrollment | `npx tsx scripts/import-tea.ts` | Annually (after ~March release) | Jolie |
 | TDC population projections | `npx tsx scripts/import-tdc.ts` | Every ~2 years (new vintage) | Jolie |
 | LEHD LODES commute corridors | `npx tsx scripts/import-lodes.ts` | Annually (after ~Dec release) | Jolie |
+| HUD USPS address momentum | `npx tsx scripts/import-hud-usps.ts` | Quarterly (manual download) | Jolie |
 | Attendee density | Admin upload page | After each Rock RMS export | Jolie |
 
 ### Census ACS + CBP (~8 min for all 370 ZIPs)
@@ -148,6 +149,28 @@ Notes:
 - Source files are cached to `data/lodes-*.csv.gz` (gitignored, ~80 MB) so re-runs skip the download. Delete them to force a fresh fetch.
 - When a newer LODES vintage lands, bump `YEAR` at the top of the script.
 - `data/dfw-zip-centroids.json` **is** committed (small runtime asset read by `/api/commute`); the `.gz` caches are **not**.
+
+### HUD USPS address momentum (quarterly, manual download — [HUMAN] gated)
+
+The active-residential-address count comes from **HUD's Aggregated USPS Administrative Data on Address Vacancies** — a licensed dataset restricted to government and non-profit organizations. It is a manual quarterly download, **not** an API. (The free HUD-USPS crosswalk API returns allocation ratios only, not raw address counts, so it can't produce this signal.)
+
+One-time registration:
+
+1. Go to **https://www.huduser.gov/portal/datasets/usps.html** → **Login** → **Register Here**.
+2. Accept the license agreement (Lakepointe qualifies as a 501(c)(3) non-profit). Confirm via HUD's email.
+
+Each quarter:
+
+3. Log in, use the **year + quarter** dropdowns, and download the **ZIP-code** summary level. Grab the most recent **5+ consecutive quarters** the first time (5 are needed for a trailing-4-quarter change).
+   - If only **Census Tract** level is offered, download that and tell Claude — we'll allocate to ZIPs via the HUD crosswalk API (separate free token at https://www.huduser.gov/hudapi/public/login).
+4. Save each file as `data/hud-usps-YYYYqQ.csv` (e.g. `data/hud-usps-2026q1.csv`). These are **gitignored** (licensed data — never committed).
+5. Run the import:
+
+```bash
+npx tsx scripts/import-hud-usps.ts          # add DRY_RUN=1 to preview
+```
+
+The script self-verifies columns: if HUD's headers don't match the expected field names it prints the file's actual headers and stops (no blind load) — send those to Claude to finalize the one-line column mapping. Once loaded, the **Address Momentum** panel appears on the Demographics page.
 
 ---
 
