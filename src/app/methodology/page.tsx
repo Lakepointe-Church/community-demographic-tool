@@ -411,10 +411,31 @@ export default function MethodologyPage() {
             </div>
           </div>
 
+          {/* IRS SOI Giving Capacity */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.5 · Giving Capacity (IRS SOI)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'IRS Statistics of Income (SOI) Individual Income Tax Statistics — ZIP Code Data, Tax Year 2022 (the latest release). File 22zpallagi.csv, downloaded directly from irs.gov/pub/irs-soi (no key). Import script: scripts/import-soi.ts (re-run annually).' },
+                { label: 'Geography', definition: 'True USPS ZIP codes (not ZCTA approximations). The file reports one row per ZIP per AGI size class (6 brackets); the importer sums the brackets to a per-ZIP total. 344 of 370 DFW ZIPs have data — the IRS suppresses or aggregates ZIPs with too few returns to protect taxpayer privacy.' },
+                { label: 'Metrics', definition: 'Avg gift per giving return = total charitable contributions (A19700) ÷ returns that claimed a charitable deduction (N19700). Charitable share of AGI = A19700 ÷ total AGI (A00100). Itemizer rate = returns itemizing (N04470) ÷ all returns (N1). All amounts are reported by the IRS in thousands of dollars; counts are rounded to the nearest 10.' },
+                { label: 'TCJA caveat (important)', definition: 'The 2017 Tax Cuts and Jobs Act roughly doubled the standard deduction, so post-2017 only ~10% of filers itemize — and charitable contributions are only visible on the return when a filer itemizes. This means SOI charitable data captures a minority of giving and skews heavily toward higher-income households who still itemize. It is a RELATIVE generosity signal between ZIPs, never a measure of total giving, and the itemizer rate is shown alongside it so the skew is visible.' },
+                { label: 'Scoring use', definition: 'Currently context/display only on the Demographics page. Adding it to the Site Scorer as a "generosity/capacity" weight is a deliberate scoring-model change reserved for a [HUMAN] decision (per the scoring-governance rules — max ~8 signals, each must name the decision it informs).' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
           {/* HUD USPS Address Momentum */}
           <div>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
-              5.5 · Address Momentum (HUD USPS) · pending data load
+              5.6 · Address Momentum (HUD USPS) · pending data load
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {[
@@ -795,6 +816,10 @@ const LIMITATIONS = [
   {
     source: 'Texas Demographic Center Projections',
     limitation: 'Projections use the mid-migration scenario from TDC Vintage 2024. They are county-level only and cannot be disaggregated to ZIP codes. Projections become less reliable further from the base year — the 2040 figure has substantially more uncertainty than the 2030 figure. Projections do not account for economic shocks, major policy changes, or unforeseen demographic shifts. The platform uses these figures for context only; they are not incorporated into the Site Scorer.',
+  },
+  {
+    source: 'IRS SOI — Giving Capacity',
+    limitation: 'Charitable contributions are only reported when a filer itemizes deductions, and after the 2017 TCJA roughly doubled the standard deduction, only ~10% of filers itemize. The data therefore captures a minority of actual giving and skews toward higher-income households — it is a relative signal between ZIPs, not a giving total, and the itemizer rate is shown alongside it. The IRS rounds counts to the nearest 10 and suppresses/aggregates small ZIPs (344 of 370 DFW ZIPs have data). In low-population ZIPs the "average gift per giving return" can be dominated by a handful of very large donors and is volatile year to year. Tax Year 2022 is the latest release (data lags ~2–3 years). Context tier only; not currently a Site Scorer input.',
   },
   {
     source: 'HUD USPS — Address Momentum',

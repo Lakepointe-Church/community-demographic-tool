@@ -495,6 +495,22 @@ interface CommuteData {
   corridors?: { zip: string; label: string; jobs: number; highEarnerJobs: number; highPct: number }[]
 }
 
+// ── Types for Giving Capacity (IRS SOI, Phase 4.4) ──────────────
+interface GivingCapacity {
+  available: boolean
+  zip: string
+  year?: number
+  totalReturns?: number
+  itemizerRate?: number | null
+  charitableReturns?: number
+  givingReturnRate?: number | null
+  avgGiftPerGivingReturn?: number | null
+  charitablePerFiler?: number | null
+  charitablePctAgi?: number | null
+  avgAgiPerReturn?: number | null
+  totalCharitable?: number
+}
+
 // ── Types for Address Momentum (HUD USPS, Phase 4.1) ────────────
 interface AddressMomentum {
   available: boolean
@@ -518,6 +534,7 @@ export default function DemographicsPage() {
   const [leadingLoading, setLeadingLoading] = useState(true)
   const [commute, setCommute] = useState<CommuteData | null>(null)
   const [addressMomentum, setAddressMomentum] = useState<AddressMomentum | null>(null)
+  const [giving, setGiving] = useState<GivingCapacity | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -550,6 +567,14 @@ export default function DemographicsPage() {
     fetch(`/api/address-momentum?zip=${selectedZip}`)
       .then(r => r.json())
       .then(d => { if (!d.error) setAddressMomentum(d) })
+      .catch(() => {})
+  }, [selectedZip])
+
+  useEffect(() => {
+    setGiving(null)
+    fetch(`/api/giving?zip=${selectedZip}`)
+      .then(r => r.json())
+      .then(d => { if (!d.error) setGiving(d) })
       .catch(() => {})
   }, [selectedZip])
 
@@ -1074,6 +1099,67 @@ export default function DemographicsPage() {
                 )}
                 </>
               )}
+            </div>
+          )}
+
+          {/* Giving Capacity — IRS SOI (Phase 4.4); renders only when the ZIP has SOI data */}
+          {giving?.available && (
+            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+              <SectionHeader
+                eyebrow={`Charitable Giving · IRS SOI ${giving.year}`}
+                title="Giving Capacity"
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {/* Avg gift per giving return */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#E8B84B', lineHeight: 1 }}>
+                    {giving.avgGiftPerGivingReturn != null ? `$${giving.avgGiftPerGivingReturn.toLocaleString()}` : '—'}
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Avg gift · giving return
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    {giving.charitableReturns?.toLocaleString()} returns claimed charity
+                  </div>
+                </div>
+
+                {/* Charitable share of AGI */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#2DD4BF', lineHeight: 1 }}>
+                      {giving.charitablePctAgi != null ? giving.charitablePctAgi.toFixed(2) : '—'}
+                    </span>
+                    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#2DD4BF' }}>%</span>
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Charitable share of AGI
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    {giving.totalCharitable != null ? `$${(giving.totalCharitable / 1e6).toFixed(1)}M total` : ''}
+                  </div>
+                </div>
+
+                {/* Itemizer rate (the caveat metric) */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#A78BFA', lineHeight: 1 }}>
+                      {giving.itemizerRate != null ? giving.itemizerRate.toFixed(1) : '—'}
+                    </span>
+                    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#A78BFA' }}>%</span>
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Filers who itemize
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    {giving.avgAgiPerReturn != null ? `$${giving.avgAgiPerReturn.toLocaleString()} avg AGI` : ''}
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px', lineHeight: 1.6 }}>
+                IRS SOI ZIP-code data · {giving.year} · charitable deductions on Schedule A. Post-2017 TCJA only ~{giving.itemizerRate != null ? giving.itemizerRate.toFixed(0) : '10'}% of filers here itemize, so deductions undercount true giving and skew toward higher-income households — read as a <span style={{ color: '#8A98AE' }}>relative</span> generosity signal, not a giving total. Counts rounded to nearest 10; small ZIPs are volatile.
+              </div>
             </div>
           )}
 

@@ -69,6 +69,7 @@ Both are set in Vercel → Project Settings → Environment Variables. Run `verc
 | TEA PEIMS enrollment | `npx tsx scripts/import-tea.ts` | Annually (after ~March release) | Jolie |
 | TDC population projections | `npx tsx scripts/import-tdc.ts` | Every ~2 years (new vintage) | Jolie |
 | LEHD LODES commute corridors | `npx tsx scripts/import-lodes.ts` | Annually (after ~Dec release) | Jolie |
+| IRS SOI ZIP income (giving) | `npx tsx scripts/import-soi.ts` | Annually (new tax year ~Q1) | Jolie |
 | HUD USPS address momentum | `npx tsx scripts/import-hud-usps.ts` | Quarterly (manual download) | Jolie |
 | Attendee density | Admin upload page | After each Rock RMS export | Jolie |
 
@@ -149,6 +150,19 @@ Notes:
 - Source files are cached to `data/lodes-*.csv.gz` (gitignored, ~80 MB) so re-runs skip the download. Delete them to force a fresh fetch.
 - When a newer LODES vintage lands, bump `YEAR` at the top of the script.
 - `data/dfw-zip-centroids.json` **is** committed (small runtime asset read by `/api/commute`); the `.gz` caches are **not**.
+
+### IRS SOI ZIP income / giving capacity (annual)
+
+Fully automated — fetches the latest ZIP-code file directly from the IRS (no key) and aggregates charitable-giving + income metrics per DFW ZIP into `zip_income_soi`.
+
+```bash
+npx tsx scripts/import-soi.ts          # add DRY_RUN=1 to preview
+```
+
+Notes:
+- Source file is cached to `data/soi-zpallagi-YYYY.csv` (gitignored, ~200 MB). Delete it to force a fresh fetch.
+- When a new tax year is released (~Q1, ~2–3 year lag), bump `YEAR` / `URL` / `LOCAL` at the top of the script.
+- Charitable data only reflects itemizers (~10% of filers post-TCJA) — a *relative* signal, paired with the itemizer rate. See methodology §5.5.
 
 ### HUD USPS address momentum (quarterly, manual download — [HUMAN] gated)
 

@@ -205,6 +205,22 @@ export async function POST(req: NextRequest) {
     await sql`CREATE INDEX IF NOT EXISTS idx_commute_flows_home ON commute_flows(home_zip, year)`
 
     // Per-home-ZIP commute headline metrics (computed over the full OD set, not just stored top corridors)
+    // IRS SOI ZIP-level income — giving capacity / generosity signal (Phase 4.4)
+    // Amounts are in $1000s (IRS convention). Summed across the 6 AGI brackets per ZIP.
+    await sql`
+      CREATE TABLE IF NOT EXISTS zip_income_soi (
+        zip                TEXT NOT NULL,
+        year               INTEGER NOT NULL,
+        total_returns      INTEGER,
+        agi_total          BIGINT,
+        itemizing_returns  INTEGER,
+        charitable_returns INTEGER,
+        charitable_amount  BIGINT,
+        updated_at         TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (zip, year)
+      )
+    `
+
     // HUD Aggregated USPS address counts — quarterly residential address momentum (Phase 4.1)
     // res_active is the spec's core field; total/vacant/no-stat are stored when the file provides them.
     await sql`

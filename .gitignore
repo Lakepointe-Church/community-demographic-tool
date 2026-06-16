@@ -45,3 +45,6 @@ data/lodes-*.csv.gz
 
 # HUD USPS address vacancy downloads (licensed dataset, gov/nonprofit only — do not commit)
 data/hud-usps-*.csv
+
+# IRS SOI ZIP income source cache (~200 MB; re-fetched by scripts/import-soi.ts)
+data/soi-zpallagi-*.csv
