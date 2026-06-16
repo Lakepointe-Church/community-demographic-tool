@@ -10,7 +10,8 @@ const MapboxChoropleth = lazy(() => import('@/components/MapboxChoropleth'))
 
 const DRIVE_MINUTES_OPTIONS = [15, 20, 30]
 
-const CAMPUS_PALETTE = ['#4EAEFF','#2DD4BF','#A78BFA','#FF6B6B','#86EFAC','#FB923C','#F472B6','#FACC15']
+// Avoid #4EAEFF (map Growing), #2DD4BF (map Rapid Growth), #FF6B6B (map Declining)
+const CAMPUS_PALETTE = ['#E8B84B','#FB923C','#A78BFA','#F472B6','#FACC15','#E879F9','#FCD34D','#4ADE80']
 
 interface ZipRow {
   zip: string
