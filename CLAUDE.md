@@ -11,14 +11,15 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 ### Pages (all live)
 | Route | Status | Description |
 |---|---|---|
-| `/` | ✅ | Overview: aggregate stats, Mapbox choropleth growth map (campus markers, isochrone controls, attendee overlay toggle, candidate-pin drop mode), age/income charts, growth table. When attendee overlay is on: circles colored by primary campus (warm palette, avoids map zone colors), hover tooltip (campus + HH), click popup with full campus breakdown table, Campus Draw Areas panel below map (bar chart of HH per campus + top ZIPs per campus). **Phase 2.2 extended:** campus rows are clickable filter toggles (click = solo that campus's circles; click again = restore all; "Show all" reset button); Underserved Clusters table (growing ZIPs with low Lakepointe penetration, ranked by growth÷penetration); Cannibalization check in isochrone stats bar (attendee HH within candidate pin's drive polygon, computed via ray-casting on ZCTA centroids) |
+| `/` | ✅ | Overview: aggregate stats, **Phase 3.3 insights panel** (top-3 opportunity cards with fit score, percentile, top drivers — loads from `/api/site-scorer` with default weights; existing campus ZIPs excluded from ranking), Mapbox choropleth growth map (campus markers, isochrone controls, attendee overlay toggle, candidate-pin drop mode), age/income charts, growth table. When attendee overlay is on: circles colored by primary campus (warm palette, avoids map zone colors), hover tooltip (campus + HH), click popup with full campus breakdown table, Campus Draw Areas panel below map (bar chart of HH per campus + top ZIPs per campus). **Phase 2.2 extended:** campus rows are clickable filter toggles (click = solo that campus's circles; click again = restore all; "Show all" reset button); Underserved Clusters table (growing ZIPs with low Lakepointe penetration, ranked by growth÷penetration); Cannibalization check in isochrone stats bar (attendee HH within candidate pin's drive polygon, computed via ray-casting on ZCTA centroids) |
 | `/demographics` | ✅ | Per-ZIP: 8 stat cards + Dual-Earner HH + Long Commute cards, YFI/WFI indexes, race donut, education bars, age bars, household type donut, college scorecard |
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | ✅ | SES tier breakdown: 4 stat cards, distribution bar chart, scatter plot (SES score vs income), filterable/sortable table with ZIP/Class/HHI/Bachelor+/Mgmt+Prof/Unemployment/Trend |
 | `/religious` | ✅ | DFW religious landscape: stat cards, faith distribution bar, top Islamic ZIPs table, county comparison (Islamic vs Christian BMF), 2020 Religion Census county adherence panel (Unclaimed/tradition breakdown, ESTIMATE-labeled), **ACS proxy layer** (PROXY-labeled ranked list: foreign-born from 20 Muslim-majority countries + Arabic speakers, per-1K, sortable, caveat callout with Iraq/Egypt/Syria flags), per-ZIP org breakdown, Islamic org panel |
 | `/employers` | ✅ | Census CBP 2022: ZIP dropdown top-right (DFW metro default), industry mix + avg wage by sector side-by-side, top ZIPs grid; per-ZIP: donut + size distribution + sector wages |
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
-| `/site-scorer` | ✅ | Full Site Scorer: **6** adjustable weight sliders (YFI/WFI/SES/Growth/Saturation/**Enrollment Growth**) with Normalize + Reset, opportunity quadrant scatter, top-10 sidebar, sortable ranked table (incl. Enroll. column), CSV export, coverage toggle |
+| `/site-scorer` | ✅ | Full Site Scorer: **7** adjustable weight sliders (YFI/WFI/SES/Growth/Saturation/Enrollment/**Distance penalty at 0**) with Normalize + Reset + **3 preset buttons** (Balanced/Young Families/Underserved), **weights encoded in URL** (shareable scenarios), **⎘ Copy Link** button, opportunity quadrant scatter (existing campus ZIPs ringed gold), top-10 sidebar with percentile + top-2 drivers, sortable ranked table with **percentile column** + campus highlighting (gold border), CSV export, coverage toggle. Footer link to `/admin/decisions`. |
+| `/admin/decisions` | ✅ | Decision log: form to record a site decision (ZIP, name, notes — scenario URL auto-captured); history table with date/ZIP/score/notes/scenario link. Accessible at `/admin/decisions`. |
 | `/methodology` | ✅ | Static data dictionary: all 13 sources (incl. BPS/TEA/TDC Phase 5), SES scoring, YFI/WFI weights, Site Scorer weights (6 sliders) + normalization formulas, Phase 5 leading indicators section, church saturation index, ASARB methodology, per-metric definitions, known limitations |
 | `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
@@ -63,6 +64,7 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
   /api/boundaries              ← ZCTA polygon GeoJSON from TIGERweb (24hr cache)
   /api/attendee-density        ← GET: privacy-masked counts + penetrationPct + attendeesPer1kUnclaimed + primaryCampus + lastUpload metadata (joins zip_demographics + religious_adherence); POST: csv-parse CSV upload with DFW-only filter + skip report; DELETE: truncate
   /api/isochrone               ← Mapbox Isochrone API proxy; ?lng=&lat=&minutes=&profile= (6hr in-memory cache)
+  /api/decisions               ← GET: list decision log entries (100 most recent); POST: create entry {zip, area, fitScore, scenarioUrl, notes, decidedBy}
         ↓
   Next.js pages (client components fetch on load)
 ```
@@ -107,6 +109,9 @@ PK: `(district_id, year)`. Index on `county`. 5 years of data (2020–2024).
 **`county_projections`** — one row per county, loaded via `scripts/import-tdc.ts`
 Columns: `fips` (PK), `county` (TEXT), `base_2020`, `proj_2025`, `proj_2030`, `proj_2035`, `proj_2040`, `proj_2050` (all INT), `updated_at`
 TDC Vintage 2024, mid-migration scenario, 23 DFW counties.
+
+**`decision_log`** — one row per logged site decision, written via `/admin/decisions`
+Columns: `id` (SERIAL PK), `zip` (TEXT NOT NULL), `area` (TEXT), `fit_score` (INT), `scenario_url` (TEXT), `notes` (TEXT), `decided_by` (TEXT), `logged_at` (TIMESTAMPTZ DEFAULT NOW())
 
 ## SES class scoring
 Composite 0–100 score: income (50%) + bachelor's rate (30%) + home value (20%)
@@ -198,7 +203,7 @@ Controls render:
   <option value="core">Core MSA · 11 counties</option>
   <option value="all">All ZIPs · Full coverage</option>
 </select>
-<button onClick={() => setRefreshKey(k => k + 1)} ...>↺ Refresh</button>
+<button onClick={() => setRefreshKey(k => k + 1)} ...>↺ Reload</button>
 ```
 
 ### ZCTA footnote
@@ -325,6 +330,8 @@ src/app/api/boundaries/route.ts        — ZCTA polygon GeoJSON from TIGERweb
 src/app/api/attendee-density/route.ts  — GET (privacy-masked counts + lastUpload metadata; auth via middleware) + POST (CSV upload; Bearer CRON_SECRET) + DELETE (truncate; Bearer CRON_SECRET)
 src/app/api/isochrone/route.ts         — Mapbox Isochrone API proxy; 6hr in-memory cache; ?lng=&lat=&minutes=&profile=
 src/app/admin/attendee-upload/page.tsx — Rock RMS upload UI: format docs, privacy callout, source date picker, file upload; result shows skip breakdown (online/outOfCoverage/invalidZip/invalidCount)
+src/app/admin/decisions/page.tsx       — Site decision log: form (ZIP, name, notes) + history table; auto-captures scenario URL from current Site Scorer state
+src/app/api/decisions/route.ts         — GET (last 100 decisions DESC) + POST (insert; validates 5-digit ZIP)
 src/app/admin/layout.tsx               — Passthrough layout for /admin/* routes; middleware handles auth
 src/middleware.ts                      — Site-wide Basic auth (BASIC_AUTH_USER/BASIC_AUTH_PASS) + Bearer CRON_SECRET for automation; noindex via next.config.ts headers
 scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS publishes monthly)
@@ -375,7 +382,7 @@ README.md                              — Full operator runbook: local setup, e
   - **2.2 core** ✅ — Penetration metrics: GET joins zip_demographics (census HH) + religious_adherence (county unclaimed) to add penetrationPct, attendeesPer1kUnclaimed, primaryCampus. Map circles colored by primary campus (warm palette). Hover + click popups. Campus Draw Areas panel on Overview page.
   - **2.2 extended** ✅ — Campus draw areas as map filter toggle (click row to isolate campus circles on map; "Show all" reset), underserved clusters table (growing ZIPs with low penetration ranked by growth÷penetration), cannibalization check (existing attendee HH within candidate pin's isochrone shown in isochrone bar)
   - **2.3** ✅ — Upload runbook in README: Rock RMS export procedure, expected columns, upload steps, privacy rules, DB-only policy, environment/DB mapping, reset procedure
-- **Spec v2 Phase 3** ⏳ — Executive decision layer: shareable scenario URLs, score percentile anchoring, insights panel, distance-to-campus slider, Vercel Analytics, boardroom UX improvements
+- **Spec v2 Phase 3** ✅ — Executive decision layer: shareable scenario URLs (weights encoded in URL, Copy Link button), score percentile anchoring (top X% in sidebar + table), top-3 insights panel on Overview page (fit score + top drivers), distance-to-campus slider (weight 0 reserved; slot built), Vercel Analytics (`@vercel/analytics/next` in root layout), preset weights (Balanced/Young Families/Underserved), campus highlights on scatter + table, decision log (`decision_log` table + `/api/decisions` + `/admin/decisions`)
 - **Spec v2 Phase 4** ⏳ — New data sources: HUD/USPS address counts, BPS place-level, TEA campus-level, IRS SOI, LEHD LODES, Zillow ZHVI, Google Places (shortlist only)
 
 ## Planned next data sources (ordered by priority)
@@ -411,11 +418,15 @@ PRRI, ARDA, Zillow, Data Axle, MissionInsite, County Appraisal Districts, NCTCOG
 - 40% dual-earner rate (/40%), 25% HH with children (/50%), 20% commute burden inverse (100−commute30+%), 15% bachelor's rate proxy (/50%)
 
 **Lakepointe Fit Score** ✅ live on `/site-scorer`
-- Default weights: YFI 23% · WFI 23% · SES 18% · Population Growth 14% · Church Saturation Opportunity 12% · **School Enrollment Growth 10%**
-- User-adjustable via sliders; Normalize button snaps to 100%; all weights documented at `/methodology#site-scorer`
+- Default weights: YFI 23% · WFI 23% · SES 18% · Population Growth 14% · Church Saturation Opportunity 12% · **School Enrollment Growth 10%** · Distance Penalty **0%** (reserved)
+- User-adjustable via **7 sliders** (including distance at 0); 3 presets (Balanced / Young Families / Underserved); Normalize button snaps to 100%; Copy Link encodes current weights into the URL for sharing; all weights documented at `/methodology#site-scorer`
 - Church Saturation Opportunity = 100 − min(100, churches/10K / 30 × 100) — inverts BMF Christian org density so low saturation = high score
 - School Enrollment Growth = county ISD CAGR (TEA PEIMS) × 12, capped 0–100; shows "—" until TEA data loaded (graceful degradation)
-- **Null growth handling**: ZIPs with `populationGrowth = null` (ZCTA boundary splits or missing 2020 data) have their growth weight redistributed proportionally across the other 5 components — they are not penalized with a 0. Growth column shows "—" with hover tooltip.
+- Distance Penalty slider reserved at weight 0 — no campus centroid data yet; UI slot exists so the weight can be activated without a redesign
+- **Null growth handling**: ZIPs with `populationGrowth = null` (ZCTA boundary splits or missing 2020 data) have their growth weight redistributed proportionally across the other 5 active components — they are not penalized with a 0. Growth column shows "—" with hover tooltip.
+- **Percentile anchoring**: each ZIP's rank / total shown as "top X%" in the top-10 sidebar and ranked table
+- **Campus highlights**: existing campus ZIPs get a gold ring on the scatter chart and a gold left-border row in the ranked table
+- **Decision log link** in footer → `/admin/decisions`
 
 ## Notion tracker
 Full task tracker (ordered by priority): https://www.notion.so/e94e55e73b55430bb9646e37600e4998

@@ -473,6 +473,11 @@ interface LeadingIndicators {
     proj2030?: number | null
     proj2040?: number | null
   }
+  placesPermits: {
+    available: boolean
+    year: number | null
+    top: { name: string; sfPermits: number; mfPermits: number; totalPermits: number; yoyPct: number | null }[]
+  }
 }
 
 // ── Page ─────────────────────────────────────────────────────────
@@ -834,6 +839,7 @@ export default function DemographicsPage() {
               )}
 
               {!leadingLoading && leadingIndicators && (
+                <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
 
                   {/* Building Permits */}
@@ -972,6 +978,56 @@ export default function DemographicsPage() {
                   </div>
 
                 </div>
+
+                {/* Place-level Permit Breakdown */}
+                {leadingIndicators.placesPermits.available && leadingIndicators.placesPermits.top.length > 0 && (
+                  <div style={{ marginTop: '16px', border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                      Top Cities by Permits · {leadingIndicators.county} County · {leadingIndicators.placesPermits.year}
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                      {(() => {
+                        const maxTotal = Math.max(...leadingIndicators.placesPermits.top.map(p => p.totalPermits))
+                        return leadingIndicators.placesPermits.top.map(place => {
+                          const pct = maxTotal > 0 ? (place.totalPermits / maxTotal) * 100 : 0
+                          return (
+                            <div key={place.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{ width: '130px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                                {place.name}
+                              </div>
+                              <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'linear-gradient(90deg,#E8B84B,#E8B84B50)' }} />
+                              </div>
+                              <div style={{ width: '50px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#E8B84B', fontWeight: 600 }}>
+                                {place.totalPermits.toLocaleString()}
+                              </div>
+                              {place.yoyPct != null && (
+                                <div style={{ width: '48px', flexShrink: 0, fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: place.yoyPct >= 0 ? '#2DD4BF' : '#FF6B6B' }}>
+                                  {place.yoyPct >= 0 ? '+' : ''}{place.yoyPct.toFixed(0)}%
+                                </div>
+                              )}
+                            </div>
+                          )
+                        })
+                      })()}
+                    </div>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '10px' }}>
+                      Census BPS · Place-level · SF + MF units authorized
+                    </div>
+                  </div>
+                )}
+                {!leadingIndicators.placesPermits.available && (
+                  <div style={{ marginTop: '16px', border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '8px' }}>
+                      City-level Permits
+                    </div>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#3d4a5c' }}>
+                      Not loaded yet — run<br />
+                      <code style={{ color: '#5a6478' }}>scripts/import-bps-places.ts</code>
+                    </div>
+                  </div>
+                )}
+                </>
               )}
             </div>
           )}

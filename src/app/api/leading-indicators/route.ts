@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   if (!county) return NextResponse.json({ error: `No county mapping for ZIP ${zip}` }, { status: 404 })
 
   try {
-    const [permitRows, enrollmentRows, projectionRows] = await Promise.all([
+    const [permitRows, enrollmentRows, projectionRows, placeRows] = await Promise.all([
       sql`
         SELECT year, sf_permits, mf_permits, total_permits
         FROM county_permits
@@ -42,6 +42,12 @@ export async function GET(req: NextRequest) {
         FROM county_projections
         WHERE county = ${county}
         LIMIT 1
+      `,
+      sql`
+        SELECT place_name, year, sf_permits, mf_permits, total_permits
+        FROM place_permits
+        WHERE county = ${county}
+        ORDER BY year DESC, total_permits DESC
       `,
     ])
 
@@ -84,6 +90,40 @@ export async function GET(req: NextRequest) {
 
     const projection = projectionRows[0] ?? null
 
+    // Place permits: group by place, keep two most recent years for YoY
+    const placesByName: Record<string, { year: number; sf: number; mf: number; total: number }[]> = {}
+    for (const r of placeRows) {
+      const name = r.place_name as string
+      if (!placesByName[name]) placesByName[name] = []
+      placesByName[name].push({
+        year: r.year as number,
+        sf: r.sf_permits as number,
+        mf: r.mf_permits as number,
+        total: r.total_permits as number,
+      })
+    }
+
+    // Identify the most recent year present
+    const allYears = placeRows.map(r => r.year as number)
+    const latestYear = allYears.length > 0 ? Math.max(...allYears) : null
+
+    // Build top-10 list for most recent year, including YoY delta if prior year exists
+    const placeSummary = latestYear
+      ? Object.entries(placesByName)
+          .map(([name, years]) => {
+            const latest = years.find(y => y.year === latestYear)
+            const prior  = years.find(y => y.year === latestYear - 1)
+            if (!latest) return null
+            const yoyPct = prior && prior.total > 0
+              ? parseFloat((((latest.total - prior.total) / prior.total) * 100).toFixed(1))
+              : null
+            return { name, year: latestYear, sfPermits: latest.sf, mfPermits: latest.mf, totalPermits: latest.total, yoyPct }
+          })
+          .filter(Boolean)
+          .sort((a, b) => b!.totalPermits - a!.totalPermits)
+          .slice(0, 10)
+      : []
+
     return NextResponse.json({
       county,
       permits: {
@@ -107,6 +147,11 @@ export async function GET(req: NextRequest) {
             proj2050:  projection.proj_2050  ? parseInt(projection.proj_2050)  : null,
           }
         : { available: false },
+      placesPermits: {
+        available: placeSummary.length > 0,
+        year: latestYear,
+        top: placeSummary,
+      },
     })
   } catch (error) {
     console.error('Leading indicators error:', error)

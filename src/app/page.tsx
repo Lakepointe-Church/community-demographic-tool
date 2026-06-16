@@ -331,7 +331,8 @@ export default function OverviewPage() {
             ...z,
             fitScore: _ssFitScore({ yfi: z.yfi, wfi: z.wfi, sesScore: z.sesScore, churchesPer10k: z.churchesPer10k, populationGrowth: z.populationGrowth, enrollmentGrowthScore: z.enrollmentGrowthScore }),
           }))
-        const byScore = [...scored].sort((a, b) => b.fitScore - a.fitScore)
+        const existingCampusZips = new Set(CAMPUSES.filter(c => c.status === 'existing').map(c => c.zip))
+        const byScore = [...scored].sort((a, b) => b.fitScore - a.fitScore).filter(z => !existingCampusZips.has(z.zip))
         const total = byScore.length
         const top3: InsightEntry[] = byScore.slice(0, 3).map((z, i) => {
           const [d1, d2] = _ssTopDrivers({ yfi: z.yfi, wfi: z.wfi, sesScore: z.sesScore, churchesPer10k: z.churchesPer10k, populationGrowth: z.populationGrowth, enrollmentGrowthScore: z.enrollmentGrowthScore })

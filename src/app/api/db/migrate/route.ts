@@ -161,6 +161,23 @@ export async function POST(req: NextRequest) {
     `
 
     await sql`
+      CREATE TABLE IF NOT EXISTS place_permits (
+        state_fips    TEXT NOT NULL,
+        place_fips    TEXT NOT NULL,
+        place_name    TEXT NOT NULL,
+        county_fips   TEXT NOT NULL,
+        county        TEXT NOT NULL,
+        year          INT  NOT NULL,
+        sf_permits    INT  NOT NULL DEFAULT 0,
+        mf_permits    INT  NOT NULL DEFAULT 0,
+        total_permits INT  NOT NULL DEFAULT 0,
+        updated_at    TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (state_fips, place_fips, year)
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS idx_place_permits_county_year ON place_permits(county, year)`
+
+    await sql`
       CREATE TABLE IF NOT EXISTS decision_log (
         id           SERIAL PRIMARY KEY,
         zip          TEXT NOT NULL,
