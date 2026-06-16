@@ -13,20 +13,27 @@ interface ZipRow {
 }
 
 export interface AttendeeZip {
-  zip: string
-  households: number  // -1 = suppressed (<5 households)
+  zip:                      string
+  households:               number   // -1 = suppressed (<5 households)
+  censusHH?:                number | null
+  penetrationPct?:          number | null
+  county?:                  string | null
+  attendeesPer1kUnclaimed?: number | null
+  campusBreakdown?:         Record<string, number> | null
+  primaryCampus?:           string | null
 }
 
 interface Props {
-  zipData:          ZipRow[]
-  loading:          boolean
-  campuses?:        CampusInfo[]
-  attendeeData?:    AttendeeZip[]
-  showAttendees?:   boolean
+  zipData:           ZipRow[]
+  loading:           boolean
+  campuses?:         CampusInfo[]
+  attendeeData?:     AttendeeZip[]
+  showAttendees?:    boolean
+  campusColorMap?:   Record<string, string>   // campus name → hex color
   isochroneGeoJson?: GeoJSON.FeatureCollection | null
   isochroneMinutes?: number
-  candidatePin?:    { lng: number; lat: number } | null
-  onMapClick?:      (coords: { lng: number; lat: number }) => void
+  candidatePin?:     { lng: number; lat: number } | null
+  onMapClick?:       (coords: { lng: number; lat: number }) => void
 }
 
 function growthColor(g: number | null): string {
@@ -54,9 +61,10 @@ function computeCentroid(geometry: GeoJSON.Geometry): [number, number] | null {
 export default function MapboxChoropleth({
   zipData,
   loading,
-  campuses       = [],
-  attendeeData   = [],
-  showAttendees  = false,
+  campuses        = [],
+  attendeeData    = [],
+  showAttendees   = false,
+  campusColorMap  = {},
   isochroneGeoJson = null,
   isochroneMinutes,
   candidatePin   = null,
@@ -210,10 +218,12 @@ export default function MapboxChoropleth({
           type:   'circle',
           source: 'attendees',
           paint:  {
-            'circle-color':       '#E8B84B',
-            'circle-opacity':     0.75,
-            'circle-stroke-color': '#E8B84B',
-            'circle-stroke-width': 1,
+            // campusColor is pre-computed per feature from the campusColorMap prop
+            'circle-color':        ['coalesce', ['get', 'campusColor'], '#E8B84B'],
+            'circle-opacity':      0.82,
+            'circle-stroke-color': ['coalesce', ['get', 'campusColor'], '#E8B84B'],
+            'circle-stroke-width': 1.5,
+            'circle-stroke-opacity': 1,
             'circle-radius': [
               'interpolate', ['linear'], ['get', 'households'],
               5, 6, 50, 14, 200, 28, 500, 44,
@@ -274,8 +284,82 @@ export default function MapboxChoropleth({
           }
         })
 
-        // ── Click-to-drop pin ─────────────────────────────────────────────────
+        // ── Attendee circle popup ─────────────────────────────────────────────
+        const attendeePopup = new mapboxgl.Popup({
+          closeButton: false,
+          closeOnClick: false,
+          className: 'cip-popup',
+        })
+
+        // Hover: quick summary (campus name + count)
+        map.on('mousemove', 'attendee-circles', (e) => {
+          if (!e.features?.length) return
+          map.getCanvas().style.cursor = 'pointer'
+          const p      = e.features[0].properties as Record<string, unknown>
+          const campus = p.primaryCampus ? String(p.primaryCampus) : null
+          const color  = p.campusColor   ? String(p.campusColor)   : '#E8B84B'
+          attendeePopup.setLngLat(e.lngLat).setHTML(`
+            <div style="font-family:'IBM Plex Mono',monospace;min-width:160px">
+              <div style="font-size:12px;color:#F0F2F7;font-weight:600;margin-bottom:4px">${p.label ?? p.zip}</div>
+              <div style="font-size:10px;color:#8A98AE;margin-bottom:6px">${p.zip}</div>
+              <div style="font-size:10px;color:#C8D4E4;margin-bottom:3px">${Number(p.households).toLocaleString()} attendee households</div>
+              ${campus ? `<div style="font-size:10px;color:${color};margin-top:4px">Primary: ${campus}</div>` : ''}
+              <div style="font-size:9px;color:#5a6478;margin-top:6px">Click for campus breakdown</div>
+            </div>
+          `).addTo(map)
+        })
+
+        map.on('mouseleave', 'attendee-circles', () => {
+          map.getCanvas().style.cursor = ''
+          attendeePopup.remove()
+        })
+
+        // Click: full campus breakdown popup (persistent, has close button)
+        const clickPopup = new mapboxgl.Popup({
+          closeButton:  true,
+          closeOnClick: false,
+          className:    'cip-popup',
+          maxWidth:     '260px',
+        })
+
+        let circleClicked = false
+
+        map.on('click', 'attendee-circles', (e) => {
+          if (!e.features?.length) return
+          circleClicked = true
+          attendeePopup.remove()
+
+          const p = e.features[0].properties as Record<string, unknown>
+          const pct   = p.penetration != null ? `${Number(p.penetration).toFixed(2)}%` : null
+          const color = p.campusColor ? String(p.campusColor) : '#E8B84B'
+
+          // Parse campus breakdown (was JSON-stringified for GeoJSON storage)
+          let breakdownRows = ''
+          try {
+            const bd = JSON.parse(String(p.campusBreakdown ?? '{}')) as Record<string, number>
+            const sorted = Object.entries(bd).sort(([, a], [, b]) => b - a)
+            breakdownRows = sorted.map(([campus, hh]) => `
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
+                <span style="font-size:10px;color:#C8D4E4">${campus}</span>
+                <span style="font-size:10px;color:${color};font-weight:600">${hh.toLocaleString()} HH</span>
+              </div>
+            `).join('')
+          } catch { /* no breakdown */ }
+
+          clickPopup.setLngLat(e.lngLat).setHTML(`
+            <div style="font-family:'IBM Plex Mono',monospace;min-width:220px">
+              <div style="font-size:13px;color:#F0F2F7;font-weight:600;margin-bottom:2px">${p.label ?? p.zip}</div>
+              <div style="font-size:10px;color:#8A98AE;margin-bottom:12px">${p.zip}${pct ? ` · ${pct} of census HH` : ''}</div>
+              <div style="font-size:9px;letter-spacing:0.1em;color:#5a6478;text-transform:uppercase;margin-bottom:6px">Campus Attendance</div>
+              ${breakdownRows || `<div style="font-size:10px;color:#5a6478">No breakdown available</div>`}
+              <div style="margin-top:8px;font-size:11px;color:#E8B84B;font-weight:600">${Number(p.households).toLocaleString()} total households</div>
+            </div>
+          `).addTo(map)
+        })
+
+        // ── Click-to-drop pin (skip if circle was just clicked) ───────────────
         map.on('click', (e) => {
+          if (circleClicked) { circleClicked = false; return }
           onMapClick?.({ lng: e.lngLat.lng, lat: e.lngLat.lat })
         })
 
@@ -375,11 +459,13 @@ export default function MapboxChoropleth({
     if (!boundaryData?.features?.length) return
 
     const zctaCentroids: Record<string, [number, number]> = {}
+    const zctaLabels:    Record<string, string>            = {}
     for (const f of boundaryData.features) {
       const zcta = f.properties?.ZCTA5 as string
       if (!zcta || !f.geometry) continue
       const centroid = computeCentroid(f.geometry as GeoJSON.Geometry)
       if (centroid) zctaCentroids[zcta] = centroid
+      if (f.properties?.label) zctaLabels[zcta] = f.properties.label as string
     }
 
     const features: GeoJSON.Feature[] = attendeeData
@@ -387,16 +473,31 @@ export default function MapboxChoropleth({
       .map(a => {
         const coords = zctaCentroids[a.zip]
         if (!coords) return null
+        const campusColor = a.primaryCampus
+          ? (campusColorMap[a.primaryCampus] ?? '#E8B84B')
+          : '#E8B84B'
         return {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: coords },
-          properties: { zip: a.zip, households: a.households },
+          properties: {
+            zip:                     a.zip,
+            label:                   zctaLabels[a.zip] ?? a.zip,
+            households:              a.households,
+            penetration:             a.penetrationPct ?? null,
+            attendeesPer1kUnclaimed: a.attendeesPer1kUnclaimed ?? null,
+            primaryCampus:           a.primaryCampus ?? null,
+            campusColor,
+            // Stringify for GeoJSON property storage; parsed back in click handler
+            campusBreakdown:         a.campusBreakdown
+              ? JSON.stringify(a.campusBreakdown)
+              : null,
+          },
         } as GeoJSON.Feature
       })
       .filter(Boolean) as GeoJSON.Feature[]
 
     src.setData({ type: 'FeatureCollection', features })
-  }, [attendeeData, showAttendees])
+  }, [attendeeData, showAttendees, campusColorMap])
 
   // ── Candidate pin update ────────────────────────────────────────────────────
   useEffect(() => {

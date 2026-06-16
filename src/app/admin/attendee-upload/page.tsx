@@ -26,7 +26,7 @@ export default function AttendeeUploadPage() {
   const [file, setFile]               = useState<File | null>(null)
   const [sourceDate, setSourceDate]   = useState(new Date().toISOString().slice(0, 10))
   const [status, setStatus]           = useState<'idle' | 'uploading' | 'success' | 'error'>('idle')
-  const [result, setResult]           = useState<{ upserted?: number; totalHouseholds?: number; error?: string } | null>(null)
+  const [result, setResult]           = useState<{ upserted?: number; totalHouseholds?: number; error?: string; skipped?: { online: number; invalidZip: number; invalidCount: number; outOfCoverage: number } } | null>(null)
   const [lastUpload, setLastUpload]   = useState<UploadStatus>(undefined as unknown as UploadStatus)
   const [truncating, setTruncating]   = useState(false)
   const inputRef                      = useRef<HTMLInputElement>(null)
@@ -38,7 +38,7 @@ export default function AttendeeUploadPage() {
       .catch(() => setLastUpload(null))
   }, [])
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!file) return
     setStatus('uploading')
@@ -290,10 +290,36 @@ Mesquite,75150,31`}
             </>
           ) : (
             <>
-              <div style={{ ...MONO, fontSize: '11px', color: '#2DD4BF', marginBottom: '6px' }}>Upload Complete</div>
-              <div style={{ ...MONO, fontSize: '12px', color: '#C8D4E4' }}>
-                {result.upserted} ZIP{result.upserted !== 1 ? 's' : ''} · {result.totalHouseholds?.toLocaleString()} households upserted. The Overview map attendee overlay will reflect the new data.
+              <div style={{ ...MONO, fontSize: '11px', color: '#2DD4BF', marginBottom: '10px' }}>Upload Complete</div>
+              <div style={{ ...MONO, fontSize: '12px', color: '#C8D4E4', marginBottom: '12px' }}>
+                <span style={{ color: '#E8B84B' }}>{result.upserted} DFW ZIP{result.upserted !== 1 ? 's' : ''}</span>
+                {' · '}
+                <span style={{ color: '#2DD4BF' }}>{result.totalHouseholds?.toLocaleString()} households</span>
+                {' upserted. The Overview map attendee overlay will reflect the new data.'}
               </div>
+              {result.skipped && (
+                <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '10px' }}>
+                  <div style={{ ...MONO, fontSize: '9px', letterSpacing: '0.1em', color: '#5a6478', textTransform: 'uppercase', marginBottom: '8px' }}>
+                    Rows Skipped
+                  </div>
+                  <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                    {[
+                      { label: 'Online campus', count: result.skipped.online,        color: '#8A98AE' },
+                      { label: 'Out of DFW',   count: result.skipped.outOfCoverage, color: '#8A98AE' },
+                      { label: 'Invalid ZIP',   count: result.skipped.invalidZip,    color: '#FF6B6B' },
+                      { label: 'Invalid count', count: result.skipped.invalidCount,  color: '#FF6B6B' },
+                    ].map(({ label, count, color }) => count > 0 && (
+                      <div key={label} style={{ ...MONO, fontSize: '10px' }}>
+                        <span style={{ color }}>{count.toLocaleString()}</span>
+                        <span style={{ color: '#5a6478' }}> {label}</span>
+                      </div>
+                    ))}
+                    {Object.values(result.skipped).every(v => v === 0) && (
+                      <div style={{ ...MONO, fontSize: '10px', color: '#5a6478' }}>None — all rows processed</div>
+                    )}
+                  </div>
+                </div>
+              )}
             </>
           )}
         </div>

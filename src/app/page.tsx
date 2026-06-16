@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
 import { downloadCsv } from '@/lib/csv'
 import { CAMPUSES } from '@/lib/campuses'
 import { BOUNDARY_CHANGED } from '@/lib/zips'
@@ -9,6 +9,8 @@ import type { AttendeeZip } from '@/components/MapboxChoropleth'
 const MapboxChoropleth = lazy(() => import('@/components/MapboxChoropleth'))
 
 const DRIVE_MINUTES_OPTIONS = [15, 20, 30]
+
+const CAMPUS_PALETTE = ['#4EAEFF','#2DD4BF','#A78BFA','#FF6B6B','#86EFAC','#FB923C','#F472B6','#FACC15']
 
 interface ZipRow {
   zip: string
@@ -198,10 +200,22 @@ export default function OverviewPage() {
   const [refreshKey, setRefreshKey] = useState(0)
 
   // Phase 4.1 — attendee overlay
-  const [attendeeData, setAttendeeData]   = useState<AttendeeZip[]>([])
-  const [showAttendees, setShowAttendees] = useState(false)
+  const [attendeeData, setAttendeeData]     = useState<AttendeeZip[]>([])
+  const [showAttendees, setShowAttendees]   = useState(false)
   const [attendeeLoaded, setAttendeeLoaded] = useState(false)
   const [attendeeUploadDate, setAttendeeUploadDate] = useState<string | null>(null)
+
+  // Assign a stable color to each campus name (sorted for consistency across re-renders)
+  const campusColorMap = useMemo<Record<string, string>>(() => {
+    const names = new Set<string>()
+    for (const a of attendeeData) {
+      if (a.campusBreakdown) Object.keys(a.campusBreakdown).forEach(n => names.add(n))
+    }
+    const sorted = [...names].sort()
+    const map: Record<string, string> = {}
+    sorted.forEach((name, i) => { map[name] = CAMPUS_PALETTE[i % CAMPUS_PALETTE.length] })
+    return map
+  }, [attendeeData])
 
   // Phase 4.2 — isochrones + candidate pin
   const [selectedCampusZip, setSelectedCampusZip] = useState<string>('')
@@ -539,6 +553,7 @@ export default function OverviewPage() {
               campuses={CAMPUSES}
               attendeeData={attendeeData}
               showAttendees={showAttendees}
+              campusColorMap={campusColorMap}
               isochroneGeoJson={activeIsochrone}
               isochroneMinutes={driveMinutes}
               candidatePin={candidatePin}
@@ -546,6 +561,124 @@ export default function OverviewPage() {
             />
           </Suspense>
         </div>
+
+        {/* Attendee Analysis Panel — visible when overlay is toggled on */}
+        {showAttendees && (() => {
+          const valid = attendeeData.filter(a => a.households !== -1)
+          if (!valid.length) return null
+
+          const labelMap = new Map((data?.zips ?? []).map(z => [z.zip, z.label]))
+          const totalHH  = valid.reduce((s, a) => s + a.households, 0)
+
+          // Campus totals — sorted by household count descending
+          const byCampus = new Map<string, { total: number; zips: { zip: string; hh: number }[] }>()
+          for (const a of valid) {
+            const bd = a.campusBreakdown ?? {}
+            for (const [campus, hh] of Object.entries(bd)) {
+              if (!byCampus.has(campus)) byCampus.set(campus, { total: 0, zips: [] })
+              const entry = byCampus.get(campus)!
+              entry.total += hh
+              entry.zips.push({ zip: a.zip, hh })
+            }
+          }
+          const campusList = [...byCampus.entries()]
+            .map(([name, { total, zips }]) => ({
+              name,
+              total,
+              color: campusColorMap[name] ?? '#E8B84B',
+              topZips: zips.sort((a, b) => b.hh - a.hh).slice(0, 5),
+            }))
+            .sort((a, b) => b.total - a.total)
+
+          const maxCampusHH = campusList[0]?.total ?? 1
+          const MONO = { fontFamily: "'IBM Plex Mono', monospace" }
+
+          return (
+            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px', marginBottom: '20px' }}>
+
+              {/* Header + summary stats */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                <div>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    Attendee Analysis
+                  </div>
+                  <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '0.05em', color: '#F0F2F7' }}>
+                    Campus Draw Areas
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: '24px', textAlign: 'right' }}>
+                  <div>
+                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Total HH</div>
+                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#E8B84B' }}>{totalHH.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ZIPs</div>
+                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#4EAEFF' }}>{valid.length}</div>
+                  </div>
+                  <div>
+                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Campuses</div>
+                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#2DD4BF' }}>{campusList.length}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Campus bars + top ZIPs side by side */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
+
+                {/* Left: campus bar list */}
+                <div>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase', marginBottom: '14px' }}>
+                    Households by Campus
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    {campusList.map(c => (
+                      <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: c.color, flexShrink: 0 }} />
+                        <div style={{ width: '120px', flexShrink: 0, ...MONO, fontSize: '11px', color: '#C8D4E4', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
+                        <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${(c.total / maxCampusHH) * 100}%`, background: `linear-gradient(90deg,${c.color},${c.color}50)` }} />
+                        </div>
+                        <div style={{ width: '60px', flexShrink: 0, textAlign: 'right', ...MONO, fontSize: '11px', color: c.color, fontWeight: 600 }}>
+                          {c.total.toLocaleString()}
+                        </div>
+                        <div style={{ width: '36px', flexShrink: 0, textAlign: 'right', ...MONO, fontSize: '10px', color: '#5a6478' }}>
+                          {Math.round((c.total / totalHH) * 100)}%
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right: top ZIPs per campus */}
+                <div>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase', marginBottom: '14px' }}>
+                    Top ZIP Codes per Campus
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {campusList.slice(0, 4).map(c => (
+                      <div key={c.name}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                          <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: c.color, flexShrink: 0 }} />
+                          <span style={{ ...MONO, fontSize: '10px', color: c.color, letterSpacing: '0.06em' }}>{c.name}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', paddingLeft: '14px' }}>
+                          {c.topZips.map(z => (
+                            <div key={z.zip} style={{ display: 'flex', justifyContent: 'space-between' }}>
+                              <span style={{ ...MONO, fontSize: '10px', color: '#8A98AE' }}>
+                                {z.zip}{labelMap.get(z.zip) ? ` · ${labelMap.get(z.zip)}` : ''}
+                              </span>
+                              <span style={{ ...MONO, fontSize: '10px', color: '#C8D4E4', fontWeight: 600 }}>{z.hh.toLocaleString()}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
 
         {/* Age Band + Income Distribution */}
         <div className="fade-up-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '20px' }}>
