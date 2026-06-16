@@ -190,6 +190,36 @@ export async function POST(req: NextRequest) {
       )
     `
 
+    // Commute corridors — LEHD LODES8 origin-destination, aggregated block→ZCTA
+    await sql`
+      CREATE TABLE IF NOT EXISTS commute_flows (
+        home_zip          TEXT NOT NULL,
+        work_zip          TEXT NOT NULL,
+        jobs              INTEGER NOT NULL,
+        high_earner_jobs  INTEGER NOT NULL DEFAULT 0,
+        year              INTEGER NOT NULL,
+        updated_at        TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (home_zip, work_zip, year)
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS idx_commute_flows_home ON commute_flows(home_zip, year)`
+
+    // Per-home-ZIP commute headline metrics (computed over the full OD set, not just stored top corridors)
+    await sql`
+      CREATE TABLE IF NOT EXISTS commute_summary (
+        home_zip         TEXT NOT NULL,
+        year             INTEGER NOT NULL,
+        total_workers    INTEGER NOT NULL,
+        work_in_zip      INTEGER NOT NULL,
+        top_dest_zip     TEXT,
+        net_bearing_deg  NUMERIC(5,1),
+        direction_label  TEXT,
+        concentration    NUMERIC(4,3),
+        updated_at       TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (home_zip, year)
+      )
+    `
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

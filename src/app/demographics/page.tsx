@@ -480,6 +480,21 @@ interface LeadingIndicators {
   }
 }
 
+// ── Types for Commute Corridors (LODES, Phase 4.5) ──────────────
+interface CommuteData {
+  available: boolean
+  zip: string
+  county: string | null
+  year?: number
+  totalWorkers?: number
+  workInZip?: number
+  selfContainmentPct?: number
+  direction?: { label: string; bearingDeg: number | null; concentration: number | null } | null
+  topDestZip?: string | null
+  topDestLabel?: string | null
+  corridors?: { zip: string; label: string; jobs: number; highEarnerJobs: number; highPct: number }[]
+}
+
 // ── Page ─────────────────────────────────────────────────────────
 export default function DemographicsPage() {
   const [selectedZip, setSelectedZip] = useState<string>(DFW_ZIPS[0].zip)
@@ -489,6 +504,7 @@ export default function DemographicsPage() {
   const [collegesLoading, setCollegesLoading] = useState(true)
   const [leadingIndicators, setLeadingIndicators] = useState<LeadingIndicators | null>(null)
   const [leadingLoading, setLeadingLoading] = useState(true)
+  const [commute, setCommute] = useState<CommuteData | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -506,6 +522,14 @@ export default function DemographicsPage() {
       .then(r => r.json())
       .then(d => { if (!d.error) setLeadingIndicators(d); setLeadingLoading(false) })
       .catch(() => setLeadingLoading(false))
+  }, [selectedZip])
+
+  useEffect(() => {
+    setCommute(null)
+    fetch(`/api/commute?zip=${selectedZip}`)
+      .then(r => r.json())
+      .then(d => { if (!d.error) setCommute(d) })
+      .catch(() => {})
   }, [selectedZip])
 
   useEffect(() => {
@@ -1029,6 +1053,105 @@ export default function DemographicsPage() {
                 )}
                 </>
               )}
+            </div>
+          )}
+
+          {/* Commute Corridors — LODES (Phase 4.5) */}
+          {commute?.available && commute.corridors && commute.corridors.length > 0 && (
+            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+              <SectionHeader
+                eyebrow={`${commute.county ?? ''} ${commute.county ? '· ' : ''}Where Residents Work · Daily Drive`}
+                title="Commute Corridors"
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
+                {/* Net commute direction */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                  <div style={{ flexShrink: 0, width: '52px', height: '52px', borderRadius: '50%', border: '1px solid #232940', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+                    {commute.direction?.bearingDeg != null ? (
+                      <svg width="26" height="26" viewBox="0 0 24 24" style={{ transform: `rotate(${commute.direction.bearingDeg}deg)` }}>
+                        <path d="M12 2 L18 20 L12 16 L6 20 Z" fill="#4EAEFF" />
+                      </svg>
+                    ) : <span style={{ color: '#3d4a5c' }}>—</span>}
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#F0F2F7', lineHeight: 1 }}>
+                      {commute.direction?.label ?? '—'}
+                    </div>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '4px' }}>
+                      Net direction
+                    </div>
+                    {commute.direction?.concentration != null && (
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '2px' }}>
+                        {Math.round(commute.direction.concentration * 100)}% aligned
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Resident workers */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#F0F2F7', lineHeight: 1 }}>
+                    {commute.totalWorkers?.toLocaleString() ?? '—'}
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Resident workers
+                  </div>
+                  {commute.topDestLabel && (
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                      Top: {commute.topDestLabel}
+                    </div>
+                  )}
+                </div>
+
+                {/* Self-containment */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                    <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#2DD4BF', lineHeight: 1 }}>
+                      {commute.selfContainmentPct?.toFixed(0) ?? '—'}
+                    </span>
+                    <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#2DD4BF' }}>%</span>
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Live &amp; work in-ZIP
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    {commute.workInZip?.toLocaleString()} of {commute.totalWorkers?.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Top destination corridors */}
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                Top Work Destinations · jobs (▸ = % earning &gt; $40k)
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                {(() => {
+                  const maxJobs = Math.max(...commute.corridors.map(c => c.jobs))
+                  return commute.corridors.map(c => {
+                    const pct = maxJobs > 0 ? (c.jobs / maxJobs) * 100 : 0
+                    return (
+                      <div key={c.zip} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '150px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                          {c.label} <span style={{ color: '#3d4a5c' }}>{c.zip}</span>
+                        </div>
+                        <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'linear-gradient(90deg,#4EAEFF,#4EAEFF50)' }} />
+                        </div>
+                        <div style={{ width: '52px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#4EAEFF', fontWeight: 600 }}>
+                          {c.jobs.toLocaleString()}
+                        </div>
+                        <div style={{ width: '40px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#2DD4BF' }}>
+                          ▸{c.highPct}%
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
+                LEHD LODES8 · {commute.year} · intra-DFW resident worker flows · block→ZCTA · &quot;Net direction&quot; is the job-weighted bearing toward work
+              </div>
             </div>
           )}
 

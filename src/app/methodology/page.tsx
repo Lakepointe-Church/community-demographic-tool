@@ -389,6 +389,28 @@ export default function MethodologyPage() {
             </div>
           </div>
 
+          {/* LODES Commute Corridors */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#2DD4BF', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.4 · Commute Corridors (LEHD LODES)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'U.S. Census Bureau LEHD LODES8 (LODES, version 8) Origin-Destination Employment Statistics — the data behind OnTheMap. The Texas "main" OD file (tx_od_main_JT00, all primary + secondary jobs, both ends in TX) is paired with the LODES8 geography crosswalk (tx_xwalk), which maps every 2020 census block to its ZCTA. Current vintage: 2023 (released December 2025). Import script: scripts/import-lodes.ts (auto-fetches both gzip files; re-run annually).' },
+                { label: 'Geography', definition: 'Census block → ZCTA, aggregated to home-ZIP → work-ZIP. Only intra-DFW flows (both home and work block fall in a DFW coverage ZIP) are kept, so the corridors describe where a ZIP\'s residents commute within the metro. Jobs commuting outside the DFW coverage area are excluded from the displayed totals.' },
+                { label: 'Self-containment', definition: 'Share of a ZIP\'s resident workers whose job is in the same ZIP (work_in_zip ÷ total_workers). High self-containment = a live-work community; low self-containment = a bedroom community whose residents drive elsewhere for work.' },
+                { label: 'Net commute direction', definition: 'The job-weighted average bearing from the home ZIP\'s centroid toward each work-destination ZIP\'s centroid, expressed as a compass label (N/NE/…/NW) plus a 0–1 concentration (vector magnitude ÷ total external jobs). Concentration near 1.0 means residents nearly all drive the same way (a strong corridor); near 0 means work is dispersed in all directions. Centroids are derived from the crosswalk\'s block lat/long. Used to reason about "is a candidate campus on the right side of the daily drive?"' },
+                { label: 'High-earner share', definition: 'Each corridor reports the % of those jobs paying more than $3,333/month (~$40k/yr), from the LODES SE03 earnings segment. A relative affluence signal for the commute, not a household income measure.' },
+                { label: 'Scoring use', definition: 'Context tier only — commute corridors are shown on the Demographics page and are NOT a Site Scorer input. Per the scoring-governance rules, access/commute would be a single candidate signal if ever scored, but it is displayed-with-caveat for now.' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </Section>
 
@@ -752,5 +774,9 @@ const LIMITATIONS = [
   {
     source: 'Texas Demographic Center Projections',
     limitation: 'Projections use the mid-migration scenario from TDC Vintage 2024. They are county-level only and cannot be disaggregated to ZIP codes. Projections become less reliable further from the base year — the 2040 figure has substantially more uncertainty than the 2030 figure. Projections do not account for economic shocks, major policy changes, or unforeseen demographic shifts. The platform uses these figures for context only; they are not incorporated into the Site Scorer.',
+  },
+  {
+    source: 'LEHD LODES — Commute Corridors',
+    limitation: 'LODES counts jobs, not people, and a worker with two jobs is counted twice. The vintage lags ~2 years (2023 is the latest, released Dec 2025) and excludes most federal and uniformed-military workers and self-employed/informal jobs, which are absent from the unemployment-insurance records LODES is built on. Home and work are assigned to census blocks via a model with synthetic noise added for confidentiality, then aggregated up to ZCTA — block-level figures are noisy, but ZCTA aggregates are stable. Only flows where both ends fall inside the DFW coverage area are kept, so a ZIP\'s residents who work outside the metro are not reflected in its totals. The "net commute direction" is a job-weighted average bearing; a ZIP whose workers split between two opposite job centers can show a low concentration and a direction that points between them. Context only — never a Site Scorer input.',
   },
 ]

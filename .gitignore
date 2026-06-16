@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# large LODES source caches (re-fetched by scripts/import-lodes.ts; do not commit)
+data/lodes-*.csv.gz

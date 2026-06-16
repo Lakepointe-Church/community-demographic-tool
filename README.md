@@ -68,6 +68,7 @@ Both are set in Vercel → Project Settings → Environment Variables. Run `verc
 | Census BPS permits | `npx tsx scripts/import-permits.ts` | Annually (after May release) | Jolie |
 | TEA PEIMS enrollment | `npx tsx scripts/import-tea.ts` | Annually (after ~March release) | Jolie |
 | TDC population projections | `npx tsx scripts/import-tdc.ts` | Every ~2 years (new vintage) | Jolie |
+| LEHD LODES commute corridors | `npx tsx scripts/import-lodes.ts` | Annually (after ~Dec release) | Jolie |
 | Attendee density | Admin upload page | After each Rock RMS export | Jolie |
 
 ### Census ACS + CBP (~8 min for all 370 ZIPs)
@@ -134,6 +135,19 @@ npx tsx scripts/import-tea.ts
 ```bash
 npx tsx scripts/import-tdc.ts
 ```
+
+### LEHD LODES commute corridors (annual, after ~Dec release)
+
+Fully automated — the script fetches the Texas OD file and geography crosswalk directly from the Census LODES8 endpoint, streams ~12M block-pair rows, aggregates intra-DFW flows to home-ZIP → work-ZIP, and writes `commute_flows` + `commute_summary` plus `data/dfw-zip-centroids.json`.
+
+```bash
+npx tsx scripts/import-lodes.ts          # add DRY_RUN=1 to preview without DB writes
+```
+
+Notes:
+- Source files are cached to `data/lodes-*.csv.gz` (gitignored, ~80 MB) so re-runs skip the download. Delete them to force a fresh fetch.
+- When a newer LODES vintage lands, bump `YEAR` at the top of the script.
+- `data/dfw-zip-centroids.json` **is** committed (small runtime asset read by `/api/commute`); the `.gz` caches are **not**.
 
 ---
 

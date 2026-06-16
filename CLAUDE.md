@@ -12,7 +12,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | Route | Status | Description |
 |---|---|---|
 | `/` | ✅ | Overview: aggregate stats, **Phase 3.3 insights panel** (top-3 opportunity cards with fit score, percentile, top drivers — loads from `/api/site-scorer` with default weights; existing campus ZIPs excluded from ranking), Mapbox choropleth growth map (campus markers, isochrone controls, attendee overlay toggle, candidate-pin drop mode), age/income charts, growth table. When attendee overlay is on: circles colored by primary campus (warm palette, avoids map zone colors), hover tooltip (campus + HH), click popup with full campus breakdown table, Campus Draw Areas panel below map (bar chart of HH per campus + top ZIPs per campus). **Phase 2.2 extended:** campus rows are clickable filter toggles (click = solo that campus's circles; click again = restore all; "Show all" reset button); Underserved Clusters table (growing ZIPs with low Lakepointe penetration, ranked by growth÷penetration); Cannibalization check in isochrone stats bar (attendee HH within candidate pin's drive polygon, computed via ray-casting on ZCTA centroids) |
-| `/demographics` | ✅ | Per-ZIP: 8 stat cards + Dual-Earner HH + Long Commute cards, YFI/WFI indexes, race donut, education bars, age bars, household type donut, college scorecard |
+| `/demographics` | ✅ | Per-ZIP: 8 stat cards + Dual-Earner HH + Long Commute cards, YFI/WFI indexes, race donut, education bars, age bars, household type donut, college scorecard. **Phase 4.2:** Leading Indicators panel includes a full-width horizontal bar list of top permit-issuing cities in the ZIP's county (Census BPS place-level, 2023–2025, with YoY% delta badges). **Phase 4.5:** Commute Corridors panel (LODES8) — net commute direction (compass + rotated arrow + concentration), resident workers, self-containment %, and top work-destination ZIPs (blue bar list with high-earner ▸% badges). |
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | ✅ | SES tier breakdown: 4 stat cards, distribution bar chart, scatter plot (SES score vs income), filterable/sortable table with ZIP/Class/HHI/Bachelor+/Mgmt+Prof/Unemployment/Trend |
 | `/religious` | ✅ | DFW religious landscape: stat cards, faith distribution bar, top Islamic ZIPs table, county comparison (Islamic vs Christian BMF), 2020 Religion Census county adherence panel (Unclaimed/tradition breakdown, ESTIMATE-labeled), **ACS proxy layer** (PROXY-labeled ranked list: foreign-born from 20 Muslim-majority countries + Arabic speakers, per-1K, sortable, caveat callout with Iraq/Egypt/Syria flags), per-ZIP org breakdown, Islamic org panel |
@@ -24,7 +24,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
 ### Data sources (all routed through Neon DB)
-- **Census BPS (Building Permits Survey)** — county-level annual permit counts (SF + MF), 3 years. Loaded via `scripts/import-permits.ts` (automated). Shows on Demographics page as momentum badge.
+- **Census BPS (Building Permits Survey)** — county-level annual permit counts (SF + MF), 3 years. Loaded via `scripts/import-permits.ts` (automated). Shows on Demographics page as momentum badge. **Place-level** (city/municipality) permit counts also loaded via `scripts/import-bps-places.ts` from the Census South Region flat files (`so{YY}12y.txt`); 265–273 DFW places per year, 3 years (2023–2025), stored in `place_permits` table. Shows as horizontal bar list below Leading Indicators grid on Demographics page.
 - **TEA PEIMS** — ISD district enrollment 2020-21→2024-25, county-aggregated. Loaded via `scripts/import-tea.ts` (manual download). Drives enrollment growth score in Site Scorer + trend chart on Demographics.
 - **Texas Demographic Center Projections (Vintage 2024)** — county-level 2030/2040/2050 projections (mid scenario). Loaded via `scripts/import-tdc.ts` (manual download). Context panel on Demographics only.
 - **Census ACS 5-Year (2024)** — per-ZIP: population, income, home value, race/ethnicity, education, household type, age distribution, income brackets, SES class score, fertility rate, dual-earner %, commute 30+ %, occupation mgmt/prof %, proxy_born (B05006 foreign-born from 20 Muslim-majority countries), proxy_language (C16001 Arabic speakers). **2020 baseline** (`population_2020`) uses Decennial 2020 DHC (`P1_001N`), not ACS — true point-in-time count on exact 2020 boundaries.
@@ -37,6 +37,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 - **2020 U.S. Religion Census (ASARB)** — county-level adherent counts by tradition (Evangelical/Mainline/Black Protestant, Catholic, Orthodox, Muslim, Jewish, Buddhist, Hindu, Other, Unclaimed) for 23 DFW counties. Static data in `data/religion-census-dfw.json`; loaded via `scripts/import-religion-census.ts`. Decennial data (next ~2030). Attribution required: "2020 U.S. Religion Census (ASARB) · County level · Adherent estimates"
 - **CDC PLACES (2023)** — per-ZIP health rates: diabetes, obesity, smoking, uninsured, high BP, depression, mental distress, physical inactivity, poor general health. Loaded via `scripts/import-places.ts` (run annually). ZCTA-level dataset (`qnzd-25i4`) is still 2023 as of June 2026; county-level has a 2025 release but ZIP-level lags — re-check in late 2026.
 - **CFPB Consumer Complaints** — per-ZIP complaint counts, trailing 36-month window per 1K residents. Auto-refreshed monthly via vercel.json cron (`GET /api/refresh-community`, 1st at 07:00 UTC).
+- **LEHD LODES8 (2023)** — origin-destination worker commute flows. `scripts/import-lodes.ts` streams the Texas `od_main_JT00_2023` file (~12M block-pair rows) + the LODES8 geography crosswalk (`tx_xwalk`, which ships a block→ZCTA column), keeps intra-DFW flows, aggregates to home-ZIP→work-ZIP, and stores top-15 corridors + per-home summary (totals, self-containment, job-weighted net bearing). Also writes `data/dfw-zip-centroids.json` from crosswalk block centroids. Annual vintage (released ~Dec). Context tier only — not a Site Scorer input. Shows as Commute Corridors panel on Demographics page.
 
 ## Architecture
 
@@ -65,6 +66,7 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
   /api/attendee-density        ← GET: privacy-masked counts + penetrationPct + attendeesPer1kUnclaimed + primaryCampus + lastUpload metadata (joins zip_demographics + religious_adherence); POST: csv-parse CSV upload with DFW-only filter + skip report; DELETE: truncate
   /api/isochrone               ← Mapbox Isochrone API proxy; ?lng=&lat=&minutes=&profile= (6hr in-memory cache)
   /api/decisions               ← GET: list decision log entries (100 most recent); POST: create entry {zip, area, fitScore, scenarioUrl, notes, decidedBy}
+  /api/commute?zip=            ← LODES8 commute corridors: top work-destination ZIPs + self-containment % + net commute bearing/direction + high-earner share (joins commute_flows + commute_summary)
         ↓
   Next.js pages (client components fetch on load)
 ```
@@ -102,6 +104,10 @@ Returned as `lastUpload` in GET /api/attendee-density response; drives status in
 Columns: `fips` (TEXT), `county` (TEXT), `year` (INT), `sf_permits` (INT), `mf_permits` (INT), `total_permits` (INT), `updated_at`
 PK: `(fips, year)`. 3 years of data (2023–2025).
 
+**`place_permits`** — one row per census place per year, loaded via `scripts/import-bps-places.ts`
+Columns: `state_fips` (TEXT), `place_fips` (TEXT), `place_name` (TEXT), `county_fips` (TEXT), `county` (TEXT), `year` (INT), `sf_permits` (INT), `mf_permits` (INT), `total_permits` (INT), `updated_at`
+PK: `(state_fips, place_fips, year)`. Index on `(county, year)`. 265–273 DFW places per year, 3 years (2023–2025). Source: Census BPS South Region `so{YY}12y.txt`.
+
 **`isd_enrollment`** — one row per ISD per year, loaded via `scripts/import-tea.ts`
 Columns: `district_id` (TEXT), `district_name` (TEXT), `county` (TEXT — matches ZIP_COUNTY values), `year` (INT), `enrollment` (INT), `updated_at`
 PK: `(district_id, year)`. Index on `county`. 5 years of data (2020–2024).
@@ -112,6 +118,14 @@ TDC Vintage 2024, mid-migration scenario, 23 DFW counties.
 
 **`decision_log`** — one row per logged site decision, written via `/admin/decisions`
 Columns: `id` (SERIAL PK), `zip` (TEXT NOT NULL), `area` (TEXT), `fit_score` (INT), `scenario_url` (TEXT), `notes` (TEXT), `decided_by` (TEXT), `logged_at` (TIMESTAMPTZ DEFAULT NOW())
+
+**`commute_flows`** — top work-destination corridors per home ZIP, loaded via `scripts/import-lodes.ts`
+Columns: `home_zip` (TEXT), `work_zip` (TEXT), `jobs` (INT), `high_earner_jobs` (INT — SE03, >$40k/yr), `year` (INT), `updated_at`
+PK: `(home_zip, work_zip, year)`. Index on `(home_zip, year)`. Stores top-15 external destinations per home ZIP (self-flow excluded). 5,497 rows (369 home ZIPs × ≤15), year 2023.
+
+**`commute_summary`** — per-home-ZIP commute headline metrics (computed over the FULL OD set, not just stored corridors), loaded via `scripts/import-lodes.ts`
+Columns: `home_zip` (TEXT), `year` (INT), `total_workers` (INT), `work_in_zip` (INT — self-containment numerator), `top_dest_zip` (TEXT), `net_bearing_deg` (NUMERIC(5,1) — job-weighted bearing, 0=N/90=E), `direction_label` (TEXT — compass N/NE/…), `concentration` (NUMERIC(4,3) — 0–1 directionality of the commute), `updated_at`
+PK: `(home_zip, year)`. 369 rows, year 2023.
 
 ## SES class scoring
 Composite 0–100 score: income (50%) + bachelor's rate (30%) + home value (20%)
@@ -275,9 +289,11 @@ Run cadence:
 - **CFPB complaints** — monthly (trailing 36-month window; runs automatically via vercel.json cron on the 1st at 07:00 UTC)
 - **CDC PLACES** — annually (releases once/year)
 - **IRS BMF** — monthly (IRS publishes updates monthly)
-- **Census BPS** — annually after May release: `npx tsx scripts/import-permits.ts`
+- **Census BPS county** — annually after May release: `npx tsx scripts/import-permits.ts`
+- **Census BPS place-level** — annually after May release: `npx tsx scripts/import-bps-places.ts` (auto-fetches South Region flat files; no manual download needed)
 - **TEA PEIMS** — annually after ~March release: download CSVs from TEA, then `npx tsx scripts/import-tea.ts`
 - **TDC Projections** — every ~2 years on new vintage: download from demographics.texas.gov/Projections/, then `npx tsx scripts/import-tdc.ts`
+- **LEHD LODES8 commute** — annually after the ~December release: `npx tsx scripts/import-lodes.ts` (auto-fetches TX OD + crosswalk gz; bump `YEAR` in the script when a newer vintage lands)
 
 ## DB migration (adding new columns)
 If new columns are needed, add them to both the `zip_demographics` schema in `src/app/api/db/migrate/route.ts` AND run an `ALTER TABLE` directly:
@@ -341,7 +357,11 @@ data/religion-census-dfw.json          — Static processed county adherence dat
 scripts/import-permits.ts              — Census BPS county annual permits loader (automated; re-run annually after May release)
 scripts/import-tea.ts                  — TEA PEIMS enrollment loader (manual download; re-run annually; expects data/tea-enrollment-{YYYY}.csv)
 scripts/import-tdc.ts                  — TDC county projections loader (manual download; re-run on new vintage; expects data/tdc-projections-2024.csv)
-src/app/api/leading-indicators/route.ts — GET /api/leading-indicators?zip= — returns permits + enrollment + projection for a ZIP's county
+src/app/api/leading-indicators/route.ts — GET /api/leading-indicators?zip= — returns permits + enrollment + projection + placesPermits (top-10 cities by total permits with YoY%) for a ZIP's county
+scripts/import-bps-places.ts          — Census BPS place-level loader; fetches South Region so{YY}12y.txt for 2023–2025, filters DFW counties, upserts to place_permits (re-run annually)
+scripts/import-lodes.ts               — LEHD LODES8 commute loader; streams TX od_main + xwalk (gz), aggregates block→ZCTA intra-DFW flows, writes commute_flows + commute_summary + data/dfw-zip-centroids.json. Caches source gz in data/lodes-*.csv.gz (gitignored). DRY_RUN=1 to preview. Re-run annually
+src/app/api/commute/route.ts          — GET /api/commute?zip= — top work-destination corridors + self-containment % + net commute bearing/direction + high-earner share for a home ZIP
+data/dfw-zip-centroids.json           — ZIP→[lng,lat] centroids derived from LODES crosswalk block points (committed asset). Net commute bearings are precomputed in import-lodes.ts and stored in commute_summary; this file is the reusable centroid source for future distance-to-campus scoring (3.4)
 scripts/find-missing-zips.ts           — Census Gazetteer-based ZIP radius discovery tool
 scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs via zippopotam.us
 README.md                              — Full operator runbook: local setup, env vars, all data refresh cadences, attendee upload procedure (Rock RMS columns, admin page URL, skip report), DB-only policy, environment/DB mapping, reset procedure, DB migration pattern
@@ -383,7 +403,15 @@ README.md                              — Full operator runbook: local setup, e
   - **2.2 extended** ✅ — Campus draw areas as map filter toggle (click row to isolate campus circles on map; "Show all" reset), underserved clusters table (growing ZIPs with low penetration ranked by growth÷penetration), cannibalization check (existing attendee HH within candidate pin's isochrone shown in isochrone bar)
   - **2.3** ✅ — Upload runbook in README: Rock RMS export procedure, expected columns, upload steps, privacy rules, DB-only policy, environment/DB mapping, reset procedure
 - **Spec v2 Phase 3** ✅ — Executive decision layer: shareable scenario URLs (weights encoded in URL, Copy Link button), score percentile anchoring (top X% in sidebar + table), top-3 insights panel on Overview page (fit score + top drivers), distance-to-campus slider (weight 0 reserved; slot built), Vercel Analytics (`@vercel/analytics/next` in root layout), preset weights (Balanced/Young Families/Underserved), campus highlights on scatter + table, decision log (`decision_log` table + `/api/decisions` + `/admin/decisions`)
-- **Spec v2 Phase 4** ⏳ — New data sources: HUD/USPS address counts, BPS place-level, TEA campus-level, IRS SOI, LEHD LODES, Zillow ZHVI, Google Places (shortlist only)
+- **Spec v2 Phase 4** — New data sources (in progress):
+  - **4.2** ✅ — Census BPS place-level permits: `place_permits` table, `scripts/import-bps-places.ts`, top-cities bar list on Demographics page Leading Indicators panel. 805 rows (265–273 DFW places × 3 years). Breaks "Collin County" into Celina vs. Anna vs. Melissa etc.
+  - **4.1** ⏳ [HUMAN] — HUD–USPS address counts (quarterly residential address momentum); requires HUD User token signup
+  - **4.3** ⏳ — TEA campus-level enrollment (geocode campuses to ZIPs); manual portal download + format verify
+  - **4.4** ⏳ — IRS SOI ZIP-level income (charitable deductions + itemizer rate); annual download, no key
+  - **4.5** ✅ — LEHD LODES8 commute corridors: `commute_flows` + `commute_summary` tables, `scripts/import-lodes.ts` (streams TX `od_main_JT00_2023` + `tx_xwalk`, aggregates block→ZCTA), `/api/commute?zip=`, Commute Corridors panel on Demographics page. Per home ZIP: top work-destination ZIPs, self-containment %, job-weighted net commute bearing/compass direction + concentration, and high-earner (SE03, >$40k/yr) share per corridor. LODES8 ships a block→ZCTA crosswalk (no hand-built crosswalk needed); also derives `data/dfw-zip-centroids.json` (committed; reusable for 3.4 distance-to-campus). 5,497 corridor rows / 369 home ZIPs, year 2023. Context tier (not scored).
+  - **4.6** ⏳ — IRS SOI county-to-county migration (AGI bands); context/narrative tier
+  - **4.7** ⏳ — Zillow ZHVI (monthly home values); free CSV
+  - **4.8** ⏳ — Google Places church search; on-demand only, not bulk
 
 ## Planned next data sources (ordered by priority)
 These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).
