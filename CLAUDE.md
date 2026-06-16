@@ -11,7 +11,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 ### Pages (all live)
 | Route | Status | Description |
 |---|---|---|
-| `/` | ✅ | Overview: aggregate stats, Mapbox choropleth growth map (campus markers, isochrone controls, attendee overlay toggle, candidate-pin drop mode), age/income charts, growth table |
+| `/` | ✅ | Overview: aggregate stats, Mapbox choropleth growth map (campus markers, isochrone controls, attendee overlay toggle, candidate-pin drop mode), age/income charts, growth table. When attendee overlay is on: circles colored by primary campus (warm palette, avoids map zone colors), hover tooltip (campus + HH), click popup with full campus breakdown table, Campus Draw Areas panel below map (bar chart of HH per campus + top ZIPs per campus) |
 | `/demographics` | ✅ | Per-ZIP: 8 stat cards + Dual-Earner HH + Long Commute cards, YFI/WFI indexes, race donut, education bars, age bars, household type donut, college scorecard |
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | ✅ | SES tier breakdown: 4 stat cards, distribution bar chart, scatter plot (SES score vs income), filterable/sortable table with ZIP/Class/HHI/Bachelor+/Mgmt+Prof/Unemployment/Trend |
@@ -61,7 +61,7 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
   /api/community-needs?coverage=&zip= ← CDC PLACES + CFPB health data; ?coverage=core|all for overview mode
   /api/scorecard?zip=&radius=  ← College Scorecard (direct, not cached in Neon)
   /api/boundaries              ← ZCTA polygon GeoJSON from TIGERweb (24hr cache)
-  /api/attendee-density        ← GET: privacy-masked counts + lastUpload metadata; POST: CSV upload; DELETE: truncate
+  /api/attendee-density        ← GET: privacy-masked counts + penetrationPct + attendeesPer1kUnclaimed + primaryCampus + lastUpload metadata (joins zip_demographics + religious_adherence); POST: csv-parse CSV upload with DFW-only filter + skip report; DELETE: truncate
   /api/isochrone               ← Mapbox Isochrone API proxy; ?lng=&lat=&minutes=&profile= (6hr in-memory cache)
         ↓
   Next.js pages (client components fetch on load)
@@ -156,6 +156,14 @@ Used in `/employers` for industry mix and sector wage charts. **Do NOT use SVG f
     )
   })}
 </div>
+```
+
+### Campus circle color palette
+```ts
+// src/app/page.tsx — CAMPUS_PALETTE
+// Avoids #4EAEFF (map Growing), #2DD4BF (map Rapid Growth), #FF6B6B (map Declining)
+// Colors assigned alphabetically by campus name for render consistency
+const CAMPUS_PALETTE = ['#E8B84B','#FB923C','#A78BFA','#F472B6','#FACC15','#E879F9','#FCD34D','#4ADE80']
 ```
 
 ### Nav active pill
@@ -288,7 +296,7 @@ src/lib/db.ts                          — Neon client
 src/lib/campuses.ts                    — All 10 campus locations with lat/lng + status (existing|soon); used for map markers + isochrone fetch
 src/components/TopNav.tsx              — Shared nav; renders <CoverageNav /> (do NOT also render in page files)
 src/components/CoverageNav.tsx         — Suspense-wrapped nav links; preserves ?coverage=all param across page transitions
-src/components/MapboxChoropleth.tsx    — Mapbox choropleth map; props: zipData, campuses, attendeeData/showAttendees, isochroneGeoJson, candidatePin, onMapClick
+src/components/MapboxChoropleth.tsx    — Mapbox choropleth map; props: zipData, campuses, attendeeData/showAttendees, campusColorMap, isochroneGeoJson, candidatePin, onMapClick. AttendeeZip type includes: zip, households, censusHH, penetrationPct, county, attendeesPer1kUnclaimed, campusBreakdown, primaryCampus. Circles colored by campusColor property (pre-computed from campusColorMap). Hover popup = quick summary; click popup = full campus breakdown (persistent, close button).
 src/app/page.tsx                       — Overview page
 src/app/site-scorer/page.tsx           — Full Site Scorer: scatter chart, weight sliders, ranked table, CSV export
 src/app/demographics/page.tsx          — Per-ZIP demographics + YFI/WFI + college scorecard
@@ -316,7 +324,7 @@ src/app/api/site-scorer/route.ts       — Per-ZIP church saturation (Christian 
 src/app/api/boundaries/route.ts        — ZCTA polygon GeoJSON from TIGERweb
 src/app/api/attendee-density/route.ts  — GET (privacy-masked counts + lastUpload metadata; auth via middleware) + POST (CSV upload; Bearer CRON_SECRET) + DELETE (truncate; Bearer CRON_SECRET)
 src/app/api/isochrone/route.ts         — Mapbox Isochrone API proxy; 6hr in-memory cache; ?lng=&lat=&minutes=&profile=
-src/app/admin/attendee-upload/page.tsx — Rock RMS upload UI: format docs, privacy callout, source date picker, file upload
+src/app/admin/attendee-upload/page.tsx — Rock RMS upload UI: format docs, privacy callout, source date picker, file upload; result shows skip breakdown (online/outOfCoverage/invalidZip/invalidCount)
 src/app/admin/layout.tsx               — Passthrough layout for /admin/* routes; middleware handles auth
 src/middleware.ts                      — Site-wide Basic auth (BASIC_AUTH_USER/BASIC_AUTH_PASS) + Bearer CRON_SECRET for automation; noindex via next.config.ts headers
 scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS publishes monthly)
@@ -354,14 +362,18 @@ scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs
   - **0.3** ⏳ [HUMAN] — Mapbox token: move to church-owned account, add URL restrictions, separate server-only token for isochrone route
   - **0.4** ✅ — `npm uninstall xlsx` (unused, CVE)
   - **0.5** ✅ — CFPB cron in `vercel.json` (`GET /api/refresh-community`, 1st of month 07:00 UTC); ACS refresh excluded (exceeds 300s Hobby timeout — stays manual; GET handler added to `/api/refresh` for Pro-plan readiness)
-  - **0.6** ✅ — Attendee data: diagnosed (2,893 rows of non-DFW test data in prod DB, source 2026-06-12); fixed GET auth bug (route was requiring Bearer, blocking browser map load); added `attendee_upload_log` table + upload status to admin page (last upload date/ZIPs/HH + Truncate button) and map toggle tooltip; admin routes re-enabled (removed `notFound()` from admin/layout.tsx). **[HUMAN]**: truncate bad data via admin page, re-upload `FamilyCountByCampusAndPostalCode_20260611.csv`
+  - **0.6** ✅ — Attendee data: diagnosed (2,893 rows of non-DFW test data in prod DB, source 2026-06-12); fixed GET auth bug (route was requiring Bearer, blocking browser map load); added `attendee_upload_log` table + upload status to admin page (last upload date/ZIPs/HH + Truncate button) and map toggle tooltip; admin routes re-enabled (removed `notFound()` from admin/layout.tsx). Bad data truncated and `FamilyCountByCampusAndPostalCode_20260611.csv` re-uploaded via admin page ✅
 - **Spec v2 Phase 1** — Data integrity
   - **1.1** ✅ — Growth metric fixed: 2020 base swapped to Decennial DHC (`P1_001N`); `BOUNDARY_CHANGED` set nulls 7 split ZIPs; Site Scorer redistributes null-growth weight; tooltip + Demographics sub-label explain unavailability
   - **1.2** ✅ — Reliability flags: `hhi_moe` + `low_reliability` columns added to DB and refresh; SES Classes table hides unreliable ZIPs by default (⚠ toggle to show greyed); Site Scorer always excludes them
   - **1.3** ✅ — CFPB trailing 36-month window per 1K residents; methodology + page labels updated; now runs via cron (see 0.5)
   - **1.4** ✅ — ACS bumped to 2024 5-year (verified: all variables present including C16001_033E, B05006 proxy, HHI MOE); CDC PLACES ZCTA still 2023 (ZCTA-level `qnzd-25i4` dataset lags county release — re-check late 2026)
   - **1.5** ⏳ [HUMAN] — Reconcile SES model: docs say percentile/6-class; code uses absolute/5-class. Recommend keeping absolute thresholds.
-- **Spec v2 Phase 2** ⏳ — Attendee layer activation (after Phase 0 verified): penetration metrics, campus draw areas, underserved clusters, cannibalization check
+- **Spec v2 Phase 2** — Attendee layer activation
+  - **2.1** ✅ — Robust CSV parsing: csv-parse/sync replaces line.split; Church Online + non-DFW ZIPs filtered; skip report returned in POST response and shown in admin UI
+  - **2.2 core** ✅ — Penetration metrics: GET joins zip_demographics (census HH) + religious_adherence (county unclaimed) to add penetrationPct, attendeesPer1kUnclaimed, primaryCampus. Map circles colored by primary campus (warm palette). Hover + click popups. Campus Draw Areas panel on Overview page.
+  - **2.2 extended** ⏳ — Campus draw areas as map filter toggle, underserved clusters (high fit + low penetration), cannibalization check (isochrone-based)
+  - **2.3** ⏳ — Upload runbook in README
 - **Spec v2 Phase 3** ⏳ — Executive decision layer: shareable scenario URLs, score percentile anchoring, insights panel, distance-to-campus slider, Vercel Analytics, boardroom UX improvements
 - **Spec v2 Phase 4** ⏳ — New data sources: HUD/USPS address counts, BPS place-level, TEA campus-level, IRS SOI, LEHD LODES, Zillow ZHVI, Google Places (shortlist only)
 
