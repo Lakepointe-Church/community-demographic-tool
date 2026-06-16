@@ -160,6 +160,19 @@ export async function POST(req: NextRequest) {
       )
     `
 
+    await sql`
+      CREATE TABLE IF NOT EXISTS decision_log (
+        id           SERIAL PRIMARY KEY,
+        zip          TEXT NOT NULL,
+        area         TEXT,
+        fit_score    INTEGER,
+        scenario_url TEXT,
+        notes        TEXT,
+        decided_by   TEXT,
+        logged_at    TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

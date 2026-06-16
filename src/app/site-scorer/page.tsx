@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { downloadCsv } from '@/lib/csv'
 import { BOUNDARY_CHANGED } from '@/lib/zips'
+import { CAMPUSES } from '@/lib/campuses'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -28,14 +29,30 @@ interface Weights {
   growth: number
   saturation: number
   enrollment: number
+  distance: number
 }
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const DEFAULT_WEIGHTS: Weights = {
+  yfi: 23, wfi: 23, ses: 18, growth: 14, saturation: 12, enrollment: 10, distance: 0,
+}
+
+const WEIGHT_KEYS = ['yfi', 'wfi', 'ses', 'growth', 'saturation', 'enrollment', 'distance'] as const
+
+const PRESETS: Record<string, Weights> = {
+  'Balanced':       { yfi: 23, wfi: 23, ses: 18, growth: 14, saturation: 12, enrollment: 10, distance: 0 },
+  'Young Families': { yfi: 40, wfi: 30, ses: 10, growth: 10, saturation:  5, enrollment:  5, distance: 0 },
+  'Underserved':    { yfi: 15, wfi: 10, ses:  5, growth: 25, saturation: 40, enrollment:  5, distance: 0 },
+}
+
+const EXISTING_CAMPUS_ZIPS = new Set(CAMPUSES.filter(c => c.status === 'existing').map(c => c.zip))
+const CAMPUS_LABEL = Object.fromEntries(CAMPUSES.map(c => [c.zip, c.label]))
 
 // ── Scoring helpers ───────────────────────────────────────────────────────────
 
-const DEFAULT_WEIGHTS: Weights = { yfi: 23, wfi: 23, ses: 18, growth: 14, saturation: 12, enrollment: 10 }
-
 function effectivePct(w: Weights): Weights {
-  const total = w.yfi + w.wfi + w.ses + w.growth + w.saturation + w.enrollment || 1
+  const total = w.yfi + w.wfi + w.ses + w.growth + w.saturation + w.enrollment + w.distance || 1
   return {
     yfi:        (w.yfi / total) * 100,
     wfi:        (w.wfi / total) * 100,
@@ -43,6 +60,7 @@ function effectivePct(w: Weights): Weights {
     growth:     (w.growth / total) * 100,
     saturation: (w.saturation / total) * 100,
     enrollment: (w.enrollment / total) * 100,
+    distance:   (w.distance / total) * 100,
   }
 }
 
@@ -51,14 +69,12 @@ function growthScore(g: number): number {
 }
 
 function satOpportunityScore(cper10k: number): number {
-  // 0 churches/10K = 100 (max opportunity), 30+/10K = 0
   return Math.max(0, 100 - Math.min(100, (cper10k / 30) * 100))
 }
 
 function computeFitScore(z: ZipScore, eff: Weights): number {
-  // When growth is null (boundary change or no 2020 data), redistribute that weight
-  // proportionally across the other components rather than counting it as 0.
   const growthW = z.populationGrowth != null ? eff.growth : 0
+  // distance slot reserved (no centroid data yet; default weight is 0)
   const otherSum = eff.yfi + eff.wfi + eff.ses + eff.saturation + eff.enrollment
   const scale = (otherSum + growthW) > 0 ? 100 / (otherSum + growthW) : 1
   return Math.round((
@@ -71,11 +87,47 @@ function computeFitScore(z: ZipScore, eff: Weights): number {
   ) * scale / 100)
 }
 
+const DRIVER_LABELS: Record<string, string> = {
+  yfi:        'young family concentration',
+  wfi:        'working family rate',
+  ses:        'SES score',
+  growth:     'population growth',
+  saturation: 'low saturation',
+  enrollment: 'enrollment growth',
+}
+
+function topDrivers(z: ZipScore, eff: Weights): [string, string] {
+  const growthW = z.populationGrowth != null ? eff.growth : 0
+  const scores: Record<string, number> = {
+    yfi:        z.yfi * eff.yfi,
+    wfi:        z.wfi * eff.wfi,
+    ses:        z.sesScore * eff.ses,
+    growth:     z.populationGrowth != null ? growthScore(z.populationGrowth) * growthW : 0,
+    saturation: satOpportunityScore(z.churchesPer10k) * eff.saturation,
+    enrollment: z.enrollmentGrowthScore * eff.enrollment,
+  }
+  const keys = Object.keys(scores).sort((a, b) => scores[b] - scores[a])
+  return [DRIVER_LABELS[keys[0]], DRIVER_LABELS[keys[1]]]
+}
+
 function scoreColor(score: number): string {
   if (score >= 75) return '#E8B84B'
   if (score >= 60) return '#4EAEFF'
   if (score >= 45) return '#2DD4BF'
   return '#8A98AE'
+}
+
+// ── URL helpers ───────────────────────────────────────────────────────────────
+
+function weightsFromSearch(search: string): Weights | null {
+  const p = new URLSearchParams(search)
+  if (!WEIGHT_KEYS.some(k => p.has(k))) return null
+  const w: Record<string, number> = {}
+  for (const k of WEIGHT_KEYS) {
+    const v = parseInt(p.get(k) ?? '')
+    w[k] = Number.isFinite(v) && v >= 0 && v <= 100 ? v : DEFAULT_WEIGHTS[k]
+  }
+  return w as unknown as Weights
 }
 
 // ── Scatter chart ─────────────────────────────────────────────────────────────
@@ -206,15 +258,16 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
           const score = computeFitScore(d, eff)
           const color = scoreColor(score)
           const isH = hovered?.zip === d.zip
+          const isCampus = EXISTING_CAMPUS_ZIPS.has(d.zip)
           return (
             <circle
               key={d.zip}
               cx={x} cy={y}
-              r={isH ? 5.5 : 3.5}
+              r={isH ? 5.5 : isCampus ? 4.5 : 3.5}
               fill={color}
               fillOpacity={isH ? 1 : 0.65}
-              stroke={isH ? color : 'none'}
-              strokeWidth={isH ? 1.5 : 0}
+              stroke={isCampus ? '#E8B84B' : isH ? color : 'none'}
+              strokeWidth={isCampus ? 1.5 : isH ? 1.5 : 0}
               style={{ cursor: 'pointer' }}
               onMouseEnter={() => onHover(d)}
             />
@@ -241,6 +294,11 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
         }}>
           <div style={{ color: '#E8B84B', fontWeight: 600, marginBottom: 6 }}>
             {hovered.zip} · {hovered.label}
+            {EXISTING_CAMPUS_ZIPS.has(hovered.zip) && (
+              <span style={{ marginLeft: 6, fontSize: 9, color: '#E8B84B', opacity: 0.7, border: '1px solid rgba(232,184,75,0.4)', borderRadius: 3, padding: '1px 4px' }}>
+                {CAMPUS_LABEL[hovered.zip]}
+              </span>
+            )}
           </div>
           <div style={{ color: '#C8D4E4', marginBottom: 3 }}>
             Fit Score: <span style={{ color: scoreColor(computeFitScore(hovered, eff)) }}>{computeFitScore(hovered, eff)}</span>
@@ -261,6 +319,10 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
           </span>
         ))}
         <span style={{ marginLeft: 8, color: 'rgba(232,184,75,0.5)' }}>■ Target quadrant</span>
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(232,184,75,0.6)', border: '1.5px solid #E8B84B', display: 'inline-block' }} />
+          Existing campus
+        </span>
       </div>
     </div>
   )
@@ -275,7 +337,7 @@ function WeightSlider({
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ width: 160, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#A8B4C5', flexShrink: 0 }}>
+      <div style={{ width: 180, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#A8B4C5', flexShrink: 0 }}>
         {label}
       </div>
       <input
@@ -295,35 +357,37 @@ function WeightSlider({
 type SortKey = 'fitScore' | 'populationGrowth' | 'churchesPer10k' | 'sesScore' | 'yfi' | 'wfi' | 'population' | 'enrollmentGrowthScore'
 
 export default function SiteScorerPage() {
-  const [data, setData]           = useState<ZipScore[]>([])
-  const [loading, setLoading]     = useState(true)
-  const [error, setError]         = useState<string | null>(null)
-  const [coverage, setCoverage]   = useState<'core' | 'all'>('core')
+  const [data, setData]             = useState<ZipScore[]>([])
+  const [loading, setLoading]       = useState(true)
+  const [error, setError]           = useState<string | null>(null)
+  const [coverage, setCoverage]     = useState<'core' | 'all'>('core')
   const [refreshKey, setRefreshKey] = useState(0)
-  const [weights, setWeights]     = useState<Weights>(DEFAULT_WEIGHTS)
+  const [weights, setWeights]       = useState<Weights>(DEFAULT_WEIGHTS)
+  const [hovered, setHovered]       = useState<ZipScore | null>(null)
+  const [sortKey, setSortKey]       = useState<SortKey>('fitScore')
+  const [sortAsc, setSortAsc]       = useState(false)
+  const [showAll, setShowAll]       = useState(false)
+  const [copied, setCopied]         = useState(false)
+  const skipUrlWrite                = useRef(true)
 
-  function handleNormalize() {
-    const total = weights.yfi + weights.wfi + weights.ses + weights.growth + weights.saturation + weights.enrollment
-    if (total === 0) return
-    setWeights({
-      yfi:        Math.round(weights.yfi / total * 100),
-      wfi:        Math.round(weights.wfi / total * 100),
-      ses:        Math.round(weights.ses / total * 100),
-      growth:     Math.round(weights.growth / total * 100),
-      saturation: Math.round(weights.saturation / total * 100),
-      enrollment: Math.round(weights.enrollment / total * 100),
-    })
-  }
-  const [hovered, setHovered]     = useState<ZipScore | null>(null)
-  const [sortKey, setSortKey]     = useState<SortKey>('fitScore')
-  const [sortAsc, setSortAsc]     = useState(false)
-  const [showAll, setShowAll]     = useState(false)
-
+  // Read weights + coverage from URL on mount (once)
   useEffect(() => {
-    const url = new URL(window.location.href)
-    if (url.searchParams.get('coverage') === 'all') setCoverage('all')
+    const p = new URLSearchParams(window.location.search)
+    if (p.get('coverage') === 'all') setCoverage('all')
+    const fromUrl = weightsFromSearch(window.location.search)
+    if (fromUrl) setWeights(fromUrl)
   }, [])
 
+  // Sync weights + coverage to URL whenever they change (skip first render)
+  useEffect(() => {
+    if (skipUrlWrite.current) { skipUrlWrite.current = false; return }
+    const p = new URLSearchParams()
+    if (coverage === 'all') p.set('coverage', 'all')
+    for (const k of WEIGHT_KEYS) p.set(k, String(weights[k]))
+    window.history.replaceState(null, '', `/site-scorer?${p.toString()}`)
+  }, [weights, coverage])
+
+  // Fetch site-scorer data
   useEffect(() => {
     setLoading(true)
     fetch(`/api/site-scorer?coverage=${coverage}`)
@@ -336,16 +400,36 @@ export default function SiteScorerPage() {
       .catch(() => { setError('Failed to load data'); setLoading(false) })
   }, [coverage, refreshKey])
 
+  function handleNormalize() {
+    const total = WEIGHT_KEYS.reduce((s, k) => s + weights[k], 0)
+    if (total === 0) return
+    setWeights(Object.fromEntries(
+      WEIGHT_KEYS.map(k => [k, Math.round(weights[k] / total * 100)])
+    ) as unknown as Weights)
+  }
+
   function handleCoverageChange(val: 'core' | 'all') {
     setCoverage(val)
-    const url = new URL(window.location.href)
-    val === 'all' ? url.searchParams.set('coverage', 'all') : url.searchParams.delete('coverage')
-    window.history.replaceState(null, '', url.toString())
+  }
+
+  function handleCopyLink() {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
   }
 
   const eff = effectivePct(weights)
 
+  // Score all ZIPs and compute percentile ranks
   const scored = data.map(z => ({ ...z, fitScore: computeFitScore(z, eff) }))
+  const byScoreDesc = [...scored].sort((a, b) => b.fitScore - a.fitScore)
+  const rankMap = new Map(byScoreDesc.map((z, i) => [z.zip, i + 1]))
+  const totalZips = scored.length
+
+  function topPct(zip: string) {
+    return Math.max(1, Math.round(((rankMap.get(zip) ?? 1) / totalZips) * 100))
+  }
 
   const sorted = [...scored].sort((a, b) => {
     const av = sortKey === 'fitScore' ? a.fitScore : (a[sortKey] ?? -999)
@@ -363,14 +447,17 @@ export default function SiteScorerPage() {
 
   function handleExport() {
     downloadCsv('site-scorer.csv', [
-      'ZIP', 'Area', 'County', 'Fit Score', 'Growth %', 'Churches/10K', 'SES Score', 'SES Class', 'YFI', 'WFI', 'Enrollment Growth Score', 'Population', 'Total Churches',
+      'ZIP', 'Area', 'County', 'Fit Score', 'Percentile', 'Growth %', 'Churches/10K',
+      'SES Score', 'SES Class', 'YFI', 'WFI', 'Enrollment Growth Score', 'Population', 'Total Churches',
     ], sorted.map(z => [
-      z.zip, z.label, z.county ?? '', z.fitScore, z.populationGrowth ?? '', z.churchesPer10k, z.sesScore, z.sesLabel, z.yfi, z.wfi, z.enrollmentGrowthScore, z.population, z.totalChurches,
+      z.zip, z.label, z.county ?? '', z.fitScore, `top ${topPct(z.zip)}%`,
+      z.populationGrowth ?? '', z.churchesPer10k, z.sesScore, z.sesLabel,
+      z.yfi, z.wfi, z.enrollmentGrowthScore, z.population, z.totalChurches,
     ]))
   }
 
   const thStyle = (key: SortKey): React.CSSProperties => ({
-    textAlign: key === 'fitScore' || key === 'population' || key === 'yfi' || key === 'wfi' || key === 'sesScore' || key === 'populationGrowth' || key === 'churchesPer10k' || key === 'enrollmentGrowthScore' ? 'right' : 'left',
+    textAlign: ['fitScore', 'population', 'yfi', 'wfi', 'sesScore', 'populationGrowth', 'churchesPer10k', 'enrollmentGrowthScore'].includes(key) ? 'right' : 'left',
     padding: '6px 10px 10px',
     color: sortKey === key ? '#E8B84B' : '#5a6478',
     fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
@@ -388,6 +475,8 @@ export default function SiteScorerPage() {
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap');
         input[type=range] { height: 4px; }
         .ss-row:hover { background: rgba(255,255,255,0.03) !important; }
+        .ss-campus-row { background: rgba(232,184,75,0.04) !important; }
+        .ss-campus-row:hover { background: rgba(232,184,75,0.08) !important; }
       `}</style>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
@@ -413,8 +502,9 @@ export default function SiteScorerPage() {
             </select>
             <button
               onClick={() => setRefreshKey(k => k + 1)}
+              title="Reload data from database"
               style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', background: 'transparent', border: '1px solid #232940', borderRadius: '4px', color: '#8A98AE', padding: '6px 12px', cursor: 'pointer' }}
-            >↺ Refresh</button>
+            >↺ Reload</button>
           </div>
         </div>
 
@@ -432,16 +522,32 @@ export default function SiteScorerPage() {
           <>
             {/* Weight controls */}
             <div style={{ background: '#13161f', border: '1px solid #232940', borderRadius: 10, padding: '24px 28px', marginBottom: 32 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
                 <div>
                   <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 4 }}>
                     Scoring Weights
                   </div>
                   <div style={{ fontSize: 11, color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace" }}>
-                    Adjust sliders, then click Normalize to snap all values to 100%
+                    Adjust sliders, then Normalize to snap to 100% · share scenario via Copy Link
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {/* Preset buttons */}
+                  {Object.keys(PRESETS).map(name => (
+                    <button
+                      key={name}
+                      onClick={() => setWeights(PRESETS[name])}
+                      style={{
+                        fontFamily: "'IBM Plex Mono',monospace", fontSize: 10,
+                        background: JSON.stringify(weights) === JSON.stringify(PRESETS[name])
+                          ? 'rgba(232,184,75,0.15)' : 'transparent',
+                        border: JSON.stringify(weights) === JSON.stringify(PRESETS[name])
+                          ? '1px solid rgba(232,184,75,0.5)' : '1px solid #232940',
+                        borderRadius: 4, color: '#A8B4C5', padding: '5px 10px',
+                        cursor: 'pointer', letterSpacing: '0.06em',
+                      }}
+                    >{name}</button>
+                  ))}
                   <button
                     onClick={handleNormalize}
                     style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'rgba(232,184,75,0.08)', border: '1px solid rgba(232,184,75,0.3)', borderRadius: 4, color: '#E8B84B', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
@@ -450,6 +556,10 @@ export default function SiteScorerPage() {
                     onClick={() => setWeights(DEFAULT_WEIGHTS)}
                     style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'transparent', border: '1px solid #232940', borderRadius: 4, color: '#8A98AE', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                   >Reset</button>
+                  <button
+                    onClick={handleCopyLink}
+                    style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: copied ? 'rgba(45,212,191,0.1)' : 'transparent', border: `1px solid ${copied ? 'rgba(45,212,191,0.4)' : '#232940'}`, borderRadius: 4, color: copied ? '#2DD4BF' : '#8A98AE', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.06em' }}
+                  >{copied ? '✓ Copied!' : '⎘ Copy Link'}</button>
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -459,9 +569,15 @@ export default function SiteScorerPage() {
                 <WeightSlider label="Population Growth"          color="#FF6B6B" value={weights.growth}     effPct={eff.growth}     onChange={v => setWeights(w => ({ ...w, growth: v }))} />
                 <WeightSlider label="Church Saturation Opp."     color="#E8B84B" value={weights.saturation} effPct={eff.saturation} onChange={v => setWeights(w => ({ ...w, saturation: v }))} />
                 <WeightSlider label="School Enrollment Growth"   color="#2DD4BF" value={weights.enrollment} effPct={eff.enrollment} onChange={v => setWeights(w => ({ ...w, enrollment: v }))} />
+                <div style={{ borderTop: '1px solid #1a1f2e', marginTop: 4, paddingTop: 14 }}>
+                  <WeightSlider label="Distance Penalty ⁰"       color="#5a6478" value={weights.distance}  effPct={eff.distance}  onChange={v => setWeights(w => ({ ...w, distance: v }))} />
+                  <div style={{ marginTop: 6, fontSize: 10, color: '#3d4a5c', fontFamily: "'IBM Plex Mono',monospace", paddingLeft: 190 }}>
+                    ⁰ Reserved — ZIP centroid data not yet loaded. Keep at 0.
+                  </div>
+                </div>
               </div>
               <div style={{ marginTop: 16, fontSize: 10, color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace" }}>
-                Church Saturation Opportunity = inverse of churches/10K — lower saturation = higher score. School Enrollment Growth = TEA PEIMS county-level CAGR (0 when data not yet loaded). See <a href="/methodology#site-scorer" style={{ color: '#5a6478', textDecoration: 'underline' }}>/methodology</a> for full formulas.
+                Church Saturation Opportunity = inverse of churches/10K. School Enrollment Growth = TEA PEIMS county CAGR (0 when not loaded). See <a href="/methodology#site-scorer" style={{ color: '#5a6478', textDecoration: 'underline' }}>/methodology</a>.
               </div>
             </div>
 
@@ -484,17 +600,34 @@ export default function SiteScorerPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {topZips.map((z, i) => {
                     const color = scoreColor(z.fitScore)
+                    const pct = topPct(z.zip)
+                    const [d1, d2] = topDrivers(z, eff)
                     return (
                       <div key={z.zip} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 9 ? '1px solid #1a1f2e' : 'none' }}>
                         <div style={{ width: 20, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', textAlign: 'right', flexShrink: 0 }}>
                           #{i + 1}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#E8B84B', marginBottom: 1 }}>{z.zip}</div>
-                          <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 11, color: '#8A98AE', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{z.label}</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#E8B84B', marginBottom: 1 }}>
+                            {z.zip}
+                            {EXISTING_CAMPUS_ZIPS.has(z.zip) && (
+                              <span style={{ marginLeft: 5, fontSize: 9, color: 'rgba(232,184,75,0.6)', border: '1px solid rgba(232,184,75,0.3)', borderRadius: 3, padding: '1px 3px' }}>
+                                {CAMPUS_LABEL[z.zip]}
+                              </span>
+                            )}
+                          </div>
+                          <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 10, color: '#8A98AE', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{z.label}</div>
+                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#3d4a5c', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {d1} + {d2}
+                          </div>
                         </div>
-                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color, lineHeight: 1, flexShrink: 0 }}>
-                          {z.fitScore}
+                        <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color, lineHeight: 1 }}>
+                            {z.fitScore}
+                          </div>
+                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#5a6478', marginTop: 2 }}>
+                            top {pct}%
+                          </div>
                         </div>
                       </div>
                     )
@@ -506,8 +639,13 @@ export default function SiteScorerPage() {
             {/* Full ranked table */}
             <div style={{ background: '#13161f', border: '1px solid #232940', borderRadius: 10, padding: '24px 28px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace" }}>
-                  All ZIPs · Ranked by Fit Score
+                <div>
+                  <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace" }}>
+                    All ZIPs · Ranked by Fit Score
+                  </div>
+                  <div style={{ fontSize: 10, color: '#3d4a5c', fontFamily: "'IBM Plex Mono',monospace", marginTop: 3 }}>
+                    {totalZips} ZIPs · gold rows = existing Lakepointe campuses
+                  </div>
                 </div>
                 <button
                   onClick={handleExport}
@@ -523,8 +661,9 @@ export default function SiteScorerPage() {
                       <th style={{ ...thStyle('fitScore'), textAlign: 'left' }} onClick={() => handleSort('fitScore')}>ZIP</th>
                       <th style={{ ...thStyle('fitScore'), textAlign: 'left' }}>Area</th>
                       <th style={thStyle('fitScore')} onClick={() => handleSort('fitScore')}>Fit Score <SortArrow k="fitScore" /></th>
+                      <th style={{ ...thStyle('fitScore'), textAlign: 'left' }}>Percentile</th>
                       <th style={thStyle('populationGrowth')} onClick={() => handleSort('populationGrowth')}>Growth % <SortArrow k="populationGrowth" /></th>
-                      <th style={thStyle('churchesPer10k')} onClick={() => handleSort('churchesPer10k')}>Churches/10K <SortArrow k="churchesPer10k" /></th>
+                      <th style={thStyle('churchesPer10k')} onClick={() => handleSort('churchesPer10k')}>Chr/10K <SortArrow k="churchesPer10k" /></th>
                       <th style={thStyle('sesScore')} onClick={() => handleSort('sesScore')}>SES <SortArrow k="sesScore" /></th>
                       <th style={thStyle('yfi')} onClick={() => handleSort('yfi')}>YFI <SortArrow k="yfi" /></th>
                       <th style={thStyle('wfi')} onClick={() => handleSort('wfi')}>WFI <SortArrow k="wfi" /></th>
@@ -535,19 +674,35 @@ export default function SiteScorerPage() {
                   <tbody>
                     {tableRows.map((z, i) => {
                       const color = scoreColor(z.fitScore)
+                      const isCampus = EXISTING_CAMPUS_ZIPS.has(z.zip)
+                      const pct = topPct(z.zip)
                       return (
                         <tr
                           key={z.zip}
-                          className="ss-row"
-                          style={{ borderBottom: '1px solid #1a1f2e' }}
+                          className={isCampus ? 'ss-campus-row' : 'ss-row'}
+                          style={{
+                            borderBottom: '1px solid #1a1f2e',
+                            borderLeft: isCampus ? '2px solid rgba(232,184,75,0.4)' : '2px solid transparent',
+                          }}
                           onMouseEnter={() => setHovered(z)}
                           onMouseLeave={() => setHovered(null)}
                         >
                           <td style={{ padding: '7px 10px', color: '#5a6478', textAlign: 'center' }}>{i + 1}</td>
-                          <td style={{ padding: '7px 10px', color: '#E8B84B' }}>{z.zip}</td>
+                          <td style={{ padding: '7px 10px', color: '#E8B84B' }}>
+                            {z.zip}
+                            {isCampus && (
+                              <span style={{ marginLeft: 5, fontSize: 9, color: 'rgba(232,184,75,0.6)', border: '1px solid rgba(232,184,75,0.25)', borderRadius: 3, padding: '1px 3px' }}>
+                                {CAMPUS_LABEL[z.zip]}
+                              </span>
+                            )}
+                          </td>
                           <td style={{ padding: '7px 10px', color: '#A8B4C5', maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{z.label}</td>
                           <td style={{ padding: '7px 10px', textAlign: 'right' }}>
                             <span style={{ color, fontWeight: 600, fontSize: 13 }}>{z.fitScore}</span>
+                          </td>
+                          <td style={{ padding: '7px 10px', color: '#5a6478', fontSize: 10 }}>
+                            top {pct}%
+                            <span style={{ color: '#3d4a5c', marginLeft: 3 }}>of {totalZips}</span>
                           </td>
                           <td
                             style={{ padding: '7px 10px', textAlign: 'right', color: (z.populationGrowth ?? 0) > 0 ? '#2DD4BF' : '#FF6B6B' }}
@@ -586,16 +741,20 @@ export default function SiteScorerPage() {
             </div>
 
             {/* Footer */}
-            <div style={{ marginTop: 32, padding: '16px 0', borderTop: '1px solid #1e2b3c', display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+            <div style={{ marginTop: 32, padding: '16px 0', borderTop: '1px solid #1e2b3c', display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478' }}>
                 Church saturation: IRS BMF Christian orgs (NTEE X20/X21/X22) · Updated monthly
               </span>
               <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478' }}>
-                BMF undercounts congregations — use index for relative comparison only, not absolute counts
+                BMF undercounts congregations — use index for relative comparison only
               </span>
               <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478' }}>
                 * ZCTA boundaries approximate USPS ZIP codes
               </span>
+              <a
+                href="/admin/decisions"
+                style={{ marginLeft: 'auto', fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#E8B84B', textDecoration: 'none', border: '1px solid rgba(232,184,75,0.3)', borderRadius: 4, padding: '4px 10px', opacity: 0.8 }}
+              >📋 Log a site decision →</a>
             </div>
           </>
         )}

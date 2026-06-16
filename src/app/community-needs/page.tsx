@@ -307,7 +307,7 @@ export default function CommunityNeedsPage() {
               onMouseEnter={e => { e.currentTarget.style.color = '#C8D4E4'; e.currentTarget.style.borderColor = '#4EAEFF' }}
               onMouseLeave={e => { e.currentTarget.style.color = '#8A98AE'; e.currentTarget.style.borderColor = '#232940' }}
             >
-              ↺ Refresh
+              ↺ Reload
             </button>
           </div>
         </div>

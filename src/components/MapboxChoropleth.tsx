@@ -3,6 +3,32 @@
 import { useEffect, useRef } from 'react'
 import type { CampusInfo } from '@/lib/campuses'
 
+// ── Point-in-polygon (ray casting) ──────────────────────────────────────────
+function pointInRing(pt: [number, number], ring: number[][]): boolean {
+  const [x, y] = pt
+  let inside = false
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const xi = ring[i][0], yi = ring[i][1], xj = ring[j][0], yj = ring[j][1]
+    if ((yi > y) !== (yj > y) && x < ((xj - xi) * (y - yi)) / (yj - yi) + xi) inside = !inside
+  }
+  return inside
+}
+
+function inIsochrone(pt: [number, number], fc: GeoJSON.FeatureCollection): boolean {
+  for (const f of fc.features) {
+    const g = f.geometry
+    if (!g) continue
+    if (g.type === 'Polygon') {
+      if (pointInRing(pt, (g as GeoJSON.Polygon).coordinates[0] as number[][])) return true
+    } else if (g.type === 'MultiPolygon') {
+      for (const poly of (g as GeoJSON.MultiPolygon).coordinates) {
+        if (pointInRing(pt, poly[0] as number[][])) return true
+      }
+    }
+  }
+  return false
+}
+
 interface ZipRow {
   zip: string
   label: string
@@ -30,10 +56,13 @@ interface Props {
   attendeeData?:     AttendeeZip[]
   showAttendees?:    boolean
   campusColorMap?:   Record<string, string>   // campus name → hex color
-  isochroneGeoJson?: GeoJSON.FeatureCollection | null
-  isochroneMinutes?: number
-  candidatePin?:     { lng: number; lat: number } | null
-  onMapClick?:       (coords: { lng: number; lat: number }) => void
+  activeCampuses?:   Set<string> | null       // null = show all; Set = filter to these
+  isochroneGeoJson?:    GeoJSON.FeatureCollection | null
+  candidateIsochrone?:  GeoJSON.FeatureCollection | null  // candidate-pin isochrone only, for cannibalization
+  isochroneMinutes?:    number
+  candidatePin?:        { lng: number; lat: number } | null
+  onMapClick?:          (coords: { lng: number; lat: number }) => void
+  onCannibalizationResult?: (r: { totalHH: number; zipCount: number } | null) => void
 }
 
 function growthColor(g: number | null): string {
@@ -61,19 +90,24 @@ function computeCentroid(geometry: GeoJSON.Geometry): [number, number] | null {
 export default function MapboxChoropleth({
   zipData,
   loading,
-  campuses        = [],
-  attendeeData    = [],
-  showAttendees   = false,
-  campusColorMap  = {},
-  isochroneGeoJson = null,
+  campuses                  = [],
+  attendeeData              = [],
+  showAttendees             = false,
+  campusColorMap            = {},
+  activeCampuses            = null,
+  isochroneGeoJson          = null,
+  candidateIsochrone        = null,
   isochroneMinutes,
-  candidatePin   = null,
+  candidatePin              = null,
   onMapClick,
+  onCannibalizationResult,
 }: Props) {
-  const containerRef  = useRef<HTMLDivElement>(null)
-  const mapRef        = useRef<unknown>(null)
-  const markersRef    = useRef<mapboxgl.Marker[]>([])
-  const pinMarkerRef  = useRef<mapboxgl.Marker | null>(null)
+  const containerRef      = useRef<HTMLDivElement>(null)
+  const mapRef            = useRef<unknown>(null)
+  const markersRef        = useRef<mapboxgl.Marker[]>([])
+  const pinMarkerRef      = useRef<mapboxgl.Marker | null>(null)
+  const zctaCentroidsRef  = useRef<Record<string, [number, number]>>({})
+  const zctaLabelsRef     = useRef<Record<string, string>>({})
 
   // ── Main map initialization (runs once after data loads) ────────────────────
   useEffect(() => {
@@ -129,6 +163,15 @@ export default function MapboxChoropleth({
         }
 
         map.addSource('zctas', { type: 'geojson', data: enriched })
+
+        // Compute and cache centroids + labels for cannibalization checks
+        for (const f of enriched.features) {
+          const zcta = f.properties?.ZCTA5 as string
+          if (!zcta || !f.geometry) continue
+          const c = computeCentroid(f.geometry as GeoJSON.Geometry)
+          if (c) zctaCentroidsRef.current[zcta] = c
+          if (f.properties?.label) zctaLabelsRef.current[zcta] = f.properties.label as string
+        }
 
         map.addLayer({
           id:     'zcta-fill',
@@ -451,27 +494,31 @@ export default function MapboxChoropleth({
 
     if (!showAttendees || !attendeeData.length) return
 
-    // Build centroid points from ZCTA features if possible; otherwise skip ZIPs with no boundary
-    const boundariesSrc = map.getSource('zctas') as mapboxgl.GeoJSONSource | undefined
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const boundaryData = (boundariesSrc as any)?._data as GeoJSON.FeatureCollection | null
-
-    if (!boundaryData?.features?.length) return
-
-    const zctaCentroids: Record<string, [number, number]> = {}
-    const zctaLabels:    Record<string, string>            = {}
-    for (const f of boundaryData.features) {
-      const zcta = f.properties?.ZCTA5 as string
-      if (!zcta || !f.geometry) continue
-      const centroid = computeCentroid(f.geometry as GeoJSON.Geometry)
-      if (centroid) zctaCentroids[zcta] = centroid
-      if (f.properties?.label) zctaLabels[zcta] = f.properties.label as string
+    // Use centroids cached during map init; recompute as fallback if not yet populated
+    if (!Object.keys(zctaCentroidsRef.current).length) {
+      const boundariesSrc = map.getSource('zctas') as mapboxgl.GeoJSONSource | undefined
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const boundaryData = (boundariesSrc as any)?._data as GeoJSON.FeatureCollection | null
+      if (boundaryData?.features?.length) {
+        for (const f of boundaryData.features) {
+          const zcta = f.properties?.ZCTA5 as string
+          if (!zcta || !f.geometry) continue
+          const c = computeCentroid(f.geometry as GeoJSON.Geometry)
+          if (c) zctaCentroidsRef.current[zcta] = c
+          if (f.properties?.label) zctaLabelsRef.current[zcta] = f.properties.label as string
+        }
+      }
     }
+    if (!Object.keys(zctaCentroidsRef.current).length) return
 
     const features: GeoJSON.Feature[] = attendeeData
-      .filter(a => a.households !== -1)  // skip suppressed ZIPs
+      .filter(a => a.households !== -1)
+      .filter(a => {
+        if (!activeCampuses) return true
+        return a.primaryCampus ? activeCampuses.has(a.primaryCampus) : false
+      })
       .map(a => {
-        const coords = zctaCentroids[a.zip]
+        const coords = zctaCentroidsRef.current[a.zip]
         if (!coords) return null
         const campusColor = a.primaryCampus
           ? (campusColorMap[a.primaryCampus] ?? '#E8B84B')
@@ -481,13 +528,12 @@ export default function MapboxChoropleth({
           geometry: { type: 'Point', coordinates: coords },
           properties: {
             zip:                     a.zip,
-            label:                   zctaLabels[a.zip] ?? a.zip,
+            label:                   zctaLabelsRef.current[a.zip] ?? a.zip,
             households:              a.households,
             penetration:             a.penetrationPct ?? null,
             attendeesPer1kUnclaimed: a.attendeesPer1kUnclaimed ?? null,
             primaryCampus:           a.primaryCampus ?? null,
             campusColor,
-            // Stringify for GeoJSON property storage; parsed back in click handler
             campusBreakdown:         a.campusBreakdown
               ? JSON.stringify(a.campusBreakdown)
               : null,
@@ -497,7 +543,33 @@ export default function MapboxChoropleth({
       .filter(Boolean) as GeoJSON.Feature[]
 
     src.setData({ type: 'FeatureCollection', features })
-  }, [attendeeData, showAttendees, campusColorMap])
+  }, [attendeeData, showAttendees, campusColorMap, activeCampuses])
+
+  // ── Cannibalization check ────────────────────────────────────────────────────
+  // When a candidate pin isochrone is active, compute how many existing attendee
+  // households fall within that drive-time polygon.
+  useEffect(() => {
+    if (!candidateIsochrone || !attendeeData.length) {
+      onCannibalizationResult?.(null)
+      return
+    }
+    const centroids = zctaCentroidsRef.current
+    if (!Object.keys(centroids).length) {
+      onCannibalizationResult?.(null)
+      return
+    }
+    let totalHH = 0, zipCount = 0
+    for (const a of attendeeData) {
+      if (a.households === -1) continue
+      const c = centroids[a.zip]
+      if (!c) continue
+      if (inIsochrone(c, candidateIsochrone)) {
+        totalHH += a.households
+        zipCount++
+      }
+    }
+    onCannibalizationResult?.(totalHH > 0 ? { totalHH, zipCount } : null)
+  }, [candidateIsochrone, attendeeData, onCannibalizationResult])
 
   // ── Candidate pin update ────────────────────────────────────────────────────
   useEffect(() => {

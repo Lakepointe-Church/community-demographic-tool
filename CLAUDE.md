@@ -11,7 +11,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 ### Pages (all live)
 | Route | Status | Description |
 |---|---|---|
-| `/` | ✅ | Overview: aggregate stats, Mapbox choropleth growth map (campus markers, isochrone controls, attendee overlay toggle, candidate-pin drop mode), age/income charts, growth table. When attendee overlay is on: circles colored by primary campus (warm palette, avoids map zone colors), hover tooltip (campus + HH), click popup with full campus breakdown table, Campus Draw Areas panel below map (bar chart of HH per campus + top ZIPs per campus) |
+| `/` | ✅ | Overview: aggregate stats, Mapbox choropleth growth map (campus markers, isochrone controls, attendee overlay toggle, candidate-pin drop mode), age/income charts, growth table. When attendee overlay is on: circles colored by primary campus (warm palette, avoids map zone colors), hover tooltip (campus + HH), click popup with full campus breakdown table, Campus Draw Areas panel below map (bar chart of HH per campus + top ZIPs per campus). **Phase 2.2 extended:** campus rows are clickable filter toggles (click = solo that campus's circles; click again = restore all; "Show all" reset button); Underserved Clusters table (growing ZIPs with low Lakepointe penetration, ranked by growth÷penetration); Cannibalization check in isochrone stats bar (attendee HH within candidate pin's drive polygon, computed via ray-casting on ZCTA centroids) |
 | `/demographics` | ✅ | Per-ZIP: 8 stat cards + Dual-Earner HH + Long Commute cards, YFI/WFI indexes, race donut, education bars, age bars, household type donut, college scorecard |
 | `/compare` | ✅ | Multi-select ZIP comparison: combined stats, race donut, income chart, summary table |
 | `/ses-classes` | ✅ | SES tier breakdown: 4 stat cards, distribution bar chart, scatter plot (SES score vs income), filterable/sortable table with ZIP/Class/HHI/Bachelor+/Mgmt+Prof/Unemployment/Trend |
@@ -296,7 +296,7 @@ src/lib/db.ts                          — Neon client
 src/lib/campuses.ts                    — All 10 campus locations with lat/lng + status (existing|soon); used for map markers + isochrone fetch
 src/components/TopNav.tsx              — Shared nav; renders <CoverageNav /> (do NOT also render in page files)
 src/components/CoverageNav.tsx         — Suspense-wrapped nav links; preserves ?coverage=all param across page transitions
-src/components/MapboxChoropleth.tsx    — Mapbox choropleth map; props: zipData, campuses, attendeeData/showAttendees, campusColorMap, isochroneGeoJson, candidatePin, onMapClick. AttendeeZip type includes: zip, households, censusHH, penetrationPct, county, attendeesPer1kUnclaimed, campusBreakdown, primaryCampus. Circles colored by campusColor property (pre-computed from campusColorMap). Hover popup = quick summary; click popup = full campus breakdown (persistent, close button).
+src/components/MapboxChoropleth.tsx    — Mapbox choropleth map. Key props: zipData, campuses, attendeeData/showAttendees, campusColorMap, activeCampuses (Set<string>|null — filters which campus circles render), isochroneGeoJson (merged display), candidateIsochrone (candidate-only, used for cannibalization), candidatePin, onMapClick, onCannibalizationResult. AttendeeZip type: zip, households, censusHH, penetrationPct, county, attendeesPer1kUnclaimed, campusBreakdown, primaryCampus. ZCTA centroids cached in zctaCentroidsRef during map.on('load') for O(1) point-in-polygon lookups. Hover popup = quick summary; click popup = full campus breakdown (persistent, close button). Ray-casting `inIsochrone()` helper computes cannibalization count when candidateIsochrone changes.
 src/app/page.tsx                       — Overview page
 src/app/site-scorer/page.tsx           — Full Site Scorer: scatter chart, weight sliders, ranked table, CSV export
 src/app/demographics/page.tsx          — Per-ZIP demographics + YFI/WFI + college scorecard
@@ -337,6 +337,7 @@ scripts/import-tdc.ts                  — TDC county projections loader (manual
 src/app/api/leading-indicators/route.ts — GET /api/leading-indicators?zip= — returns permits + enrollment + projection for a ZIP's county
 scripts/find-missing-zips.ts           — Census Gazetteer-based ZIP radius discovery tool
 scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs via zippopotam.us
+README.md                              — Full operator runbook: local setup, env vars, all data refresh cadences, attendee upload procedure (Rock RMS columns, admin page URL, skip report), DB-only policy, environment/DB mapping, reset procedure, DB migration pattern
 ```
 
 ## Slash commands
@@ -372,8 +373,8 @@ scripts/label-missing-zips.ts          — Fetches city names for unlabeled ZIPs
 - **Spec v2 Phase 2** — Attendee layer activation
   - **2.1** ✅ — Robust CSV parsing: csv-parse/sync replaces line.split; Church Online + non-DFW ZIPs filtered; skip report returned in POST response and shown in admin UI
   - **2.2 core** ✅ — Penetration metrics: GET joins zip_demographics (census HH) + religious_adherence (county unclaimed) to add penetrationPct, attendeesPer1kUnclaimed, primaryCampus. Map circles colored by primary campus (warm palette). Hover + click popups. Campus Draw Areas panel on Overview page.
-  - **2.2 extended** ⏳ — Campus draw areas as map filter toggle, underserved clusters (high fit + low penetration), cannibalization check (isochrone-based)
-  - **2.3** ⏳ — Upload runbook in README
+  - **2.2 extended** ✅ — Campus draw areas as map filter toggle (click row to isolate campus circles on map; "Show all" reset), underserved clusters table (growing ZIPs with low penetration ranked by growth÷penetration), cannibalization check (existing attendee HH within candidate pin's isochrone shown in isochrone bar)
+  - **2.3** ✅ — Upload runbook in README: Rock RMS export procedure, expected columns, upload steps, privacy rules, DB-only policy, environment/DB mapping, reset procedure
 - **Spec v2 Phase 3** ⏳ — Executive decision layer: shareable scenario URLs, score percentile anchoring, insights panel, distance-to-campus slider, Vercel Analytics, boardroom UX improvements
 - **Spec v2 Phase 4** ⏳ — New data sources: HUD/USPS address counts, BPS place-level, TEA campus-level, IRS SOI, LEHD LODES, Zillow ZHVI, Google Places (shortlist only)
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, lazy, Suspense } from 'react'
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react'
 import { downloadCsv } from '@/lib/csv'
 import { CAMPUSES } from '@/lib/campuses'
 import { BOUNDARY_CHANGED } from '@/lib/zips'
@@ -193,6 +193,59 @@ function SEsBadge({ label }: { label: string }) {
 
 const CARD_SURFACE = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
 
+// ── Site-scorer helpers (inline for insights panel) ───────────────
+const _DEFAULT_SS_WEIGHTS = { yfi: 23, wfi: 23, ses: 18, growth: 14, saturation: 12, enrollment: 10 }
+
+function _ssGrowthScore(g: number) { return Math.min(100, Math.max(0, (g + 10) / 50 * 100)) }
+function _ssSatScore(c: number) { return Math.max(0, 100 - Math.min(100, (c / 30) * 100)) }
+
+function _ssFitScore(z: {
+  yfi: number; wfi: number; sesScore: number; churchesPer10k: number
+  populationGrowth: number | null; enrollmentGrowthScore: number
+}): number {
+  const w = _DEFAULT_SS_WEIGHTS
+  const total = w.yfi + w.wfi + w.ses + w.growth + w.saturation + w.enrollment
+  const growthW = z.populationGrowth != null ? w.growth : 0
+  const otherSum = total - w.growth
+  const scale = (otherSum + growthW) > 0 ? 100 / (otherSum + growthW) : 1
+  return Math.round((
+    z.yfi * w.yfi + z.wfi * w.wfi + z.sesScore * w.ses +
+    _ssSatScore(z.churchesPer10k) * w.saturation +
+    (z.populationGrowth != null ? _ssGrowthScore(z.populationGrowth) * growthW : 0) +
+    z.enrollmentGrowthScore * w.enrollment
+  ) * scale / 100)
+}
+
+const _SS_DRIVER_LABELS: Record<string, string> = {
+  yfi: 'young family concentration', wfi: 'working family rate', ses: 'SES score',
+  growth: 'population growth', saturation: 'low saturation', enrollment: 'enrollment growth',
+}
+
+function _ssTopDrivers(z: {
+  yfi: number; wfi: number; sesScore: number; churchesPer10k: number
+  populationGrowth: number | null; enrollmentGrowthScore: number
+}): [string, string] {
+  const w = _DEFAULT_SS_WEIGHTS
+  const growthW = z.populationGrowth != null ? w.growth : 0
+  const scores: Record<string, number> = {
+    yfi:        z.yfi * w.yfi,
+    wfi:        z.wfi * w.wfi,
+    ses:        z.sesScore * w.ses,
+    growth:     z.populationGrowth != null ? _ssGrowthScore(z.populationGrowth) * growthW : 0,
+    saturation: _ssSatScore(z.churchesPer10k) * w.saturation,
+    enrollment: z.enrollmentGrowthScore * w.enrollment,
+  }
+  const keys = Object.keys(scores).sort((a, b) => scores[b] - scores[a])
+  return [_SS_DRIVER_LABELS[keys[0]], _SS_DRIVER_LABELS[keys[1]]]
+}
+
+interface InsightEntry {
+  zip: string; label: string; fitScore: number; rank: number; total: number
+  populationGrowth: number | null; churchesPer10k: number
+  yfi: number; wfi: number; sesLabel: string
+  driver1: string; driver2: string
+}
+
 // ── Page ─────────────────────────────────────────────────────────
 export default function OverviewPage() {
   const [data, setData]           = useState<OverviewData | null>(null)
@@ -218,6 +271,10 @@ export default function OverviewPage() {
     return map
   }, [attendeeData])
 
+  // Phase 2.2 extended — campus filter + cannibalization
+  const [activeCampuses, setActiveCampuses]           = useState<Set<string> | null>(null)
+  const [cannibalizationResult, setCannibalizationResult] = useState<{ totalHH: number; zipCount: number } | null>(null)
+
   // Phase 4.2 — isochrones + candidate pin
   const [selectedCampusZip, setSelectedCampusZip] = useState<string>('')
   const [driveMinutes, setDriveMinutes]           = useState<number>(20)
@@ -227,6 +284,9 @@ export default function OverviewPage() {
   const [candidatePin, setCandidatePin]           = useState<{ lng: number; lat: number } | null>(null)
   const [candidateIsochrone, setCandidateIsochrone] = useState<GeoJSON.FeatureCollection | null>(null)
   const [candidateIsoLoading, setCandidateIsoLoading] = useState(false)
+
+  // Phase 3.3 — top opportunities insights panel
+  const [insights, setInsights] = useState<InsightEntry[]>([])
 
   // Read initial coverage from URL on mount
   useEffect(() => {
@@ -259,6 +319,31 @@ export default function OverviewPage() {
       .catch(() => setAttendeeLoaded(true))
   }, [attendeeLoaded])
 
+  // Fetch site-scorer data once for insights panel (uses default weights, core MSA)
+  useEffect(() => {
+    fetch('/api/site-scorer?coverage=core')
+      .then(r => r.json())
+      .then(d => {
+        if (!d.zips) return
+        const w = _DEFAULT_SS_WEIGHTS
+        const scored: Array<{ zip: string; label: string; fitScore: number; populationGrowth: number | null; churchesPer10k: number; yfi: number; wfi: number; sesLabel: string; sesScore: number; enrollmentGrowthScore: number }> =
+          d.zips.map((z: { zip: string; label: string; populationGrowth: number | null; churchesPer10k: number; yfi: number; wfi: number; sesLabel: string; sesScore: number; enrollmentGrowthScore: number }) => ({
+            ...z,
+            fitScore: _ssFitScore({ yfi: z.yfi, wfi: z.wfi, sesScore: z.sesScore, churchesPer10k: z.churchesPer10k, populationGrowth: z.populationGrowth, enrollmentGrowthScore: z.enrollmentGrowthScore }),
+          }))
+        const byScore = [...scored].sort((a, b) => b.fitScore - a.fitScore)
+        const total = byScore.length
+        const top3: InsightEntry[] = byScore.slice(0, 3).map((z, i) => {
+          const [d1, d2] = _ssTopDrivers({ yfi: z.yfi, wfi: z.wfi, sesScore: z.sesScore, churchesPer10k: z.churchesPer10k, populationGrowth: z.populationGrowth, enrollmentGrowthScore: z.enrollmentGrowthScore })
+          return { zip: z.zip, label: z.label, fitScore: z.fitScore, rank: i + 1, total, populationGrowth: z.populationGrowth, churchesPer10k: z.churchesPer10k, yfi: z.yfi, wfi: z.wfi, sesLabel: z.sesLabel, driver1: d1, driver2: d2 }
+        })
+        // suppress _DEFAULT_SS_WEIGHTS unused warning
+        void w
+        setInsights(top3)
+      })
+      .catch(() => {/* insights are non-critical */})
+  }, [])
+
   // Fetch isochrone when campus selection or drive time changes
   useEffect(() => {
     if (!selectedCampusZip) {
@@ -287,6 +372,71 @@ export default function OverviewPage() {
       .then(d => { setCandidateIsochrone(d); setCandidateIsoLoading(false) })
       .catch(() => setCandidateIsoLoading(false))
   }, [candidatePin, driveMinutes, pinMode])
+
+  // ── Attendee-derived memos ────────────────────────────────────────────────
+  const validAttendees = useMemo(() => attendeeData.filter(a => a.households !== -1), [attendeeData])
+
+  const campusList = useMemo(() => {
+    const byCampus = new Map<string, { total: number; zips: { zip: string; hh: number }[] }>()
+    for (const a of validAttendees) {
+      for (const [campus, hh] of Object.entries(a.campusBreakdown ?? {})) {
+        if (!byCampus.has(campus)) byCampus.set(campus, { total: 0, zips: [] })
+        const e = byCampus.get(campus)!
+        e.total += hh as number
+        e.zips.push({ zip: a.zip, hh: hh as number })
+      }
+    }
+    return [...byCampus.entries()]
+      .map(([name, { total, zips }]) => ({
+        name,
+        total,
+        color: campusColorMap[name] ?? '#E8B84B',
+        topZips: zips.sort((a, b) => b.hh - a.hh).slice(0, 5),
+      }))
+      .sort((a, b) => b.total - a.total)
+  }, [validAttendees, campusColorMap])
+
+  const attendeeTotal = useMemo(() => validAttendees.reduce((s, a) => s + a.households, 0), [validAttendees])
+
+  const zipDataMap = useMemo(() => new Map((data?.zips ?? []).map(z => [z.zip, z])), [data])
+
+  // Growing ZIPs with low Lakepointe presence — sorted by opportunity (growth / penetration)
+  const underservedZips = useMemo(() => {
+    return validAttendees
+      .filter(a => a.penetrationPct != null)
+      .map(a => {
+        const zd = zipDataMap.get(a.zip)
+        if (!zd || (zd.populationGrowth ?? 0) <= 0) return null
+        return {
+          zip:           a.zip,
+          label:         zd.label,
+          growth:        zd.populationGrowth!,
+          penetration:   a.penetrationPct!,
+          primaryCampus: a.primaryCampus,
+          score:         zd.populationGrowth! / (a.penetrationPct! + 0.1),
+        }
+      })
+      .filter((x): x is NonNullable<typeof x> => x !== null)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10)
+  }, [validAttendees, zipDataMap])
+
+  // Campus toggle: first click solos the campus; clicking again restores all
+  const toggleCampus = useCallback((name: string) => {
+    setActiveCampuses(prev => {
+      const allNames = campusList.map(c => c.name)
+      if (prev === null) return new Set([name])
+      if (prev.size === 1 && prev.has(name)) return null
+      const next = new Set(prev)
+      next.has(name) ? next.delete(name) : next.add(name)
+      return next.size === 0 || next.size === allNames.length ? null : next
+    })
+  }, [campusList])
+
+  const handleCannibalizationResult = useCallback(
+    (r: { totalHH: number; zipCount: number } | null) => setCannibalizationResult(r),
+    []
+  )
 
   function handleCoverageChange(val: 'core' | 'all') {
     setCoverage(val)
@@ -359,7 +509,7 @@ export default function OverviewPage() {
                 onMouseEnter={e => { e.currentTarget.style.color = '#C8D4E4'; e.currentTarget.style.borderColor = '#4EAEFF' }}
                 onMouseLeave={e => { e.currentTarget.style.color = '#8A98AE'; e.currentTarget.style.borderColor = '#232940' }}
               >
-                ↺ Refresh
+                ↺ Reload
               </button>
             </div>
             {data?.updatedAt && (
@@ -400,6 +550,70 @@ export default function OverviewPage() {
             accent="purple" loading={loading}
           />
         </div>
+
+        {/* Top Opportunities Insights Panel — Phase 3.3 */}
+        {insights.length > 0 && (
+          <div style={{ marginBottom: '24px', background: '#13161f', border: '1px solid #232940', borderRadius: 10, padding: '20px 24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <div>
+                <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#E8B84B', marginBottom: 4 }}>
+                  Top Opportunities · Default Weights · Core MSA
+                </div>
+                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: '0.04em', color: '#F0F2F7', lineHeight: 1 }}>
+                  Site Scorer Highlights
+                </div>
+              </div>
+              <a
+                href="/site-scorer"
+                style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', textDecoration: 'none', border: '1px solid #232940', borderRadius: 4, padding: '5px 10px', letterSpacing: '0.06em' }}
+              >Full Rankings →</a>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+              {insights.map((z, i) => {
+                const color = z.fitScore >= 75 ? '#E8B84B' : z.fitScore >= 60 ? '#4EAEFF' : '#2DD4BF'
+                const topPct = Math.max(1, Math.round((z.rank / z.total) * 100))
+                return (
+                  <div key={z.zip} style={{
+                    background: 'rgba(255,255,255,0.02)',
+                    border: `1px solid ${i === 0 ? 'rgba(232,184,75,0.25)' : '#1e2b3c'}`,
+                    borderRadius: 8, padding: '16px 18px',
+                    borderLeft: `3px solid ${color}`,
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                      <div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', marginBottom: 2 }}>
+                          #{z.rank} of {z.total}
+                        </div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, color: '#E8B84B', fontWeight: 600 }}>{z.zip}</div>
+                        <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 11, color: '#8A98AE', marginTop: 2, lineHeight: 1.3 }}>{z.label}</div>
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
+                        <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, color, lineHeight: 1 }}>{z.fitScore}</div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#5a6478' }}>top {topPct}%</div>
+                      </div>
+                    </div>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#4EAEFF', marginBottom: 6 }}>
+                      YFI {z.yfi} · WFI {z.wfi} · {z.sesLabel}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 6 }}>
+                      {z.populationGrowth != null && (
+                        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: z.populationGrowth >= 0 ? '#2DD4BF' : '#FF6B6B' }}>
+                          Growth {z.populationGrowth.toFixed(1)}%
+                        </span>
+                      )}
+                      <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#8A98AE' }}>
+                        {z.churchesPer10k.toFixed(1)} chr/10K
+                      </span>
+                    </div>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', borderTop: '1px solid #1a1f2e', paddingTop: 8 }}>
+                      Driven by {z.driver1} + {z.driver2}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Mapbox Choropleth Map — Phase 4 */}
         <div className="fade-up-3" style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px', marginBottom: '20px' }}>
@@ -520,9 +734,10 @@ export default function OverviewPage() {
             const geoProps = (activeIsochrone?.features?.[0]?.properties ?? {}) as Record<string, unknown>
             const contourMins = geoProps['contour'] as number | undefined
             const minutes = contourMins ?? driveMinutes
+            const showCannib = candidatePin && cannibalizationResult && attendeeData.length > 0
             return (
               <div style={{
-                display: 'flex', gap: '24px', alignItems: 'center',
+                display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap',
                 marginBottom: '12px', padding: '10px 14px',
                 background: 'rgba(78,174,255,0.06)', border: '1px solid rgba(78,174,255,0.15)',
                 fontFamily: "'IBM Plex Mono', monospace",
@@ -535,10 +750,28 @@ export default function OverviewPage() {
                     {label} · {minutes}-min
                   </div>
                 </div>
-                <div style={{ fontSize: '9px', color: '#8A98AE', lineHeight: 1.6 }}>
-                  Polygon shows approximate drive-time coverage area.{' '}
-                  Population & ZIP stats within the isochrone coming in a future update.
+                <div style={{ fontSize: '9px', color: '#8A98AE', lineHeight: 1.6, flex: 1 }}>
+                  Polygon shows approximate drive-time coverage area.
+                  {!showCannib && ' Toggle Attendees on and drop a candidate pin to see cannibalization.'}
                 </div>
+                {showCannib && (
+                  <div style={{ borderLeft: '1px solid rgba(255,107,107,0.3)', paddingLeft: '16px' }}>
+                    <div style={{ fontSize: '9px', color: '#FF6B6B', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '2px' }}>
+                      Cannibalization Risk
+                    </div>
+                    <div style={{ fontSize: '13px', color: '#F0F2F7', fontWeight: 600 }}>
+                      {cannibalizationResult!.totalHH.toLocaleString()} HH · {cannibalizationResult!.zipCount} ZIPs
+                    </div>
+                    <div style={{ fontSize: '9px', color: '#8A98AE', marginTop: '2px' }}>
+                      existing attendees within this drive area
+                    </div>
+                  </div>
+                )}
+                {candidatePin && attendeeData.length > 0 && !cannibalizationResult && (
+                  <div style={{ borderLeft: '1px solid rgba(78,174,255,0.2)', paddingLeft: '16px', fontSize: '9px', color: '#5a6478' }}>
+                    No existing attendees within drive area
+                  </div>
+                )}
               </div>
             )
           })()}
@@ -555,42 +788,19 @@ export default function OverviewPage() {
               attendeeData={attendeeData}
               showAttendees={showAttendees}
               campusColorMap={campusColorMap}
+              activeCampuses={activeCampuses}
               isochroneGeoJson={activeIsochrone}
+              candidateIsochrone={candidateIsochrone}
               isochroneMinutes={driveMinutes}
               candidatePin={candidatePin}
               onMapClick={pinMode ? handleMapClick : undefined}
+              onCannibalizationResult={handleCannibalizationResult}
             />
           </Suspense>
         </div>
 
         {/* Attendee Analysis Panel — visible when overlay is toggled on */}
-        {showAttendees && (() => {
-          const valid = attendeeData.filter(a => a.households !== -1)
-          if (!valid.length) return null
-
-          const labelMap = new Map((data?.zips ?? []).map(z => [z.zip, z.label]))
-          const totalHH  = valid.reduce((s, a) => s + a.households, 0)
-
-          // Campus totals — sorted by household count descending
-          const byCampus = new Map<string, { total: number; zips: { zip: string; hh: number }[] }>()
-          for (const a of valid) {
-            const bd = a.campusBreakdown ?? {}
-            for (const [campus, hh] of Object.entries(bd)) {
-              if (!byCampus.has(campus)) byCampus.set(campus, { total: 0, zips: [] })
-              const entry = byCampus.get(campus)!
-              entry.total += hh
-              entry.zips.push({ zip: a.zip, hh })
-            }
-          }
-          const campusList = [...byCampus.entries()]
-            .map(([name, { total, zips }]) => ({
-              name,
-              total,
-              color: campusColorMap[name] ?? '#E8B84B',
-              topZips: zips.sort((a, b) => b.hh - a.hh).slice(0, 5),
-            }))
-            .sort((a, b) => b.total - a.total)
-
+        {showAttendees && validAttendees.length > 0 && (() => {
           const maxCampusHH = campusList[0]?.total ?? 1
           const MONO = { fontFamily: "'IBM Plex Mono', monospace" }
 
@@ -600,24 +810,32 @@ export default function OverviewPage() {
               {/* Header + summary stats */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
                 <div>
-                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '4px' }}>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '4px' }}>
                     Attendee Analysis
                   </div>
                   <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '0.05em', color: '#F0F2F7' }}>
                     Campus Draw Areas
                   </div>
+                  {activeCampuses !== null && (
+                    <button
+                      onClick={() => setActiveCampuses(null)}
+                      style={{ ...MONO, fontSize: '9px', letterSpacing: '0.08em', marginTop: '6px', background: 'rgba(232,184,75,0.1)', color: '#E8B84B', border: '1px solid rgba(232,184,75,0.3)', borderRadius: '3px', padding: '3px 8px', cursor: 'pointer' }}
+                    >
+                      ✕ Show all campuses
+                    </button>
+                  )}
                 </div>
                 <div style={{ display: 'flex', gap: '24px', textAlign: 'right' }}>
                   <div>
-                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Total HH</div>
-                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#E8B84B' }}>{totalHH.toLocaleString()}</div>
+                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>Total HH</div>
+                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#E8B84B' }}>{attendeeTotal.toLocaleString()}</div>
                   </div>
                   <div>
-                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase', letterSpacing: '0.1em' }}>ZIPs</div>
-                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#4EAEFF' }}>{valid.length}</div>
+                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>ZIPs</div>
+                    <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#4EAEFF' }}>{validAttendees.length}</div>
                   </div>
                   <div>
-                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Campuses</div>
+                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>Campuses</div>
                     <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#2DD4BF' }}>{campusList.length}</div>
                   </div>
                 </div>
@@ -626,33 +844,44 @@ export default function OverviewPage() {
               {/* Campus bars + top ZIPs side by side */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>
 
-                {/* Left: campus bar list */}
+                {/* Left: campus bar list — each row is a clickable filter toggle */}
                 <div>
-                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase', marginBottom: '14px' }}>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase' as const, marginBottom: '6px' }}>
                     Households by Campus
                   </div>
+                  <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', marginBottom: '10px' }}>
+                    Click a campus to isolate its draw area on the map
+                  </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {campusList.map(c => (
-                      <div key={c.name} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: c.color, flexShrink: 0 }} />
-                        <div style={{ width: '120px', flexShrink: 0, ...MONO, fontSize: '11px', color: '#C8D4E4', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.name}</div>
-                        <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
-                          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${(c.total / maxCampusHH) * 100}%`, background: `linear-gradient(90deg,${c.color},${c.color}50)` }} />
+                    {campusList.map(c => {
+                      const isActive = activeCampuses === null || activeCampuses.has(c.name)
+                      return (
+                        <div
+                          key={c.name}
+                          onClick={() => toggleCampus(c.name)}
+                          title={isActive ? `Click to isolate ${c.name}` : `Click to add ${c.name}`}
+                          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', opacity: isActive ? 1 : 0.3, transition: 'opacity 0.15s' }}
+                        >
+                          <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: c.color, flexShrink: 0, border: isActive && activeCampuses !== null && activeCampuses.has(c.name) ? `2px solid ${c.color}` : '2px solid transparent', boxShadow: isActive && activeCampuses !== null ? `0 0 6px ${c.color}80` : 'none' }} />
+                          <div style={{ width: '120px', flexShrink: 0, ...MONO, fontSize: '11px', color: '#C8D4E4', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>{c.name}</div>
+                          <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative' as const, overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute' as const, left: 0, top: 0, bottom: 0, width: `${(c.total / maxCampusHH) * 100}%`, background: `linear-gradient(90deg,${c.color},${c.color}50)` }} />
+                          </div>
+                          <div style={{ width: '60px', flexShrink: 0, textAlign: 'right' as const, ...MONO, fontSize: '11px', color: c.color, fontWeight: 600 }}>
+                            {c.total.toLocaleString()}
+                          </div>
+                          <div style={{ width: '36px', flexShrink: 0, textAlign: 'right' as const, ...MONO, fontSize: '10px', color: '#5a6478' }}>
+                            {Math.round((c.total / attendeeTotal) * 100)}%
+                          </div>
                         </div>
-                        <div style={{ width: '60px', flexShrink: 0, textAlign: 'right', ...MONO, fontSize: '11px', color: c.color, fontWeight: 600 }}>
-                          {c.total.toLocaleString()}
-                        </div>
-                        <div style={{ width: '36px', flexShrink: 0, textAlign: 'right', ...MONO, fontSize: '10px', color: '#5a6478' }}>
-                          {Math.round((c.total / totalHH) * 100)}%
-                        </div>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
                 </div>
 
                 {/* Right: top ZIPs per campus */}
                 <div>
-                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase', marginBottom: '14px' }}>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase' as const, marginBottom: '14px' }}>
                     Top ZIP Codes per Campus
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -666,7 +895,7 @@ export default function OverviewPage() {
                           {c.topZips.map(z => (
                             <div key={z.zip} style={{ display: 'flex', justifyContent: 'space-between' }}>
                               <span style={{ ...MONO, fontSize: '10px', color: '#8A98AE' }}>
-                                {z.zip}{labelMap.get(z.zip) ? ` · ${labelMap.get(z.zip)}` : ''}
+                                {z.zip}{zipDataMap.get(z.zip)?.label ? ` · ${zipDataMap.get(z.zip)!.label}` : ''}
                               </span>
                               <span style={{ ...MONO, fontSize: '10px', color: '#C8D4E4', fontWeight: 600 }}>{z.hh.toLocaleString()}</span>
                             </div>
@@ -677,6 +906,42 @@ export default function OverviewPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Underserved clusters — growing ZIPs with low penetration */}
+              {underservedZips.length > 0 && (
+                <div style={{ marginTop: '28px', borderTop: '1px solid #1e2b3c', paddingTop: '20px' }}>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase' as const, marginBottom: '4px' }}>
+                    Underserved Clusters
+                  </div>
+                  <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', marginBottom: '12px' }}>
+                    Growing ZIPs where Lakepointe attendance is low relative to population · ranked by growth ÷ penetration
+                  </div>
+                  <div style={{ overflowX: 'auto' as const }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' as const }}>
+                      <thead>
+                        <tr>
+                          {['ZIP', 'Area', 'Growth', 'Penetration', 'Primary Campus'].map(h => (
+                            <th key={h} style={{ ...MONO, fontSize: '9px', color: '#5a6478', letterSpacing: '0.08em', textTransform: 'uppercase' as const, textAlign: 'left' as const, padding: '5px 12px 7px 0', borderBottom: '1px solid #1e2b3c', fontWeight: 400 }}>{h}</th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {underservedZips.map(u => (
+                          <tr key={u.zip} style={{ cursor: 'default' }}>
+                            <td style={{ ...MONO, fontSize: '11px', color: '#2DD4BF', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020' }}>{u.zip}</td>
+                            <td style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: '12px', color: '#C8D4E4', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020' }}>{u.label}</td>
+                            <td style={{ ...MONO, fontSize: '11px', color: '#4EAEFF', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020' }}>↑ {u.growth}%</td>
+                            <td style={{ ...MONO, fontSize: '11px', color: '#FF6B6B', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020' }}>{u.penetration.toFixed(2)}%</td>
+                            <td style={{ ...MONO, fontSize: '10px', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020', color: u.primaryCampus ? (campusColorMap[u.primaryCampus] ?? '#8A98AE') : '#5a6478' }}>
+                              {u.primaryCampus ?? '—'}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )
         })()}
