@@ -19,7 +19,7 @@ export default function MethodologyPage() {
       {/* ── DATA SOURCES ─────────────────────────────── */}
       <Section title="Data Sources">
         <p style={bodyStyle}>
-          The platform aggregates ten public data sources, all routed through a Neon PostgreSQL database.
+          The platform aggregates over a dozen public data sources, all routed through a Neon PostgreSQL database.
           Data is not fetched live on page load — it is refreshed on the cadences below and served from the database.
         </p>
         <div style={{ overflowX: 'auto', marginTop: '20px' }}>
