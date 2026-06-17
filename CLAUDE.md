@@ -446,6 +446,13 @@ README.md                              — Full operator runbook: local setup, e
   - **4.6** ⏳ — IRS SOI county-to-county migration (AGI bands); context/narrative tier
   - **4.7** ✅ — Zillow ZHVI ZIP-level home values: `zip_home_values` table, `scripts/import-zillow.ts` (streams the public ZIP CSV via csv-parse — the Metro field has embedded commas, so `line.split` is unsafe; keeps latest monthly value + YoY + trailing-13-month series), `/api/home-values?zip=`, Home Value Trend panel on Demographics (typical value, YoY badge, sparkline). All-homes 35th–65th-pctile tier (SFR+condo), smoothed/seasonally-adjusted. 337/370 DFW ZIPs (Zillow suppresses low-transaction ZIPs), latest 2026-05. Monthly vintage. **Context tier (display only)** — never scored; home value already enters scoring via the ACS-based SES composite, so adding ZHVI would re-count it.
   - **4.8** ⏳ — Google Places church search; on-demand only, not bulk
+- **Spec v2 Phase 5** — Code health (ongoing, interleave):
+  - **5.1** ✅ — Scoring unit tests: all decision-bearing formulas extracted to `src/lib/scoring.ts` (pure, no DB/Next/React), production wired to import them (census.ts/site-scorer route+page/overview) so tested math = production math. `src/lib/scoring.test.ts` — Vitest, 22 hand-computed fixtures. `npm test`. Behavior-preserving (tsc + build clean). Tests pin current SES absolute-caps + YFI 0–17 behavior (see §1.5 [HUMAN]). See "Scoring math" section above.
+  - **5.2** ⏳ — Shared component library (`<StatCard>`/`<Surface>`/`<SectionHeader>`/`<DataTable>` + theme.ts); incremental, one page per session
+  - **5.3** ⏳ — Cache `/api/overview` (currently `SELECT *` + JS reduce per request); add revalidate or SQL aggregates
+  - **5.4** ⏳ — Error monitoring (Sentry / Vercel log drains) — a failed monthly refresh is currently silent. Per spec build-order, do before/alongside adding more refresh-dependent sources.
+  - **5.5** ✅ — Real README (operator runbook; done under Phase 2.3)
+  - **Governance reframe** (spec Appendix A): source throughput is gated by *tier*, not a flat monthly quota — context-tier sources add freely during build-out if they clear admission gates; scored signals ≤1/quarter behind tests + ~8-cap + no-double-count + [HUMAN]; ~1/month for everything post-launch. Build order: 5.1 (done) → 5.4 → 4.3 (scored, behind tests), context sources (4.6, 4.1-when-unblocked) interleaved.
 
 ## Planned next data sources (ordered by priority)
 These are the next APIs to wire in, from Paul's Technical Specification v1.1 (April 2026).
