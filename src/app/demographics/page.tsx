@@ -523,6 +523,16 @@ interface AddressMomentum {
   series?: { quarter: string; resActive: number }[]
 }
 
+// ── Types for Home Values (Zillow ZHVI, Phase 4.7) ──────────────
+interface HomeValues {
+  available: boolean
+  zip: string
+  latestMonth?: string
+  zhvi?: number
+  zhviYoy?: number | null
+  series?: { month: string; value: number }[]
+}
+
 // ── Page ─────────────────────────────────────────────────────────
 export default function DemographicsPage() {
   const [selectedZip, setSelectedZip] = useState<string>(DFW_ZIPS[0].zip)
@@ -535,6 +545,7 @@ export default function DemographicsPage() {
   const [commute, setCommute] = useState<CommuteData | null>(null)
   const [addressMomentum, setAddressMomentum] = useState<AddressMomentum | null>(null)
   const [giving, setGiving] = useState<GivingCapacity | null>(null)
+  const [homeValues, setHomeValues] = useState<HomeValues | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -575,6 +586,14 @@ export default function DemographicsPage() {
     fetch(`/api/giving?zip=${selectedZip}`)
       .then(r => r.json())
       .then(d => { if (!d.error) setGiving(d) })
+      .catch(() => {})
+  }, [selectedZip])
+
+  useEffect(() => {
+    setHomeValues(null)
+    fetch(`/api/home-values?zip=${selectedZip}`)
+      .then(r => r.json())
+      .then(d => { if (!d.error) setHomeValues(d) })
       .catch(() => {})
   }, [selectedZip])
 
@@ -1159,6 +1178,85 @@ export default function DemographicsPage() {
 
               <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px', lineHeight: 1.6 }}>
                 IRS SOI ZIP-code data · {giving.year} · charitable deductions on Schedule A. Post-2017 TCJA only ~{giving.itemizerRate != null ? giving.itemizerRate.toFixed(0) : '10'}% of filers here itemize, so deductions undercount true giving and skew toward higher-income households — read as a <span style={{ color: '#8A98AE' }}>relative</span> generosity signal, not a giving total. Counts rounded to nearest 10; small ZIPs are volatile.
+              </div>
+            </div>
+          )}
+
+          {/* Home Value Trend — Zillow ZHVI (Phase 4.7); renders only when the ZIP has ZHVI data */}
+          {homeValues?.available && homeValues.zhvi != null && (
+            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+              <SectionHeader
+                eyebrow={`Current Home Values · Zillow ZHVI ${homeValues.latestMonth ?? ''}`}
+                title="Home Value Trend"
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                {/* Typical home value */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#E8B84B', lineHeight: 1 }}>
+                    ${homeValues.zhvi.toLocaleString()}
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Typical home value
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    Smoothed · seasonally adjusted
+                  </div>
+                </div>
+
+                {/* Year-over-year change */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  {(() => {
+                    const v = homeValues.zhviYoy
+                    const color = v == null ? '#5a6478' : v >= 0 ? '#2DD4BF' : '#FF6B6B'
+                    return (
+                      <>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                          <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color, lineHeight: 1 }}>
+                            {v == null ? '—' : `${v >= 0 ? '+' : ''}${v.toFixed(1)}`}
+                          </span>
+                          <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color }}>%</span>
+                        </div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                          Year-over-year change
+                        </div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                          vs. same month last year
+                        </div>
+                      </>
+                    )
+                  })()}
+                </div>
+
+                {/* Sparkline */}
+                {homeValues.series && homeValues.series.length > 1 && (
+                  <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                      Trailing-year trend
+                    </div>
+                    <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '40px' }}>
+                      {homeValues.series.map((s, i, arr) => {
+                        const max = Math.max(...arr.map(x => x.value))
+                        const min = Math.min(...arr.map(x => x.value))
+                        const range = max - min || 1
+                        const h = 8 + ((s.value - min) / range) * 32
+                        return (
+                          <div key={s.month} title={`${s.month}: $${s.value.toLocaleString()}`}
+                            style={{ flex: 1, height: h, borderRadius: '2px 2px 0 0',
+                              background: i === arr.length - 1 ? '#E8B84B' : 'rgba(232,184,75,0.3)' }} />
+                        )
+                      })}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '6px' }}>
+                      <span>{homeValues.series[0]?.month}</span>
+                      <span>{homeValues.series[homeValues.series.length - 1]?.month}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px', lineHeight: 1.6 }}>
+                Zillow Home Value Index (ZHVI) · all-homes, 35th–65th-percentile tier (SFR + condo) · ZIP level · updated monthly. A smoothed, seasonally adjusted measure of typical value — fresher than the ACS self-reported median, which lags ~2 years. Context signal, not scored.
               </div>
             </div>
           )}

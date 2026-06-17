@@ -455,6 +455,27 @@ export default function MethodologyPage() {
             </div>
           </div>
 
+          {/* Zillow ZHVI Home Values */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.7 · Home Value Trend (Zillow ZHVI)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'Zillow Home Value Index (ZHVI) — the public ZIP-level CSV (Zip_zhvi_uc_sfrcondo_tier_0.33_0.67_sm_sa_month.csv) downloaded directly from files.zillowstatic.com (no key). All-homes, 35th–65th-percentile value tier, single-family + condo, smoothed and seasonally adjusted. Import script: scripts/import-zillow.ts (re-run monthly; Zillow updates around mid-month).' },
+                { label: 'Geography', definition: 'True USPS ZIP codes (not ZCTA approximations). 337 of 370 DFW ZIPs have data — Zillow suppresses ZIPs with too few transactions to compute a stable index. The importer keeps the most recent non-empty monthly value per ZIP and a trailing 13-month series for the sparkline.' },
+                { label: 'Metrics', definition: 'Typical home value = the latest monthly ZHVI for the ZIP (a smoothed measure of the value of a typical home, not a sale-price median). Year-over-year change = the % change vs. the ZHVI 12 months prior. Both shown on the Demographics page Home Value Trend panel.' },
+                { label: 'Why alongside ACS', definition: 'ACS median home value (B25077) is self-reported by owners and lags roughly two years; ZHVI is a market-derived measure refreshed monthly. ZHVI captures recent cooling or appreciation that ACS has not yet recorded. The two answer different questions — ACS = what owners think their homes are worth (lagged), ZHVI = current typical market value.' },
+                { label: 'Scoring use', definition: 'Context/display only — never a Site Scorer input. Home value already enters scoring indirectly through the SES composite (20% home value, from ACS); adding ZHVI to scoring would re-count the same construct (see scoring-governance rules).' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </Section>
 
@@ -830,5 +851,9 @@ const LIMITATIONS = [
   {
     source: 'LEHD LODES — Commute Corridors',
     limitation: 'LODES counts jobs, not people, and a worker with two jobs is counted twice. The vintage lags ~2 years (2023 is the latest, released Dec 2025) and excludes most federal and uniformed-military workers and self-employed/informal jobs, which are absent from the unemployment-insurance records LODES is built on. Home and work are assigned to census blocks via a model with synthetic noise added for confidentiality, then aggregated up to ZCTA — block-level figures are noisy, but ZCTA aggregates are stable. Only flows where both ends fall inside the DFW coverage area are kept, so a ZIP\'s residents who work outside the metro are not reflected in its totals. The "net commute direction" is a job-weighted average bearing; a ZIP whose workers split between two opposite job centers can show a low concentration and a direction that points between them. Context only — never a Site Scorer input.',
+  },
+  {
+    source: 'Zillow ZHVI — Home Value Trend',
+    limitation: 'ZHVI is a modeled index of "typical" value (35th–65th-percentile tier), not a record of actual sales, so it neither matches any individual home nor reflects the high or low end of a ZIP\'s market. It covers single-family homes and condos but not raw land, multifamily, or new-construction not yet on Zillow. Coverage is thinner in rural/low-transaction ZIPs (337 of 370 DFW ZIPs have data); where present, those values are based on fewer observations and are more volatile. The index is smoothed and seasonally adjusted, which slightly dampens recent turning points. Zillow\'s methodology can be revised, restating history. Context tier — never a Site Scorer input (home value already enters scoring via the ACS-based SES composite).',
   },
 ]

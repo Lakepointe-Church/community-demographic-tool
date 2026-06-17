@@ -251,6 +251,19 @@ export async function POST(req: NextRequest) {
       )
     `
 
+    // Zillow ZHVI ZIP-level home values — current typical value + momentum (Phase 4.7)
+    // One row per ZIP, latest monthly snapshot. zhvi in whole dollars; series = trailing months for sparkline.
+    await sql`
+      CREATE TABLE IF NOT EXISTS zip_home_values (
+        zip          TEXT PRIMARY KEY,
+        latest_month TEXT,
+        zhvi         INTEGER,
+        zhvi_yoy     NUMERIC(6,1),
+        series       JSONB,
+        updated_at   TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

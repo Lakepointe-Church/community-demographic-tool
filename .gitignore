@@ -48,3 +48,6 @@ data/hud-usps-*.csv
 
 # IRS SOI ZIP income source cache (~200 MB; re-fetched by scripts/import-soi.ts)
 data/soi-zpallagi-*.csv
+
+# Zillow ZHVI source cache (~120 MB; streamed/re-fetched by scripts/import-zillow.ts)
+data/zillow-zhvi-zip.csv
