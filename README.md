@@ -25,6 +25,8 @@ npm run dev        # http://localhost:3000
 
 `vercel env pull` writes `.env.local` with `DATABASE_URL`, `NEXT_PUBLIC_MAPBOX_TOKEN`, `CRON_SECRET`, `BASIC_AUTH_USER`, and `BASIC_AUTH_PASS`. Never commit `.env.local`.
 
+**Optional:** `REFRESH_ALERT_WEBHOOK` — a Slack (or any `{text}`-accepting) incoming webhook URL. If set, a failed `/api/refresh` or `/api/refresh-community` run posts an alert there. Unset = no alert (the run is still recorded). Every refresh outcome is visible at **`/admin/status`** regardless.
+
 ---
 
 ## Environment & database mapping

@@ -3,6 +3,7 @@ import { sql } from '@/lib/db'
 import { DFW_ZIPS } from '@/lib/zips'
 import { fetchZipData, fetchZipProxy } from '@/lib/census'
 import { fetchZipEmployers, SECTORS } from '@/lib/cbp'
+import { recordRefreshRun } from '@/lib/refresh-log'
 
 // ACS refresh runs ~8 min for 370 ZIPs — exceeds 300s Hobby limit, so not in vercel.json cron.
 // GET handler is here for Pro-plan readiness; run manually on Hobby via curl POST.
@@ -117,6 +118,7 @@ export async function POST(req: NextRequest) {
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+  const startedAt = Date.now()
   const errors: string[] = []
   let zipsRefreshed = 0
 
@@ -284,8 +286,17 @@ export async function POST(req: NextRequest) {
     errors.push(`Metro stats: ${String(e)}`)
   }
 
+  const ok = errors.length === 0
+  await recordRefreshRun({
+    job: 'refresh',
+    ok,
+    durationMs: Date.now() - startedAt,
+    summary: { zipsRefreshed, employersRefreshed },
+    errors,
+  })
+
   return NextResponse.json({
-    ok: errors.length === 0,
+    ok,
     zipsRefreshed,
     employersRefreshed,
     errors: errors.length > 0 ? errors : undefined,

@@ -264,6 +264,21 @@ export async function POST(req: NextRequest) {
       )
     `
 
+    // Data-refresh run log — one row per /api/refresh or /api/refresh-community run (Phase 5.4)
+    // so a failed/partial monthly refresh is no longer silent. Read by /admin/status.
+    await sql`
+      CREATE TABLE IF NOT EXISTS refresh_log (
+        id          SERIAL PRIMARY KEY,
+        job         TEXT NOT NULL,
+        ok          BOOLEAN NOT NULL,
+        duration_ms INTEGER,
+        summary     JSONB,
+        error_count INTEGER NOT NULL DEFAULT 0,
+        errors      JSONB,
+        logged_at   TIMESTAMPTZ DEFAULT NOW()
+      )
+    `
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

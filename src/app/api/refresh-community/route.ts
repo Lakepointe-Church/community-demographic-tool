@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { DFW_ZIPS } from '@/lib/zips'
+import { recordRefreshRun } from '@/lib/refresh-log'
 
 export const maxDuration = 300
 
@@ -12,6 +13,7 @@ export const maxDuration = 300
 export async function GET() { return POST() }
 
 export async function POST() {
+  const startedAt = Date.now()
   const zips = [...DFW_ZIPS]
   let refreshed = 0
   const errors: string[] = []
@@ -45,8 +47,17 @@ export async function POST() {
     }))
   }
 
+  const ok = errors.length === 0
+  await recordRefreshRun({
+    job: 'refresh-community',
+    ok,
+    durationMs: Date.now() - startedAt,
+    summary: { complaintsRefreshed: refreshed },
+    errors,
+  })
+
   return NextResponse.json({
-    ok: errors.length === 0,
+    ok,
     complaintsRefreshed: refreshed,
     errors: errors.length > 0 ? errors.slice(0, 20) : undefined,
     refreshedAt: new Date().toISOString(),

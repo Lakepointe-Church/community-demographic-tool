@@ -20,6 +20,7 @@ Internal demographic research dashboard for identifying DFW expansion opportunit
 | `/community-needs` | ✅ | CDC PLACES health metrics + CFPB complaints: DFW metro averages, scrollable ZIP rankings table, per-ZIP health profile vs DFW avg |
 | `/site-scorer` | ✅ | Full Site Scorer: **signal toggle pills** along the top of the weights panel (YFI/WFI/SES/Growth/Saturation/Enrollment/**Distance**) — click to include/exclude each signal from the score; disabled signals' sliders hide and the remaining weights renormalize to 100%; at least one signal always stays on. Selection encoded in URL (`off=` lists disabled signals, `dist=1` flags distance-on, e.g. `?off=enrollment&dist=1`). **Distance** = straight-line miles to nearest existing campus (computed server-side from `data/dfw-zip-centroids.json` + `CAMPUSES`; farther = more open territory = higher score); **defaults OFF** and auto-sets weight 10 when first enabled. Weight sliders for each enabled signal with Normalize (operates on enabled signals) + Reset + **3 preset buttons** (Balanced/Young Families/Underserved — restore default selection), **weights encoded in URL** (shareable scenarios), **⎘ Copy Link** button, opportunity quadrant scatter (existing campus ZIPs ringed gold), top-10 sidebar with percentile + top-2 drivers, sortable ranked table with **percentile column** + campus highlighting (gold border), CSV export, coverage toggle. Footer link to `/admin/decisions`. |
 | `/admin/decisions` | ✅ | Decision log: form to record a site decision (ZIP, name, notes — scenario URL auto-captured); history table with date/ZIP/score/notes/scenario link. Accessible at `/admin/decisions`. |
+| `/admin/status` | ✅ | **Phase 5.4** Data refresh status: latest-per-job status cards (OK / N errors) + table of the last 50 `/api/refresh` and `/api/refresh-community` runs (when, job, status, summary counts, duration); failed rows expand to show error strings. Reads `/api/refresh-log`. Makes a failed/partial monthly refresh visible instead of silent. |
 | `/methodology` | ✅ | Static data dictionary: every source (incl. Phase 4 LODES commute §5.4 / IRS SOI giving §5.5 / HUD address momentum §5.6 / Zillow ZHVI §5.7), SES scoring, YFI/WFI weights, Site Scorer signals (7 toggleable: 6 on by default + Distance) + normalization formulas, leading-indicators section, church saturation index, ASARB methodology, per-metric definitions, known limitations |
 | `/zip/[zip]/print` | ✅ | Per-ZIP print one-pager: white-background document layout, 8 core stats, household/age/race breakdown, CDC PLACES health, employers, religious orgs — "Print / Save as PDF" button calls `window.print()`; linked from Demographics page ZIP selector |
 
@@ -69,6 +70,7 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
   /api/attendee-density        ← GET: privacy-masked counts + penetrationPct + attendeesPer1kUnclaimed + primaryCampus + lastUpload metadata (joins zip_demographics + religious_adherence); POST: csv-parse CSV upload with DFW-only filter + skip report; DELETE: truncate
   /api/isochrone               ← Mapbox Isochrone API proxy; ?lng=&lat=&minutes=&profile= (6hr in-memory cache)
   /api/decisions               ← GET: list decision log entries (100 most recent); POST: create entry {zip, area, fitScore, scenarioUrl, notes, decidedBy}
+  /api/refresh-log             ← GET: last 50 data-refresh run outcomes from refresh_log (Phase 5.4; powers /admin/status)
   /api/commute?zip=            ← LODES8 commute corridors: top work-destination ZIPs + self-containment % + net commute bearing/direction + high-earner share (joins commute_flows + commute_summary)
   /api/address-momentum?zip=   ← HUD USPS active-residential-address momentum: latest count + trailing-4Q % change + quarterly series (reads usps_addresses; available:false until HUD data loaded)
   /api/giving?zip=             ← IRS SOI giving capacity: avg gift/giving return + charitable % of AGI + itemizer rate + avg AGI (reads zip_income_soi; available:false for IRS-suppressed ZIPs)
@@ -124,6 +126,10 @@ TDC Vintage 2024, mid-migration scenario, 23 DFW counties.
 
 **`decision_log`** — one row per logged site decision, written via `/admin/decisions`
 Columns: `id` (SERIAL PK), `zip` (TEXT NOT NULL), `area` (TEXT), `fit_score` (INT), `scenario_url` (TEXT), `notes` (TEXT), `decided_by` (TEXT), `logged_at` (TIMESTAMPTZ DEFAULT NOW())
+
+**`refresh_log`** — one row per data-refresh run, written by `recordRefreshRun` at the end of `/api/refresh` + `/api/refresh-community` (Phase 5.4)
+Columns: `id` (SERIAL PK), `job` (TEXT — `refresh` | `refresh-community`), `ok` (BOOLEAN), `duration_ms` (INT), `summary` (JSONB — e.g. `{zipsRefreshed, employersRefreshed}` or `{complaintsRefreshed}`), `error_count` (INT), `errors` (JSONB — string[], capped at 50), `logged_at` (TIMESTAMPTZ DEFAULT NOW())
+Read by `/admin/status`. Logging never throws into the refresh itself. If `REFRESH_ALERT_WEBHOOK` is set, a failed run also POSTs a `{text}` alert (Slack-compatible); unset = no-op.
 
 **`commute_flows`** — top work-destination corridors per home ZIP, loaded via `scripts/import-lodes.ts`
 Columns: `home_zip` (TEXT), `work_zip` (TEXT), `jobs` (INT), `high_earner_jobs` (INT — SE03, >$40k/yr), `year` (INT), `updated_at`
@@ -373,6 +379,9 @@ src/app/api/isochrone/route.ts         — Mapbox Isochrone API proxy; 6hr in-me
 src/app/admin/attendee-upload/page.tsx — Rock RMS upload UI: format docs, privacy callout, source date picker, file upload; result shows skip breakdown (online/outOfCoverage/invalidZip/invalidCount)
 src/app/admin/decisions/page.tsx       — Site decision log: form (ZIP, name, notes) + history table; auto-captures scenario URL from current Site Scorer state
 src/app/api/decisions/route.ts         — GET (last 100 decisions DESC) + POST (insert; validates 5-digit ZIP)
+src/lib/refresh-log.ts                 — recordRefreshRun({job, ok, durationMs, summary, errors}); writes refresh_log + optional REFRESH_ALERT_WEBHOOK alert on failure. Never throws into the caller (Phase 5.4)
+src/app/api/refresh-log/route.ts       — GET (last 50 refresh runs DESC) for /admin/status
+src/app/admin/status/page.tsx          — Refresh status dashboard: latest-per-job cards + 50-run table w/ expandable error rows
 src/app/admin/layout.tsx               — Passthrough layout for /admin/* routes; middleware handles auth
 src/middleware.ts                      — Site-wide Basic auth (BASIC_AUTH_USER/BASIC_AUTH_PASS) + Bearer CRON_SECRET for automation; noindex via next.config.ts headers
 scripts/import-bmf.ts                  — IRS BMF loader (re-run monthly; IRS publishes monthly)
@@ -450,7 +459,7 @@ README.md                              — Full operator runbook: local setup, e
   - **5.1** ✅ — Scoring unit tests: all decision-bearing formulas extracted to `src/lib/scoring.ts` (pure, no DB/Next/React), production wired to import them (census.ts/site-scorer route+page/overview) so tested math = production math. `src/lib/scoring.test.ts` — Vitest, 22 hand-computed fixtures. `npm test`. Behavior-preserving (tsc + build clean). Tests pin current SES absolute-caps + YFI 0–17 behavior (see §1.5 [HUMAN]). See "Scoring math" section above.
   - **5.2** ⏳ — Shared component library (`<StatCard>`/`<Surface>`/`<SectionHeader>`/`<DataTable>` + theme.ts); incremental, one page per session
   - **5.3** ⏳ — Cache `/api/overview` (currently `SELECT *` + JS reduce per request); add revalidate or SQL aggregates
-  - **5.4** ⏳ — Error monitoring (Sentry / Vercel log drains) — a failed monthly refresh is currently silent. Per spec build-order, do before/alongside adding more refresh-dependent sources.
+  - **5.4** ✅ — Error monitoring (dependency-free slice): `refresh_log` table + `recordRefreshRun` (`src/lib/refresh-log.ts`) wired into both refresh routes, `/api/refresh-log`, and the `/admin/status` dashboard — a failed/partial monthly refresh is now visible instead of silent. Optional push alerts via `REFRESH_ALERT_WEBHOOK` (Slack-compatible; no-op if unset). Logging never breaks the refresh. **Follow-up (not done):** full runtime error capture (Sentry `@sentry/nextjs`) needs a [HUMAN] DSN — layer on later for broad error tracking beyond the refresh jobs.
   - **5.5** ✅ — Real README (operator runbook; done under Phase 2.3)
   - **Governance reframe** (spec Appendix A): source throughput is gated by *tier*, not a flat monthly quota — context-tier sources add freely during build-out if they clear admission gates; scored signals ≤1/quarter behind tests + ~8-cap + no-double-count + [HUMAN]; ~1/month for everything post-launch. Build order: 5.1 (done) → 5.4 → 4.3 (scored, behind tests), context sources (4.6, 4.1-when-unblocked) interleaved.
 
