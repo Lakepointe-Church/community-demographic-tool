@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { downloadCsv } from '@/lib/csv'
+import { StatCard } from '@/components/ui/StatCard'
+import { Surface } from '@/components/ui/Surface'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 
 interface ZipSes {
   zip: string
@@ -39,16 +42,6 @@ const TIER_RGB: Record<string, string> = {
   'Lower Income': '255,107,107',
 }
 
-const COLOR_TO_RGB: Record<string, string> = {
-  '#A78BFA': '167,139,250',
-  '#4EAEFF': '78,174,255',
-  '#2DD4BF': '45,212,191',
-  '#E8B84B': '232,184,75',
-  '#FF6B6B': '255,107,107',
-  '#8A98AE': '138,152,174',
-}
-
-const CARD_SURFACE = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
 
 function fmt$(n: number | null) {
   if (n == null || n <= 0) return '—'
@@ -64,35 +57,6 @@ function trend(growth: number | null): { label: string; color: string } {
   if (growth > 2)  return { label: '↑ Growing',   color: '#2DD4BF' }
   if (growth >= 0) return { label: '→ Stable',    color: '#E8B84B' }
   return              { label: '↓ Declining',  color: '#FF6B6B' }
-}
-
-// ── Stat Card ────────────────────────────────────────────────────
-function StatCard({ label, value, sub, color, loading = false }: {
-  label: string; value: string; sub?: string; color: string; loading?: boolean
-}) {
-  const [hovered, setHovered] = useState(false)
-  const rgb = COLOR_TO_RGB[color] ?? '232,184,75'
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered
-          ? `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.22) 0%, transparent 60%), linear-gradient(145deg, rgba(${rgb},0.08) 0%, rgba(255,255,255,0.01) 100%)`
-          : `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.1) 0%, transparent 55%), ${CARD_SURFACE}`,
-        border: `1px solid ${hovered ? `rgba(${rgb},0.4)` : '#232940'}`,
-        borderRadius: '4px', padding: '20px 24px', transition: 'all 0.2s ease',
-      }}
-    >
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const, marginBottom: '10px' }}>{label}</div>
-      {loading ? (
-        <div style={{ height: '36px', width: '60%', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
-      ) : (
-        <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '40px', letterSpacing: '0.04em', color, lineHeight: 1 }}>{value}</div>
-      )}
-      {sub && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#5a6478', marginTop: '8px', letterSpacing: '0.04em' }}>{sub}</div>}
-    </div>
-  )
 }
 
 // ── Distribution Bar Chart ────────────────────────────────────────
@@ -349,17 +313,15 @@ export default function SesClassesPage() {
 
         {/* Charts */}
         <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
-          <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const, marginBottom: '4px' }}>SES Class Distribution</div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#5a6478', letterSpacing: '0.08em', marginBottom: '16px' }}>Count of {coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs per tier</div>
+          <Surface>
+            <SectionHeader title="SES Class Distribution" sub={`Count of ${coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs per tier`} />
             {loading
               ? <div style={{ height: '200px', background: 'rgba(255,255,255,0.03)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
               : <DistributionChart countByTier={summary?.countByTier ?? {}} total={summary?.total ?? 0} />
             }
-          </div>
-          <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const, marginBottom: '4px' }}>Composite SES Score by ZIP</div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#5a6478', letterSpacing: '0.08em', marginBottom: '16px' }}>Hover dots for ZIP details</div>
+          </Surface>
+          <Surface>
+            <SectionHeader title="Composite SES Score by ZIP" sub="Hover dots for ZIP details" />
             {loading
               ? <div style={{ height: '200px', background: 'rgba(255,255,255,0.03)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
               : <ScatterPlot zips={zips} />
@@ -373,11 +335,11 @@ export default function SesClassesPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </Surface>
         </div>
 
         {/* Table */}
-        <div className="fade-up-4" style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
+        <Surface className="fade-up-4">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const }}>
               All ZIPs by SES Classification
@@ -510,7 +472,7 @@ export default function SesClassesPage() {
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '4px', letterSpacing: '0.06em' }}>
             Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
           </div>
-        </div>
+        </Surface>
 
       </div>
     </>

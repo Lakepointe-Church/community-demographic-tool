@@ -2,7 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { DFW_ZIPS, ZIP_GROUPS, CAMPUS_ZIPS, BOUNDARY_CHANGED } from '@/lib/zips'
-import { InfoTooltip } from '@/components/InfoTooltip'
+import { StatCardAccent as StatCard } from '@/components/ui/StatCardAccent'
+import { SectionTitle as SectionHeader } from '@/components/ui/SectionTitle'
+import { Surface } from '@/components/ui/Surface'
 
 interface CensusData {
   zip: string
@@ -59,72 +61,6 @@ function indexLabel(score: number): string {
   return 'Low'
 }
 
-const ACCENT_RGB: Record<string, string> = {
-  gold: '232,184,75', blue: '78,174,255', coral: '255,107,107',
-  teal: '45,212,191', purple: '167,139,250',
-}
-
-const CARD_SURFACE = 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)'
-
-// ── Stat Card ────────────────────────────────────────────────────
-function StatCard({ label, value, sub, accent = 'gold', loading = false, tooltip }: {
-  label: string; value: string; sub?: string
-  accent?: 'gold' | 'blue' | 'coral' | 'teal' | 'purple'
-  loading?: boolean
-  tooltip?: string
-}) {
-  const [hovered, setHovered] = useState(false)
-  const colors = { gold: '#E8B84B', blue: '#4EAEFF', coral: '#FF6B6B', teal: '#2DD4BF', purple: '#A78BFA' }
-  const color = colors[accent]
-  const rgb = ACCENT_RGB[accent]
-
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        background: hovered
-          ? `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.22) 0%, transparent 60%), linear-gradient(145deg, rgba(${rgb},0.08) 0%, rgba(255,255,255,0.01) 100%)`
-          : `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.1) 0%, transparent 55%), linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)`,
-        border: `1px solid ${hovered ? `rgba(${rgb},0.4)` : '#232940'}`,
-        padding: '24px',
-        position: 'relative' as const,
-        transition: 'background 0.2s ease, border-color 0.2s ease',
-        cursor: 'default',
-      }}
-    >
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: color }} />
-      {tooltip && (
-        <div style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 50 }}>
-          <InfoTooltip text={tooltip} placement="below-right" />
-        </div>
-      )}
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '12px' }}>
-        {label}
-      </div>
-      {loading ? (
-        <div style={{ height: '40px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
-      ) : (
-        <>
-          <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '44px', lineHeight: 1, letterSpacing: '0.03em', color: '#F0F2F7' }}>
-            {value}
-          </div>
-          {sub && <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', marginTop: '8px', letterSpacing: '0.04em' }}>{sub}</div>}
-        </>
-      )}
-    </div>
-  )
-}
-
-// ── Section Header ───────────────────────────────────────────────
-function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) {
-  return (
-    <div style={{ borderLeft: '3px solid #E8B84B', paddingLeft: '16px', marginBottom: '24px' }}>
-      <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.15em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '6px' }}>{eyebrow}</div>
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '28px', letterSpacing: '0.04em', lineHeight: 1, color: '#F0F2F7' }}>{title}</div>
-    </div>
-  )
-}
 
 // ── Campus Dot ───────────────────────────────────────────────────
 function CampusDot({ status, size = 8 }: { status: 'existing' | 'soon'; size?: number }) {
@@ -783,7 +719,7 @@ export default function DemographicsPage() {
           {/* Charts — Race / Ethnicity + Education */}
           <div className="fade-up-4" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '36px' }}>
 
-            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
+            <Surface>
               <SectionHeader eyebrow="U.S. Census Bureau · ACS 2023" title="Race / Ethnicity" />
               <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }}>
                 <DonutChart race={data?.race ?? null} loading={loading} />
@@ -799,25 +735,25 @@ export default function DemographicsPage() {
                   ))}
                 </div>
               </div>
-            </div>
+            </Surface>
 
-            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
+            <Surface>
               <SectionHeader eyebrow="Adults 25+ · ACS 5-Year" title="Educational Attainment" />
               <EducationChart education={data?.education ?? null} loading={loading} />
-            </div>
+            </Surface>
           </div>
 
           {/* Age Distribution + Household Type */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
 
-            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
+            <Surface>
               <SectionHeader eyebrow="U.S. Census Bureau · ACS 2023" title="Age Distribution" />
               <div style={{ overflowX: 'auto' }}>
                 <AgeChart ageDistribution={data?.ageDistribution ?? null} loading={loading} />
               </div>
-            </div>
+            </Surface>
 
-            <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px' }}>
+            <Surface>
               <SectionHeader eyebrow="U.S. Census Bureau · ACS 2023" title="Household Type" />
               <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }}>
                 <HouseholdTypeChart householdTypes={data?.householdTypes ?? null} loading={loading} />
@@ -833,11 +769,11 @@ export default function DemographicsPage() {
                   ))}
                 </div>
               </div>
-            </div>
+            </Surface>
           </div>
 
           {/* Nearby Colleges */}
-          <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+          <Surface style={{ marginBottom: '16px' }}>
             <SectionHeader eyebrow="College Scorecard · Within 15 Miles" title="Nearby Colleges" />
             {collegesLoading ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -879,10 +815,10 @@ export default function DemographicsPage() {
               Source: U.S. Dept. of Education College Scorecard · collegescorecard.ed.gov<br />
               — indicates data not reported: institution below Scorecard disclosure threshold · trade/vocational schools excluded
             </div>
-          </div>
+          </Surface>
 
           {/* Detail row */}
-          <div style={{ background: CARD_SURFACE, border: '1px solid #232940', padding: '24px', marginBottom: '40px' }}>
+          <Surface style={{ marginBottom: '40px' }}>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '16px', paddingBottom: '14px', borderBottom: '1px solid #1e2b3c' }}>
               ZIP {selectedZip} · Full Profile · U.S. Census Bureau ACS 2023
             </div>
@@ -909,7 +845,7 @@ export default function DemographicsPage() {
                 ))}
               </div>
             ) : null}
-          </div>
+          </Surface>
 
           {/* Leading Indicators — Phase 5 */}
           {(leadingLoading || (leadingIndicators && (leadingIndicators.permits.available || leadingIndicators.enrollment.available || leadingIndicators.projection.available))) && (
