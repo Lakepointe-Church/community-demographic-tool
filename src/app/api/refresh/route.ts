@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { revalidateTag } from 'next/cache'
 import { sql } from '@/lib/db'
 import { DFW_ZIPS } from '@/lib/zips'
 import { fetchZipData, fetchZipProxy } from '@/lib/census'
 import { fetchZipEmployers, SECTORS } from '@/lib/cbp'
 import { recordRefreshRun } from '@/lib/refresh-log'
+import { OVERVIEW_TAG } from '@/app/api/overview/route'
 
 // ACS refresh runs ~8 min for 370 ZIPs — exceeds 300s Hobby limit, so not in vercel.json cron.
 // GET handler is here for Pro-plan readiness; run manually on Hobby via curl POST.
@@ -287,6 +289,9 @@ export async function POST(req: NextRequest) {
   }
 
   const ok = errors.length === 0
+  // zip_demographics changed — expire the cached /api/overview aggregates now
+  // (next read is a fresh miss; { expire: 0 } avoids any stale-while-revalidate window)
+  revalidateTag(OVERVIEW_TAG, { expire: 0 })
   await recordRefreshRun({
     job: 'refresh',
     ok,

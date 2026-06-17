@@ -58,7 +58,7 @@ External APIs (Census ACS, Census CBP, BLS, FRED)
         ↓
   /api/census?zip=             ← single ZIP read (Demographics page)
   /api/census/batch?zips=      ← multi-ZIP read (Compare page)
-  /api/overview?coverage=      ← aggregates all ZIPs + computes weighted averages; ?coverage=core|all (default core)
+  /api/overview?coverage=      ← aggregates all ZIPs + computes weighted averages; ?coverage=core|all (default core). Computed payload cached per coverage via unstable_cache (tag 'overview', 24h backstop); /api/refresh busts it with revalidateTag(OVERVIEW_TAG, {expire:0})
   /api/religious               ← DFW overview stats (incl. saturation + county comparison) + per-ZIP orgs
   /api/religious/adherence     ← 2020 Religion Census county adherence by tradition (23 counties) + core MSA summary
   /api/religious/proxy?coverage= ← per-ZIP Muslim community proxy: proxy_born + proxy_language ranked list
@@ -369,7 +369,7 @@ src/app/zip/[zip]/print/page.tsx       — Per-ZIP print one-pager; fetches cens
 src/lib/csv.ts                         — Client-side CSV download utility: downloadCsv(filename, headers, rows)
 src/app/api/refresh/route.ts           — Main refresh: ACS + CBP + BLS/FRED (~8 min, 370 ZIPs)
 src/app/api/refresh-community/route.ts — CFPB complaint refresh; GET handler for vercel.json cron (1st of month), POST for manual trigger; maxDuration = 300
-src/app/api/overview/route.ts          — Aggregates all ZIPs for Overview page
+src/app/api/overview/route.ts          — Aggregates all ZIPs for Overview page. computeOverview() wrapped in unstable_cache (per coverage, tag OVERVIEW_TAG, revalidate 24h); GET normalizes coverage to core|all. Cache busted by /api/refresh via revalidateTag
 src/app/api/census/route.ts            — Single ZIP read from DB
 src/app/api/census/batch/route.ts      — Multi-ZIP read (Compare page); uses DFW_ZIPS label map so `name` returns neighborhood label, not Census ZCTA string
 src/app/api/ses-classes/route.ts       — All ZIPs sorted by SES score + tier counts
@@ -467,7 +467,7 @@ README.md                              — Full operator runbook: local setup, e
 - **Spec v2 Phase 5** — Code health (ongoing, interleave):
   - **5.1** ✅ — Scoring unit tests: all decision-bearing formulas extracted to `src/lib/scoring.ts` (pure, no DB/Next/React), production wired to import them (census.ts/site-scorer route+page/overview) so tested math = production math. `src/lib/scoring.test.ts` — Vitest, 22 hand-computed fixtures. `npm test`. Behavior-preserving (tsc + build clean). Tests pin current SES absolute-caps + YFI 0–17 behavior (see §1.5 [HUMAN]). See "Scoring math" section above.
   - **5.2** ⏳ — Shared component library (`<StatCard>`/`<Surface>`/`<SectionHeader>`/`<DataTable>` + theme.ts); incremental, one page per session
-  - **5.3** ⏳ — Cache `/api/overview` (currently `SELECT *` + JS reduce per request); add revalidate or SQL aggregates
+  - **5.3** ✅ — Cache `/api/overview`: the `SELECT *` + JS-reduce is wrapped in `unstable_cache` (Next data cache, per coverage, tag `OVERVIEW_TAG`, 24h backstop revalidate) so it no longer re-queries + re-reduces every request. `/api/refresh` calls `revalidateTag(OVERVIEW_TAG, {expire:0})` so a data load is reflected immediately. Cache Components not enabled → used `unstable_cache` (the non-`use cache` path).
   - **5.4** ✅ — Error monitoring (dependency-free slice): `refresh_log` table + `recordRefreshRun` (`src/lib/refresh-log.ts`) wired into both refresh routes, `/api/refresh-log`, and the `/admin/status` dashboard — a failed/partial monthly refresh is now visible instead of silent. Optional push alerts via `REFRESH_ALERT_WEBHOOK` (Slack-compatible; no-op if unset). Logging never breaks the refresh. **Follow-up (not done):** full runtime error capture (Sentry `@sentry/nextjs`) needs a [HUMAN] DSN — layer on later for broad error tracking beyond the refresh jobs.
   - **5.5** ✅ — Real README (operator runbook; done under Phase 2.3)
   - **Governance reframe** (spec Appendix A): source throughput is gated by *tier*, not a flat monthly quota — context-tier sources add freely during build-out if they clear admission gates; scored signals ≤1/quarter behind tests + ~8-cap + no-double-count + [HUMAN]; ~1/month for everything post-launch. Build order: 5.1 (done) → 5.4 → 4.3 (scored, behind tests), context sources (4.6, 4.1-when-unblocked) interleaved.
