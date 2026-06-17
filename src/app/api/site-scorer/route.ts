@@ -41,7 +41,7 @@ export async function GET(req: NextRequest) {
   const coverage = req.nextUrl.searchParams.get('coverage') ?? 'core'
 
   try {
-    const [rows, enrollmentRows] = await Promise.all([
+    const [rows, enrollmentRows, zipEnrollmentRows] = await Promise.all([
       sql`
         SELECT
           d.zip,
@@ -80,6 +80,18 @@ export async function GET(req: NextRequest) {
         FROM isd_enrollment ie
         GROUP BY county
       `,
+      // ZIP-level enrollment CAGR (NCES CCD, Phase 4.3) — earliest→latest year per ZIP.
+      // Empty until scripts/import-school-enrollment.ts is run; scorer falls back to county.
+      sql`
+        SELECT
+          zip,
+          MIN(year) AS first_year,
+          MAX(year) AS last_year,
+          SUM(CASE WHEN year = (SELECT MIN(year) FROM zip_school_enrollment z2 WHERE z2.zip = z.zip) THEN enrollment ELSE 0 END)::int AS first_enr,
+          SUM(CASE WHEN year = (SELECT MAX(year) FROM zip_school_enrollment z3 WHERE z3.zip = z.zip) THEN enrollment ELSE 0 END)::int AS last_enr
+        FROM zip_school_enrollment z
+        GROUP BY zip
+      `,
     ])
 
     // Build county → enrollment CAGR score (0-100)
@@ -91,6 +103,17 @@ export async function GET(req: NextRequest) {
       const years    = parseInt(String(e.last_year ?? 0)) - parseInt(String(e.first_year ?? 0))
       if (firstEnr > 0 && lastEnr > 0 && years > 0) {
         enrollmentScore.set(e.county as string, enrollmentCagrScore(firstEnr, lastEnr, years))
+      }
+    }
+
+    // Build ZIP → enrollment CAGR score (0-100) — finer grain than county; preferred when present
+    const zipEnrollmentScore = new Map<string, number>()
+    for (const e of zipEnrollmentRows) {
+      const firstEnr = parseInt(String(e.first_enr ?? 0))
+      const lastEnr  = parseInt(String(e.last_enr ?? 0))
+      const years    = parseInt(String(e.last_year ?? 0)) - parseInt(String(e.first_year ?? 0))
+      if (firstEnr > 0 && lastEnr > 0 && years > 0) {
+        zipEnrollmentScore.set(e.zip as string, enrollmentCagrScore(firstEnr, lastEnr, years))
       }
     }
 
@@ -131,7 +154,11 @@ export async function GET(req: NextRequest) {
       })
 
       const county = ZIP_COUNTY[d.zip] ?? null
-      const enrollmentGrowthScore = county != null ? (enrollmentScore.get(county) ?? 0) : 0
+      // Prefer the finer-grained ZIP-level enrollment CAGR (NCES CCD, 4.3); fall
+      // back to county CAGR (TEA) where the ZIP has no school data, then 0.
+      const zipEnroll = zipEnrollmentScore.get(d.zip)
+      const enrollmentGrowthScore = zipEnroll ?? (county != null ? (enrollmentScore.get(county) ?? 0) : 0)
+      const enrollmentSource = zipEnroll != null ? 'zip' : (county != null && enrollmentScore.has(county) ? 'county' : 'none')
 
       return {
         zip:                  d.zip,
@@ -145,6 +172,7 @@ export async function GET(req: NextRequest) {
         totalChurches:        churchCount,
         churchesPer10k,
         enrollmentGrowthScore,
+        enrollmentSource,
         distanceToCampusMi:   distanceToNearestCampus(d.zip),
         county,
       }

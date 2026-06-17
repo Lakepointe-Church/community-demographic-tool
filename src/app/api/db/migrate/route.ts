@@ -279,6 +279,19 @@ export async function POST(req: NextRequest) {
       )
     `
 
+    // NCES CCD ZIP-level school enrollment — sharpens the Site Scorer enrollment
+    // signal from county-CAGR to per-ZIP CAGR (Phase 4.3). One row per (zip, year).
+    await sql`
+      CREATE TABLE IF NOT EXISTS zip_school_enrollment (
+        zip          TEXT NOT NULL,
+        year         INTEGER NOT NULL,
+        enrollment   INTEGER NOT NULL,
+        campus_count INTEGER NOT NULL,
+        updated_at   TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (zip, year)
+      )
+    `
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

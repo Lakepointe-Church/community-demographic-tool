@@ -360,7 +360,7 @@ export default function MethodologyPage() {
                 { label: 'Source', definition: 'Texas Education Agency PEIMS (Public Education Information Management System) district-level enrollment reports. Data covers 2020-21 through 2024-25 school years. Downloaded manually from tea.texas.gov/reports-and-data/student-data/standard-reports/peims-standard-reports and processed via scripts/import-tea.ts.' },
                 { label: 'Geography', definition: 'Individual school districts (ISDs), aggregated to county for display and scoring. Each district record includes the county it primarily serves. Some districts span county lines — they are assigned to their primary county.' },
                 { label: 'CAGR metric', definition: 'Compound Annual Growth Rate across the full available enrollment period. Formula: (lastEnrollment / firstEnrollment)^(1/years) − 1, expressed as a percentage. Positive CAGR = growing ISD base = young families moving in.' },
-                { label: 'Enrollment Growth Score (Site Scorer)', definition: 'The county-level enrollment CAGR is converted to a 0–100 score via: min(100, max(0, cagr × 12)). A CAGR of ~8.3% yields a score of 100. This score feeds the 6th Site Scorer slider (default weight: 10%). Scores show as "—" until TEA data is loaded.' },
+                { label: 'Enrollment Growth Score (Site Scorer)', definition: 'Enrollment CAGR is converted to a 0–100 score via: min(100, max(0, cagr × 12)). A CAGR of ~8.3% yields a score of 100. This feeds the 6th Site Scorer slider (default weight: 10%). As of Phase 4.3 the scorer prefers the finer ZIP-level CAGR (NCES CCD, §5.8) where a ZIP has school data; this county TEA CAGR is the fallback. Scores show as "—"/0 until at least one source is loaded.' },
                 { label: 'Rationale', definition: 'School enrollment is one of the best public leading indicators of young-family settlement — families move to areas with good schools, and enrollment growth precedes ACS population growth by 1–2 years in fast-growth suburbs.' },
               ].map(m => (
                 <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
@@ -467,6 +467,26 @@ export default function MethodologyPage() {
                 { label: 'Metrics', definition: 'Typical home value = the latest monthly ZHVI for the ZIP (a smoothed measure of the value of a typical home, not a sale-price median). Year-over-year change = the % change vs. the ZHVI 12 months prior. Both shown on the Demographics page Home Value Trend panel.' },
                 { label: 'Why alongside ACS', definition: 'ACS median home value (B25077) is self-reported by owners and lags roughly two years; ZHVI is a market-derived measure refreshed monthly. ZHVI captures recent cooling or appreciation that ACS has not yet recorded. The two answer different questions — ACS = what owners think their homes are worth (lagged), ZHVI = current typical market value.' },
                 { label: 'Scoring use', definition: 'Context/display only — never a Site Scorer input. Home value already enters scoring indirectly through the SES composite (20% home value, from ACS); adding ZHVI to scoring would re-count the same construct (see scoring-governance rules).' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* NCES CCD ZIP-level School Enrollment */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.8 · ZIP-Level School Enrollment (NCES CCD)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'NCES Common Core of Data (CCD) public-school directory, accessed via the Urban Institute Education Data API (no key). The directory lists every public school with its enrollment, ZIP, and coordinates. Import script: scripts/import-school-enrollment.ts (re-run annually; CCD lags ~1–2 years).' },
+                { label: 'Why this fixes the enrollment signal', definition: 'The original signal used a county-level ISD enrollment CAGR (TEA PEIMS). A county that holds both a booming suburban district and a shrinking urban one shows a blended growth rate that describes neither. Because each school carries its own ZIP, CCD lets us aggregate enrollment to the ZIP and compute a ZIP-level growth rate — far closer to what a specific candidate site experiences.' },
+                { label: 'Metric', definition: 'For each DFW ZIP, campus enrollments are summed per year; the Site Scorer computes the earliest→latest annualized growth rate (CAGR), ×12, clamped 0–100 — the same transform as the county version. The Site Scorer prefers the ZIP-level score where a ZIP has school data and falls back to the county TEA CAGR otherwise (then 0). The response reports which source was used.' },
+                { label: 'Why NCES, not TEA campus files', definition: 'TEA\'s TAPR campus files carry enrollment but no address, so they would need a separate campus directory plus geocoding. NCES CCD ships enrollment, ZIP, and coordinates together — one source, no manual portal download. Trade-off: it is a federal source with a ~1–2 year lag and a "membership" definition that differs slightly from TEA\'s; it counts public schools only (no private/charter-home-school nuance beyond CCD coverage).' },
               ].map(m => (
                 <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
                   <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
@@ -855,5 +875,9 @@ const LIMITATIONS = [
   {
     source: 'Zillow ZHVI — Home Value Trend',
     limitation: 'ZHVI is a modeled index of "typical" value (35th–65th-percentile tier), not a record of actual sales, so it neither matches any individual home nor reflects the high or low end of a ZIP\'s market. It covers single-family homes and condos but not raw land, multifamily, or new-construction not yet on Zillow. Coverage is thinner in rural/low-transaction ZIPs (337 of 370 DFW ZIPs have data); where present, those values are based on fewer observations and are more volatile. The index is smoothed and seasonally adjusted, which slightly dampens recent turning points. Zillow\'s methodology can be revised, restating history. Context tier — never a Site Scorer input (home value already enters scoring via the ACS-based SES composite).',
+  },
+  {
+    source: 'NCES CCD — ZIP-Level School Enrollment',
+    limitation: 'A federal source (NCES Common Core of Data) with a ~1–2 year reporting lag — fresher counts live in TEA, which is why TEA county CAGR remains the fallback. It covers public schools only; charter coverage follows CCD\'s classification and private/home-school students are absent entirely, so a ZIP\'s enrollment trend is not its child population trend. Enrollment is assigned to the school\'s ZIP, not students\' home ZIPs — a magnet or boundary school can pull children from neighboring ZIPs, concentrating the count where the building sits. A ZIP with one school produces a volatile CAGR (one school opening or closing swings it); ZIPs with no CCD-listed public school fall back to the county figure. CCD "membership" is defined slightly differently from TEA\'s. The Site Scorer prefers the ZIP-level CAGR over county where present, capping its contribution as one of several weighted signals.',
   },
 ]
