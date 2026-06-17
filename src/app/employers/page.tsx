@@ -2,6 +2,9 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
+import { StatCard } from '@/components/ui/StatCard'
+import { Surface } from '@/components/ui/Surface'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 
 interface SectorRow { label: string; estab: number; avgWage?: number | null }
 
@@ -31,42 +34,13 @@ interface ZipData {
   medianHouseholdIncome: number | null
 }
 
-const CARD_BG = 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.01) 100%)'
 const PALETTE = ['#4EAEFF','#2DD4BF','#E8B84B','#A78BFA','#FF6B6B']
-const RGB_MAP: Record<string,string> = {
-  '#E8B84B':'232,184,75','#4EAEFF':'78,174,255',
-  '#2DD4BF':'45,212,191','#A78BFA':'167,139,250','#FF6B6B':'255,107,107',
-}
 
 function fmt$(n: number) { return '$' + n.toLocaleString() }
 function fmtK(n: number) {
   if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + 'M'
   if (n >= 1_000)     return (n / 1_000).toFixed(1) + 'K'
   return String(n)
-}
-
-// ── Stat Card ──────────────────────────────────────────────────────
-function StatCard({ label, value, sub, color, loading }: {
-  label: string; value: string; sub?: string; color: string; loading?: boolean
-}) {
-  const [hov, setHov] = useState(false)
-  const rgb = RGB_MAP[color] ?? '232,184,75'
-  return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
-      background: hov
-        ? `radial-gradient(ellipse at 50% 0%,rgba(${rgb},0.22) 0%,transparent 60%),linear-gradient(145deg,rgba(${rgb},0.08) 0%,rgba(255,255,255,0.01) 100%)`
-        : `radial-gradient(ellipse at 50% 0%,rgba(${rgb},0.1) 0%,transparent 55%),${CARD_BG}`,
-      border: `1px solid ${hov ? `rgba(${rgb},0.4)` : '#232940'}`,
-      borderRadius: '4px', padding: '18px 22px', transition: 'all 0.2s',
-    }}>
-      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'8px' }}>{label}</div>
-      {loading
-        ? <div style={{ height:'32px', width:'60%', background:'rgba(255,255,255,0.05)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
-        : <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'36px', letterSpacing:'0.04em', color, lineHeight:1 }}>{value}</div>
-      }
-      {sub && <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'6px', letterSpacing:'0.04em' }}>{sub}</div>}
-    </div>
-  )
 }
 
 // ── CSS Horizontal Bar List ────────────────────────────────────────
@@ -358,19 +332,18 @@ export default function EmployersPage() {
           <>
             {/* Stat cards */}
             <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginBottom:'16px' }}>
-              <StatCard label="Total Establishments" value={loading ? '—' : fmtK(dfw?.totalEstab ?? 0)} sub="DFW Metro"          color="#E8B84B" loading={loading} />
-              <StatCard label="Total Employment"     value={loading ? '—' : fmtK(dfw?.totalEmp ?? 0)}   sub="CBP 2022"           color="#4EAEFF" loading={loading} />
-              <StatCard label="Annual Payroll"       value={loading ? '—' : `$${payrollB}B`}             sub="in $1,000s"          color="#2DD4BF" loading={loading} />
-              <StatCard label="Avg Annual Wage"      value={loading || !dfw?.avgWage ? '—' : fmt$(dfw.avgWage)} sub="payroll ÷ employment" color="#A78BFA" loading={loading} />
+              <StatCard compact label="Total Establishments" value={loading ? '—' : fmtK(dfw?.totalEstab ?? 0)} sub="DFW Metro"          color="#E8B84B" loading={loading} />
+              <StatCard compact label="Total Employment"     value={loading ? '—' : fmtK(dfw?.totalEmp ?? 0)}   sub="CBP 2022"           color="#4EAEFF" loading={loading} />
+              <StatCard compact label="Annual Payroll"       value={loading ? '—' : `$${payrollB}B`}             sub="in $1,000s"          color="#2DD4BF" loading={loading} />
+              <StatCard compact label="Avg Annual Wage"      value={loading || !dfw?.avgWage ? '—' : fmt$(dfw.avgWage)} sub="payroll ÷ employment" color="#A78BFA" loading={loading} />
             </div>
 
             {/* Industry mix + Wage by sector — side by side */}
             <div className="fade-up-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'12px' }}>
 
               {/* Industry Mix */}
-              <div style={{ background:CARD_BG, border:'1px solid #232940', padding:'20px' }}>
-                <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'3px' }}>DFW Industry Mix</div>
-                <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.06em', marginBottom:'14px' }}>Establishments by sector</div>
+              <Surface padding="20px">
+                <SectionHeader title="DFW Industry Mix" sub="Establishments by sector" marginBottom="14px" />
                 {loading
                   ? <div style={{ height:'220px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
                   : <BarList
@@ -378,12 +351,11 @@ export default function EmployersPage() {
                       formatValue={v => v.toLocaleString()}
                     />
                 }
-              </div>
+              </Surface>
 
               {/* Avg Wage by Sector */}
-              <div style={{ background:CARD_BG, border:'1px solid #232940', padding:'20px' }}>
-                <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'3px' }}>Avg Annual Wage by Sector</div>
-                <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.06em', marginBottom:'14px' }}>DFW Metro · county-level CBP (Dallas / Tarrant / Collin / Denton)</div>
+              <Surface padding="20px">
+                <SectionHeader title="Avg Annual Wage by Sector" sub="DFW Metro · county-level CBP (Dallas / Tarrant / Collin / Denton)" marginBottom="14px" />
                 {loading
                   ? <div style={{ height:'220px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
                   : (() => {
@@ -393,14 +365,12 @@ export default function EmployersPage() {
                         : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#5a6478', padding:'8px 0' }}>Available after next /api/refresh run</div>
                     })()
                 }
-              </div>
+              </Surface>
             </div>
 
             {/* Top ZIPs — compact table */}
-            <div className="fade-up-4" style={{ background:CARD_BG, border:'1px solid #232940', padding:'16px 20px', marginBottom:'16px' }}>
-              <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'12px' }}>
-                Top ZIPs by Establishments
-              </div>
+            <Surface className="fade-up-4" padding="16px 20px" style={{ marginBottom:'16px' }}>
+              <SectionHeader title="Top ZIPs by Establishments" marginBottom="12px" />
               {loading
                 ? <div style={{ height:'60px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
                 : (
@@ -416,7 +386,7 @@ export default function EmployersPage() {
                   </div>
                 )
               }
-            </div>
+            </Surface>
           </>
         )}
 
@@ -434,10 +404,10 @@ export default function EmployersPage() {
             {zipData && !zipLoading && (
               <>
                 <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginBottom:'16px' }}>
-                  <StatCard label="Total Establishments" value={zipData.totalEstab.toLocaleString()} sub={zipData.name}               color="#E8B84B" />
-                  <StatCard label="Large Employers (100+)" value={String(zipData.largeEstab || '—')} sub="100+ employee firms"         color="#4EAEFF" />
-                  <StatCard label="Avg Annual Wage"        value={zipData.avgWage ? fmt$(zipData.avgWage) : '—'} sub="payroll ÷ employment" color="#2DD4BF" />
-                  <StatCard label="Top Sector"             value={zipData.topSector?.split(' ')[0] ?? '—'} sub={zipData.topSector ?? 'by estab count'} color="#A78BFA" />
+                  <StatCard compact label="Total Establishments" value={zipData.totalEstab.toLocaleString()} sub={zipData.name}               color="#E8B84B" />
+                  <StatCard compact label="Large Employers (100+)" value={String(zipData.largeEstab || '—')} sub="100+ employee firms"         color="#4EAEFF" />
+                  <StatCard compact label="Avg Annual Wage"        value={zipData.avgWage ? fmt$(zipData.avgWage) : '—'} sub="payroll ÷ employment" color="#2DD4BF" />
+                  <StatCard compact label="Top Sector"             value={zipData.topSector?.split(' ')[0] ?? '—'} sub={zipData.topSector ?? 'by estab count'} color="#A78BFA" />
                 </div>
 
                 <div className="fade-up-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'12px' }}>

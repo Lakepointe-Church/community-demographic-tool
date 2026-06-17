@@ -3,6 +3,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { downloadCsv } from '@/lib/csv'
 import { ZIP_GROUPS, DFW_ZIPS, CORE_MSA_ZIPS } from '@/lib/zips'
+import { StatCard } from '@/components/ui/StatCard'
+import { Surface } from '@/components/ui/Surface'
+import { SectionHeader } from '@/components/ui/SectionHeader'
 
 interface ZipHealth {
   zip: string
@@ -50,12 +53,6 @@ interface ZipData {
   sesLabel: string | null
 }
 
-const CARD_BG = 'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.01) 100%)'
-const RGB_MAP: Record<string,string> = {
-  '#E8B84B':'232,184,75','#4EAEFF':'78,174,255',
-  '#2DD4BF':'45,212,191','#A78BFA':'167,139,250','#FF6B6B':'255,107,107',
-}
-
 function fmtPct(n: number | null) { return n != null ? n.toFixed(1) + '%' : '—' }
 function fmtN(n: number | null) { return n != null ? n.toLocaleString() : '—' }
 
@@ -65,30 +62,6 @@ function healthColor(val: number | null, warn: number, danger: number): string {
   if (val >= danger) return '#FF6B6B'
   if (val >= warn)   return '#E8B84B'
   return '#2DD4BF'
-}
-
-// ── Stat Card ──────────────────────────────────────────────────────
-function StatCard({ label, value, sub, color, loading }: {
-  label: string; value: string; sub?: string; color: string; loading?: boolean
-}) {
-  const [hov, setHov] = useState(false)
-  const rgb = RGB_MAP[color] ?? '232,184,75'
-  return (
-    <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} style={{
-      background: hov
-        ? `radial-gradient(ellipse at 50% 0%,rgba(${rgb},0.22) 0%,transparent 60%),linear-gradient(145deg,rgba(${rgb},0.08) 0%,rgba(255,255,255,0.01) 100%)`
-        : `radial-gradient(ellipse at 50% 0%,rgba(${rgb},0.1) 0%,transparent 55%),${CARD_BG}`,
-      border: `1px solid ${hov ? `rgba(${rgb},0.4)` : '#232940'}`,
-      borderRadius: '4px', padding: '20px 24px', transition: 'all 0.2s',
-    }}>
-      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'10px' }}>{label}</div>
-      {loading
-        ? <div style={{ height:'36px', width:'60%', background:'rgba(255,255,255,0.05)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
-        : <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'40px', letterSpacing:'0.04em', color, lineHeight:1 }}>{value}</div>
-      }
-      {sub && <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#5a6478', marginTop:'8px', letterSpacing:'0.04em' }}>{sub}</div>}
-    </div>
-  )
 }
 
 // ── Health Metric Row (horizontal fill bar) ────────────────────────
@@ -333,20 +306,19 @@ export default function CommunityNeedsPage() {
         </div>
 
         {/* ZIP Rankings Table */}
-        <div className="fade-up-3" style={{ background:CARD_BG, border:'1px solid #232940', padding:'24px', marginBottom:'24px' }}>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>ZIP Rankings by Health Indicator</div>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'20px' }}>All ZIPs · scroll to explore · sort by column to find highest-need areas</div>
+        <Surface className="fade-up-3" style={{ marginBottom:'24px' }}>
+          <SectionHeader title="ZIP Rankings by Health Indicator" sub="All ZIPs · scroll to explore · sort by column to find highest-need areas" marginBottom="20px" />
           {loading
             ? <div style={{ height:'300px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
             : overview?.zips?.length
               ? <ZipTable zips={overview.zips} />
               : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#5a6478', padding:'24px 0' }}>No data yet — run the PLACES import script to populate.</div>
           }
-        </div>
+        </Surface>
 
         {/* Per-ZIP Drill-down */}
-        <div className="fade-up-4" style={{ background:CARD_BG, border:'1px solid #232940', padding:'24px' }}>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'16px' }}>ZIP Code Health Profile</div>
+        <Surface className="fade-up-4">
+          <SectionHeader title="ZIP Code Health Profile" />
 
           <div style={{ marginBottom:'24px', position:'relative', display:'inline-block' }}>
             <select className="zip-select" value={selectedZip} onChange={e => handleZipChange(e.target.value)} style={{
@@ -423,7 +395,7 @@ export default function CommunityNeedsPage() {
               </div>
             </>
           )}
-        </div>
+        </Surface>
 
         <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'16px', letterSpacing:'0.06em' }}>
           Health data: CDC PLACES 2023 (age-adjusted prevalence estimates) · Complaints: CFPB Consumer Complaint Database (trailing 36 months) · HMDA mortgage denial rates — Phase 2
