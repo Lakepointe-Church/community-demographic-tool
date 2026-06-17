@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
 import { CORE_MSA_COUNTIES } from '@/lib/zip-county'
+import { StatCardFlex as StatCard } from '@/components/ui/StatCardFlex'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -230,34 +231,6 @@ function FaithBar({ counts, total }: { counts: { ntee_category: string; count: n
         )
       })}
     </svg>
-  )
-}
-
-// ── Stat card ─────────────────────────────────────────────────────────────────
-
-function StatCard({ label, value, sub, rgb, unit = '' }: {
-  label: string; value: string | number; sub?: string; rgb: string; unit?: string
-}) {
-  const [hovered, setHovered] = useState(false)
-  return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-      style={{
-        flex: '1 1 180px', minWidth: 160, padding: '20px 22px', borderRadius: 10,
-        background: hovered
-          ? `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.22) 0%, transparent 60%), linear-gradient(145deg, rgba(${rgb},0.08) 0%, rgba(255,255,255,0.01) 100%)`
-          : `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.1) 0%, transparent 55%), linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)`,
-        border: hovered ? `1px solid rgba(${rgb},0.4)` : '1px solid #232940',
-        transition: 'all 0.2s',
-      }}
-    >
-      <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono', monospace", marginBottom: 8 }}>{label}</div>
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 38, color: `rgb(${rgb})`, lineHeight: 1 }}>
-        {typeof value === 'number' ? value.toLocaleString() : value}{unit}
-      </div>
-      {sub && <div style={{ fontSize: 11, color: '#5a6478', marginTop: 6, fontFamily: "'IBM Plex Mono', monospace" }}>{sub}</div>}
-    </div>
   )
 }
 

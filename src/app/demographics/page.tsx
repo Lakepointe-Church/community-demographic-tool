@@ -849,7 +849,7 @@ export default function DemographicsPage() {
 
           {/* Leading Indicators — Phase 5 */}
           {(leadingLoading || (leadingIndicators && (leadingIndicators.permits.available || leadingIndicators.enrollment.available || leadingIndicators.projection.available))) && (
-            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+            <Surface style={{ marginBottom: '16px' }}>
               <SectionHeader
                 eyebrow={leadingIndicators?.county ? `${leadingIndicators.county} County · Forward-Looking Signals` : 'Forward-Looking Signals'}
                 title="Leading Indicators"
@@ -1054,12 +1054,12 @@ export default function DemographicsPage() {
                 )}
                 </>
               )}
-            </div>
+            </Surface>
           )}
 
           {/* Giving Capacity — IRS SOI (Phase 4.4); renders only when the ZIP has SOI data */}
           {giving?.available && (
-            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+            <Surface style={{ marginBottom: '16px' }}>
               <SectionHeader
                 eyebrow={`Charitable Giving · IRS SOI ${giving.year}`}
                 title="Giving Capacity"
@@ -1115,12 +1115,12 @@ export default function DemographicsPage() {
               <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px', lineHeight: 1.6 }}>
                 IRS SOI ZIP-code data · {giving.year} · charitable deductions on Schedule A. Post-2017 TCJA only ~{giving.itemizerRate != null ? giving.itemizerRate.toFixed(0) : '10'}% of filers here itemize, so deductions undercount true giving and skew toward higher-income households — read as a <span style={{ color: '#8A98AE' }}>relative</span> generosity signal, not a giving total. Counts rounded to nearest 10; small ZIPs are volatile.
               </div>
-            </div>
+            </Surface>
           )}
 
           {/* Home Value Trend — Zillow ZHVI (Phase 4.7); renders only when the ZIP has ZHVI data */}
           {homeValues?.available && homeValues.zhvi != null && (
-            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+            <Surface style={{ marginBottom: '16px' }}>
               <SectionHeader
                 eyebrow={`Current Home Values · Zillow ZHVI ${homeValues.latestMonth ?? ''}`}
                 title="Home Value Trend"
@@ -1194,12 +1194,12 @@ export default function DemographicsPage() {
               <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px', lineHeight: 1.6 }}>
                 Zillow Home Value Index (ZHVI) · all-homes, 35th–65th-percentile tier (SFR + condo) · ZIP level · updated monthly. A smoothed, seasonally adjusted measure of typical value — fresher than the ACS self-reported median, which lags ~2 years. Context signal, not scored.
               </div>
-            </div>
+            </Surface>
           )}
 
           {/* Address Momentum — HUD USPS (Phase 4.1); renders only when data is loaded */}
           {addressMomentum?.available && addressMomentum.series && addressMomentum.series.length > 0 && (
-            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+            <Surface style={{ marginBottom: '16px' }}>
               <SectionHeader
                 eyebrow="Freshest Growth Signal · USPS Residential Addresses"
                 title="Address Momentum"
@@ -1275,12 +1275,12 @@ export default function DemographicsPage() {
               <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
                 HUD Aggregated USPS Administrative Data · ZIP level · active residential = addresses with mail collected in the prior 90 days · updated quarterly
               </div>
-            </div>
+            </Surface>
           )}
 
           {/* Commute Corridors — LODES (Phase 4.5) */}
           {commute?.available && commute.corridors && commute.corridors.length > 0 && (
-            <div style={{ background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)', border: '1px solid #232940', padding: '24px', marginBottom: '16px' }}>
+            <Surface style={{ marginBottom: '16px' }}>
               <SectionHeader
                 eyebrow={`${commute.county ?? ''} ${commute.county ? '· ' : ''}Where Residents Work · Daily Drive`}
                 title="Commute Corridors"
@@ -1374,7 +1374,7 @@ export default function DemographicsPage() {
               <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
                 LEHD LODES8 · {commute.year} · intra-DFW resident worker flows · block→ZCTA · &quot;Net direction&quot; is the job-weighted bearing toward work
               </div>
-            </div>
+            </Surface>
           )}
 
           {/* Footer */}

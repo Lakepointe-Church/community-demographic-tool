@@ -49,10 +49,15 @@ export function toRgb(hex: string): string {
 export const CARD_BG =
   'linear-gradient(145deg,rgba(255,255,255,0.03) 0%,rgba(255,255,255,0.01) 100%)'
 
-// Stat-card radial-glow background (idle vs hovered) for an accent color.
-export function cardGlow(hex: string, hovered: boolean): string {
-  const rgb = toRgb(hex)
+// Stat-card radial-glow background (idle vs hovered) from a comma-separated
+// RGB string (e.g. '232,184,75').
+export function cardGlowRgb(rgb: string, hovered: boolean): string {
   return hovered
     ? `radial-gradient(ellipse at 50% 0%,rgba(${rgb},0.22) 0%,transparent 60%),linear-gradient(145deg,rgba(${rgb},0.08) 0%,rgba(255,255,255,0.01) 100%)`
     : `radial-gradient(ellipse at 50% 0%,rgba(${rgb},0.1) 0%,transparent 55%),${CARD_BG}`
+}
+
+// Same glow keyed off a palette hex.
+export function cardGlow(hex: string, hovered: boolean): string {
+  return cardGlowRgb(toRgb(hex), hovered)
 }
