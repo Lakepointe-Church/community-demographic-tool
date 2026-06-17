@@ -149,6 +149,9 @@ PK: `(home_zip, year)`. 369 rows, year 2023.
 Composite 0–100 score: income (50%) + bachelor's rate (30%) + home value (20%)
 - Upper: 78–100 · Upper Middle: 58–77 · Middle: 40–57 · Lower Middle: 25–39 · Lower Income: 0–24
 
+## Scoring math (single source of truth: `src/lib/scoring.ts`)
+All decision-bearing formulas — SES composite + label, YFI/WFI, the Site Scorer component transforms (growth/saturation/distance/enrollment-CAGR), `effectivePct` weight normalization, `computeFitScore` (incl. null-growth/null-distance weight redistribution), and `weightedMean` — are pure functions in `src/lib/scoring.ts`. Production imports them (`lib/census.ts` for SES; `api/site-scorer` for YFI/WFI/enrollment; `site-scorer/page.tsx` for the Fit Score family; `api/overview` for weighted aggregates) so the unit-tested math IS the production math — no forked copies. **Tests:** `src/lib/scoring.test.ts` (Vitest, 22 hand-computed fixtures) — run `npm test`. Tests pin current behavior: SES uses **absolute caps** (not percentiles) and YFI uses the **0–17** band (the open [HUMAN] reconciliation in spec §1.5 — if that decision changes the model, update scoring.ts + these fixtures together).
+
 ## Brand / design system
 - Background: `#0d0f14` · Surface: `#13161f` · Border: `#232940` · Border-sub: `#1e2b3c`
 - Gold (primary): `#E8B84B` · Blue: `#4EAEFF` · Teal: `#2DD4BF` · Coral: `#FF6B6B` · Purple: `#A78BFA`
@@ -278,6 +281,7 @@ To remove a ZIP with no ACS data: it will fail silently during refresh and simpl
 ```bash
 npm run dev           # start dev server on :3000
 vercel env pull       # sync Neon + API keys from Vercel
+npm test              # Vitest — scoring formula unit tests (src/lib/scoring.test.ts)
 ```
 
 ## Refreshing data
@@ -333,6 +337,8 @@ src/lib/census.ts                      — Census ACS fetch logic (all variables
 src/lib/zip-county.ts                  — Static ZIP→county map for all 370 DFW ZIPs; exports ZIP_COUNTY (Record<zip,county>) and CORE_MSA_COUNTIES (Set<string>)
 src/lib/cbp.ts                         — Census CBP fetch logic: 20 NAICS sectors (exported as SECTORS) + size distribution; sectors include emp+payroll per sector
 src/lib/db.ts                          — Neon client
+src/lib/scoring.ts                     — Pure scoring math (SES, YFI/WFI, Site Scorer transforms, effectivePct, computeFitScore, weightedMean); imported by census.ts + site-scorer route/page + overview route. No DB/Next/React imports — unit-testable in isolation
+src/lib/scoring.test.ts                — Vitest suite: 22 hand-computed fixtures covering every scoring.ts formula incl. null-growth redistribution + threshold boundaries. Run `npm test`
 src/lib/campuses.ts                    — All 10 campus locations with lat/lng + status (existing|soon); used for map markers + isochrone fetch
 src/components/TopNav.tsx              — Shared nav; renders <CoverageNav /> (do NOT also render in page files)
 src/components/CoverageNav.tsx         — Suspense-wrapped nav links; preserves ?coverage=all param across page transitions

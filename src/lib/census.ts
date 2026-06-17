@@ -1,4 +1,5 @@
 import { BOUNDARY_CHANGED } from './zips'
+import { sesScore as computeSesScore, sesLabel as computeSesLabel } from './scoring'
 
 const CENSUS_BASE = 'https://api.census.gov/data'
 
@@ -239,16 +240,8 @@ export async function fetchZipData(zip: string) {
   // SES class
   const homeValue   = i(r['B25077_001E'])
   const bachelorsRate = pct(bachelorsPlus, edTotal)
-  const sesScore    = Math.round(
-    Math.min(100, (income / 200000) * 100)    * 0.5 +
-    Math.min(100, bachelorsRate * 2)           * 0.3 +
-    Math.min(100, (homeValue / 800000) * 100)  * 0.2
-  )
-  const sesLabel =
-    sesScore >= 78 ? 'Upper' :
-    sesScore >= 58 ? 'Upper Middle' :
-    sesScore >= 40 ? 'Middle' :
-    sesScore >= 25 ? 'Lower Middle' : 'Lower Income'
+  const sesScore = computeSesScore(income, bachelorsRate, homeValue)
+  const sesLabel = computeSesLabel(sesScore)
 
   return {
     zip,

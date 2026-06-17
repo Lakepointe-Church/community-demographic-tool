@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { DFW_ZIPS, CORE_MSA_ZIP_SET } from '@/lib/zips'
+import { weightedMean } from '@/lib/scoring'
 
 export async function GET(req: NextRequest) {
   try {
@@ -23,16 +24,16 @@ export async function GET(req: NextRequest) {
     const totalPop = rows.reduce((s, d) => s + (d.population ?? 0), 0)
     const totalHH  = rows.reduce((s, d) => s + (d.total_households ?? 0), 0)
 
+    // population-weighted mean income (denominator = Σ population over all rows = totalPop)
     const wtdAvgHHI = Math.round(
-      rows.reduce((s, d) => s + (d.median_household_income ?? 0) * (d.population ?? 0), 0) / totalPop
+      weightedMean(rows.map(d => ({ value: d.median_household_income ?? 0, weight: d.population ?? 0 })))
     )
 
     const growthRows = rows.filter(d => d.population_growth != null)
     const avgGrowth  = growthRows.length
-      ? parseFloat((
-          growthRows.reduce((s, d) => s + pf(d.population_growth) * (d.population ?? 0), 0) /
-          growthRows.reduce((s, d) => s + (d.population ?? 0), 0)
-        ).toFixed(1))
+      ? parseFloat(
+          weightedMean(growthRows.map(d => ({ value: pf(d.population_growth), weight: d.population ?? 0 }))).toFixed(1)
+        )
       : null
 
     const hhChildRows = rows.filter(d => d.hh_with_children_pct != null)
@@ -45,25 +46,29 @@ export async function GET(req: NextRequest) {
       ? parseFloat((hhSizeRows.reduce((s, d) => s + pf(d.avg_household_size), 0) / hhSizeRows.length).toFixed(2))
       : null
 
-    // Age distribution — population-weighted average
+    // Age distribution — population-weighted average (denominator = Σ population over ageRows)
     const ageRows = rows.filter(d => d.age_0_17 != null)
-    const agePop  = ageRows.reduce((s, d) => s + d.population, 0)
+    const agePop  = ageRows.reduce((s, d) => s + (d.population ?? 0), 0)
+    const ageWtd = (col: string) =>
+      parseFloat(weightedMean(ageRows.map(d => ({ value: pf(d[col]), weight: d.population ?? 0 }))).toFixed(1))
     const ageDistribution = agePop > 0 ? {
-      age0_17:   parseFloat((ageRows.reduce((s, d) => s + pf(d.age_0_17)    * d.population, 0) / agePop).toFixed(1)),
-      age18_34:  parseFloat((ageRows.reduce((s, d) => s + pf(d.age_18_34)   * d.population, 0) / agePop).toFixed(1)),
-      age35_54:  parseFloat((ageRows.reduce((s, d) => s + pf(d.age_35_54)   * d.population, 0) / agePop).toFixed(1)),
-      age55_74:  parseFloat((ageRows.reduce((s, d) => s + pf(d.age_55_74)   * d.population, 0) / agePop).toFixed(1)),
-      age75plus: parseFloat((ageRows.reduce((s, d) => s + pf(d.age_75_plus) * d.population, 0) / agePop).toFixed(1)),
+      age0_17:   ageWtd('age_0_17'),
+      age18_34:  ageWtd('age_18_34'),
+      age35_54:  ageWtd('age_35_54'),
+      age55_74:  ageWtd('age_55_74'),
+      age75plus: ageWtd('age_75_plus'),
     } : null
 
-    // Income distribution — household-weighted average
+    // Income distribution — household-weighted average (denominator = Σ households over all rows = totalHH)
+    const incWtd = (col: string) =>
+      parseFloat(weightedMean(rows.map(d => ({ value: pf(d[col]), weight: d.total_households ?? 0 }))).toFixed(1))
     const incomeDistribution = [
-      { label: '<$25K',     pct: parseFloat((rows.reduce((s, d) => s + pf(d.income_lt25k)     * (d.total_households ?? 0), 0) / totalHH).toFixed(1)) },
-      { label: '$25-50K',   pct: parseFloat((rows.reduce((s, d) => s + pf(d.income_25_50k)    * (d.total_households ?? 0), 0) / totalHH).toFixed(1)) },
-      { label: '$50-75K',   pct: parseFloat((rows.reduce((s, d) => s + pf(d.income_50_75k)    * (d.total_households ?? 0), 0) / totalHH).toFixed(1)) },
-      { label: '$75-100K',  pct: parseFloat((rows.reduce((s, d) => s + pf(d.income_75_100k)   * (d.total_households ?? 0), 0) / totalHH).toFixed(1)) },
-      { label: '$100-150K', pct: parseFloat((rows.reduce((s, d) => s + pf(d.income_100_150k)  * (d.total_households ?? 0), 0) / totalHH).toFixed(1)) },
-      { label: '$150K+',    pct: parseFloat((rows.reduce((s, d) => s + pf(d.income_150k_plus) * (d.total_households ?? 0), 0) / totalHH).toFixed(1)) },
+      { label: '<$25K',     pct: incWtd('income_lt25k') },
+      { label: '$25-50K',   pct: incWtd('income_25_50k') },
+      { label: '$50-75K',   pct: incWtd('income_50_75k') },
+      { label: '$75-100K',  pct: incWtd('income_75_100k') },
+      { label: '$100-150K', pct: incWtd('income_100_150k') },
+      { label: '$150K+',    pct: incWtd('income_150k_plus') },
     ]
 
     // Per-ZIP data

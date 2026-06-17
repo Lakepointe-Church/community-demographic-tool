@@ -4,6 +4,10 @@ import { useEffect, useState, useRef } from 'react'
 import { downloadCsv } from '@/lib/csv'
 import { BOUNDARY_CHANGED } from '@/lib/zips'
 import { CAMPUSES } from '@/lib/campuses'
+import {
+  growthScore, satOpportunityScore, distanceScore,
+  effectivePct, computeFitScore, type Weights,
+} from '@/lib/scoring'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -21,16 +25,6 @@ interface ZipScore {
   enrollmentGrowthScore: number
   distanceToCampusMi: number | null
   county: string | null
-}
-
-interface Weights {
-  yfi: number
-  wfi: number
-  ses: number
-  growth: number
-  saturation: number
-  enrollment: number
-  distance: number
 }
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -70,50 +64,8 @@ const PRESETS: Record<string, Weights> = {
 const EXISTING_CAMPUS_ZIPS = new Set(CAMPUSES.filter(c => c.status === 'existing').map(c => c.zip))
 const CAMPUS_LABEL = Object.fromEntries(CAMPUSES.map(c => [c.zip, c.label]))
 
-// ── Scoring helpers ───────────────────────────────────────────────────────────
-
-function effectivePct(w: Weights): Weights {
-  const total = w.yfi + w.wfi + w.ses + w.growth + w.saturation + w.enrollment + w.distance || 1
-  return {
-    yfi:        (w.yfi / total) * 100,
-    wfi:        (w.wfi / total) * 100,
-    ses:        (w.ses / total) * 100,
-    growth:     (w.growth / total) * 100,
-    saturation: (w.saturation / total) * 100,
-    enrollment: (w.enrollment / total) * 100,
-    distance:   (w.distance / total) * 100,
-  }
-}
-
-function growthScore(g: number): number {
-  return Math.min(100, Math.max(0, (g + 10) / 50 * 100))
-}
-
-function satOpportunityScore(cper10k: number): number {
-  return Math.max(0, 100 - Math.min(100, (cper10k / 30) * 100))
-}
-
-// Farther from the nearest existing campus = more open territory = higher score.
-// Capped at 30 miles (on top of an existing campus → 0; 30+ mi away → 100).
-function distanceScore(mi: number): number {
-  return Math.min(100, Math.max(0, (mi / 30) * 100))
-}
-
-function computeFitScore(z: ZipScore, eff: Weights): number {
-  const growthW = z.populationGrowth != null ? eff.growth : 0
-  const distW = z.distanceToCampusMi != null ? eff.distance : 0
-  const otherSum = eff.yfi + eff.wfi + eff.ses + eff.saturation + eff.enrollment
-  const scale = (otherSum + growthW + distW) > 0 ? 100 / (otherSum + growthW + distW) : 1
-  return Math.round((
-    z.yfi * eff.yfi +
-    z.wfi * eff.wfi +
-    z.sesScore * eff.ses +
-    satOpportunityScore(z.churchesPer10k) * eff.saturation +
-    (z.populationGrowth != null ? growthScore(z.populationGrowth) * growthW : 0) +
-    z.enrollmentGrowthScore * eff.enrollment +
-    (z.distanceToCampusMi != null ? distanceScore(z.distanceToCampusMi) * distW : 0)
-  ) * scale / 100)
-}
+// Scoring helpers (growthScore / satOpportunityScore / distanceScore /
+// effectivePct / computeFitScore) live in @/lib/scoring — imported above, unit-tested.
 
 const DRIVER_LABELS: Record<string, string> = {
   yfi:        'young family concentration',

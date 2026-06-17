@@ -3,6 +3,7 @@ import { sql } from '@/lib/db'
 import { DFW_ZIPS, CORE_MSA_ZIP_SET } from '@/lib/zips'
 import { ZIP_COUNTY } from '@/lib/zip-county'
 import { CAMPUSES } from '@/lib/campuses'
+import { yfiScore, wfiScore, enrollmentCagrScore } from '@/lib/scoring'
 import centroidsJson from '../../../../data/dfw-zip-centroids.json'
 
 function pf(v: unknown): number {
@@ -89,8 +90,7 @@ export async function GET(req: NextRequest) {
       const lastEnr  = parseInt(String(e.last_enr ?? 0))
       const years    = parseInt(String(e.last_year ?? 0)) - parseInt(String(e.first_year ?? 0))
       if (firstEnr > 0 && lastEnr > 0 && years > 0) {
-        const cagr = (Math.pow(lastEnr / firstEnr, 1 / years) - 1) * 100
-        enrollmentScore.set(e.county as string, Math.min(100, Math.max(0, Math.round(cagr * 12))))
+        enrollmentScore.set(e.county as string, enrollmentCagrScore(firstEnr, lastEnr, years))
       }
     }
 
@@ -105,31 +105,30 @@ export async function GET(req: NextRequest) {
       const churchCount = typeof d.church_count === 'number' ? d.church_count : parseInt(String(d.church_count ?? '0'))
       const churchesPer10k = pop > 0 ? parseFloat(((churchCount / pop) * 10000).toFixed(2)) : 0
 
-      // YFI
+      // YFI — null-coalesce raw fields to documented fallbacks, then score
       const iAge0_17   = d.age_0_17                != null ? pf(d.age_0_17)                : 0
       const iAvgHH     = d.avg_household_size       != null ? pf(d.avg_household_size)       : 2.5
       const iMwKids    = d.hh_married_with_children != null ? pf(d.hh_married_with_children) : 0
       const iSingle    = d.hh_single_parent         != null ? pf(d.hh_single_parent)         : 0
-      const iFamilyHH  = iMwKids + iSingle
       const iFertility = d.fertility_rate           != null ? pf(d.fertility_rate) * 100      : 5
-      const yfi = Math.round(
-        Math.min(100, (iAge0_17 / 30) * 100)                    * 0.40 +
-        Math.min(100, (iFamilyHH / 40) * 100)                   * 0.25 +
-        Math.min(100, (iFertility / 8) * 100)                   * 0.20 +
-        Math.min(100, Math.max(0, (iAvgHH - 1.5) / 2.0 * 100)) * 0.15
-      )
+      const yfi = yfiScore({
+        age0_17Pct: iAge0_17,
+        familyHhPct: iMwKids + iSingle,
+        fertilityPct: iFertility,
+        avgHouseholdSize: iAvgHH,
+      })
 
       // WFI
       const iDualEarner = d.dual_earner_pct    != null ? pf(d.dual_earner_pct)    : 0
       const iHHWithKids = d.hh_with_children_pct != null ? pf(d.hh_with_children_pct) : 0
       const iCommute30  = d.commute_30plus_pct  != null ? pf(d.commute_30plus_pct)  : 50
       const iBachRate   = d.bachelors_rate      != null ? pf(d.bachelors_rate)      : 0
-      const wfi = Math.round(
-        Math.min(100, (iDualEarner / 40) * 100) * 0.40 +
-        Math.min(100, (iHHWithKids / 50) * 100) * 0.25 +
-        Math.max(0, 100 - iCommute30)            * 0.20 +
-        Math.min(100, (iBachRate / 50) * 100)    * 0.15
-      )
+      const wfi = wfiScore({
+        dualEarnerPct: iDualEarner,
+        hhWithChildrenPct: iHHWithKids,
+        commute30plusPct: iCommute30,
+        bachelorsRate: iBachRate,
+      })
 
       const county = ZIP_COUNTY[d.zip] ?? null
       const enrollmentGrowthScore = county != null ? (enrollmentScore.get(county) ?? 0) : 0
