@@ -7,21 +7,30 @@
  * aggregate campus enrollment up to the ZIP and let the scorer compute a
  * ZIP-level CAGR (falling back to county CAGR where a ZIP has no school data).
  *
- * SOURCE: NCES Common Core of Data (CCD) school directory, served by the Urban
- * Institute Education Data API (no key). Federal source — chosen over TEA's
- * TAPR campus files because it ships ZIP + lat/lon + enrollment in one place,
- * so no manual portal download or geocoding is needed. ~1–2yr vintage lag and a
- * "membership" definition that differs slightly from TEA's — documented at
- * /methodology. (Run from a normal network — the API Cloudflare-blocks some
- * datacenter egress IPs.)
+ * ⚠️ DATA LOAD DEFERRED (2026-06-17): the Urban Institute API path below is
+ * BLOCKED by a Cloudflare JS/managed challenge — every request (any User-Agent,
+ * from both datacenter and residential networks) returns a 403 challenge page,
+ * which a script cannot pass. This importer is therefore non-functional as-is.
+ * The Site Scorer falls back to the county TEA CAGR in the meantime (no breakage).
  *
- *   https://educationdata.urban.org/api/v1/schools/ccd/directory/{year}/?fips=48
+ * REVISIT PATH (chosen direction): rework this to read a LOCAL CSV instead of the
+ * API — export TX public schools from NCES ELSI (nces.ed.gov/ccd/elsi) with
+ * columns School Name + Location ZIP + Total Students across a few years (one
+ * file, ZIP + enrollment together, no join), save to data/school-enrollment-*.csv,
+ * and parse it the way scripts/import-tea.ts / import-soi.ts read local files.
+ * Keep the aggregate-to-ZIP + zip_school_enrollment write below; only swap the
+ * fetch loop for a CSV reader. Self-verify the ELSI column names on first run.
+ *
+ * SOURCE (intended): NCES Common Core of Data (CCD) — chosen over TEA TAPR campus
+ * files because it ships ZIP + enrollment together (no campus-directory join /
+ * geocoding). Federal, ~1–2yr lag, "membership" differs slightly from TEA.
+ *
+ *   (blocked) https://educationdata.urban.org/api/v1/schools/ccd/directory/{year}/?fips=48
  *
  * Run: npx tsx scripts/import-school-enrollment.ts   (DRY_RUN=1 to preview)
  *
  * Self-verifying: prints the first record's keys + a sample and STOPS if the
- * expected fields (enrollment / zip_location) are missing, so the field mapping
- * can be finalized against the live response in one edit if the API shifts.
+ * expected fields (enrollment / zip_location) are missing.
  */
 
 import { neon } from '@neondatabase/serverless'
@@ -41,6 +50,14 @@ const FIPS_TX = 48
 const YEARS = [2021, 2022, 2023] // CAGR uses earliest→latest year actually returned
 const BASE = 'https://educationdata.urban.org/api/v1/schools/ccd/directory'
 const DFW_ZIP_SET = new Set(DFW_ZIPS.map(z => z.zip))
+
+// The API sits behind Cloudflare, which 403s requests without a browser-like
+// User-Agent. These headers let a residential/office connection through.
+const BROWSER_HEADERS = {
+  'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+  'Accept': 'application/json, text/plain, */*',
+  'Accept-Language': 'en-US,en;q=0.9',
+}
 
 interface CcdSchool {
   school_name?: string
@@ -64,9 +81,10 @@ async function fetchYear(year: number, verifyFirst: boolean): Promise<CcdSchool[
   let pages = 0
   let verified = !verifyFirst
   while (url && pages < 500) {
-    const res = await fetch(url, { headers: { Accept: 'application/json' } })
+    const res = await fetch(url, { headers: BROWSER_HEADERS })
     if (!res.ok) {
-      console.warn(`  ⚠ ${year}: HTTP ${res.status} — skipping year`)
+      const body = (await res.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 160)
+      console.warn(`  ⚠ ${year}: HTTP ${res.status} — skipping year. Body: ${body}`)
       return out
     }
     const data = await res.json() as { count: number; next: string | null; results: CcdSchool[] }
