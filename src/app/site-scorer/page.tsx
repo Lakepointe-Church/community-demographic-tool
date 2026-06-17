@@ -19,6 +19,7 @@ interface ZipScore {
   totalChurches: number
   churchesPer10k: number
   enrollmentGrowthScore: number
+  distanceToCampusMi: number | null
   county: string | null
 }
 
@@ -39,6 +40,26 @@ const DEFAULT_WEIGHTS: Weights = {
 }
 
 const WEIGHT_KEYS = ['yfi', 'wfi', 'ses', 'growth', 'saturation', 'enrollment', 'distance'] as const
+
+// Signals leadership can toggle in/out of the score. Distance is included but
+// defaults OFF (straight-line to nearest existing campus; penalises nearness).
+const SIGNALS = [
+  { key: 'yfi',        label: 'YFI',        full: 'Young Family Index (YFI)',   color: '#4EAEFF' },
+  { key: 'wfi',        label: 'WFI',        full: 'Working Family Index (WFI)', color: '#2DD4BF' },
+  { key: 'ses',        label: 'SES',        full: 'SES Score',                  color: '#A78BFA' },
+  { key: 'growth',     label: 'Growth',     full: 'Population Growth',          color: '#FF6B6B' },
+  { key: 'saturation', label: 'Saturation', full: 'Church Saturation Opp.',     color: '#E8B84B' },
+  { key: 'enrollment', label: 'Enrollment', full: 'School Enrollment Growth',   color: '#2DD4BF' },
+  { key: 'distance',   label: 'Distance',   full: 'Distance from Campus',       color: '#FB923C' },
+] as const
+
+type ToggleKey = typeof SIGNALS[number]['key']
+const TOGGLE_KEYS = SIGNALS.map(s => s.key) as ToggleKey[]
+// Default selection: the six demand/supply signals on, distance off (reserved opt-in).
+const DEFAULT_ENABLED: Record<ToggleKey, boolean> = {
+  yfi: true, wfi: true, ses: true, growth: true, saturation: true, enrollment: true, distance: false,
+}
+const DISTANCE_DEFAULT_WEIGHT = 10 // applied when distance is first toggled on (if still 0)
 
 const PRESETS: Record<string, Weights> = {
   'Balanced':       { yfi: 23, wfi: 23, ses: 18, growth: 14, saturation: 12, enrollment: 10, distance: 0 },
@@ -72,18 +93,25 @@ function satOpportunityScore(cper10k: number): number {
   return Math.max(0, 100 - Math.min(100, (cper10k / 30) * 100))
 }
 
+// Farther from the nearest existing campus = more open territory = higher score.
+// Capped at 30 miles (on top of an existing campus → 0; 30+ mi away → 100).
+function distanceScore(mi: number): number {
+  return Math.min(100, Math.max(0, (mi / 30) * 100))
+}
+
 function computeFitScore(z: ZipScore, eff: Weights): number {
   const growthW = z.populationGrowth != null ? eff.growth : 0
-  // distance slot reserved (no centroid data yet; default weight is 0)
+  const distW = z.distanceToCampusMi != null ? eff.distance : 0
   const otherSum = eff.yfi + eff.wfi + eff.ses + eff.saturation + eff.enrollment
-  const scale = (otherSum + growthW) > 0 ? 100 / (otherSum + growthW) : 1
+  const scale = (otherSum + growthW + distW) > 0 ? 100 / (otherSum + growthW + distW) : 1
   return Math.round((
     z.yfi * eff.yfi +
     z.wfi * eff.wfi +
     z.sesScore * eff.ses +
     satOpportunityScore(z.churchesPer10k) * eff.saturation +
     (z.populationGrowth != null ? growthScore(z.populationGrowth) * growthW : 0) +
-    z.enrollmentGrowthScore * eff.enrollment
+    z.enrollmentGrowthScore * eff.enrollment +
+    (z.distanceToCampusMi != null ? distanceScore(z.distanceToCampusMi) * distW : 0)
   ) * scale / 100)
 }
 
@@ -94,10 +122,12 @@ const DRIVER_LABELS: Record<string, string> = {
   growth:     'population growth',
   saturation: 'low saturation',
   enrollment: 'enrollment growth',
+  distance:   'distance from campus',
 }
 
 function topDrivers(z: ZipScore, eff: Weights): [string, string] {
   const growthW = z.populationGrowth != null ? eff.growth : 0
+  const distW = z.distanceToCampusMi != null ? eff.distance : 0
   const scores: Record<string, number> = {
     yfi:        z.yfi * eff.yfi,
     wfi:        z.wfi * eff.wfi,
@@ -105,6 +135,7 @@ function topDrivers(z: ZipScore, eff: Weights): [string, string] {
     growth:     z.populationGrowth != null ? growthScore(z.populationGrowth) * growthW : 0,
     saturation: satOpportunityScore(z.churchesPer10k) * eff.saturation,
     enrollment: z.enrollmentGrowthScore * eff.enrollment,
+    distance:   z.distanceToCampusMi != null ? distanceScore(z.distanceToCampusMi) * distW : 0,
   }
   const keys = Object.keys(scores).sort((a, b) => scores[b] - scores[a])
   return [DRIVER_LABELS[keys[0]], DRIVER_LABELS[keys[1]]]
@@ -307,6 +338,7 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
           <div style={{ color: '#8A98AE' }}>Churches/10K: {hovered.churchesPer10k.toFixed(1)}</div>
           <div style={{ color: '#8A98AE' }}>YFI: {hovered.yfi} · WFI: {hovered.wfi}</div>
           <div style={{ color: '#8A98AE' }}>SES: {hovered.sesLabel}</div>
+          <div style={{ color: '#8A98AE' }}>Dist to campus: {hovered.distanceToCampusMi != null ? `${hovered.distanceToCampusMi} mi` : '—'}</div>
         </div>
       )}
 
@@ -354,7 +386,7 @@ function WeightSlider({
 
 // ── Main page ─────────────────────────────────────────────────────────────────
 
-type SortKey = 'fitScore' | 'populationGrowth' | 'churchesPer10k' | 'sesScore' | 'yfi' | 'wfi' | 'population' | 'enrollmentGrowthScore'
+type SortKey = 'fitScore' | 'populationGrowth' | 'churchesPer10k' | 'sesScore' | 'yfi' | 'wfi' | 'population' | 'enrollmentGrowthScore' | 'distanceToCampusMi'
 
 export default function SiteScorerPage() {
   const [data, setData]             = useState<ZipScore[]>([])
@@ -363,6 +395,7 @@ export default function SiteScorerPage() {
   const [coverage, setCoverage]     = useState<'core' | 'all'>('core')
   const [refreshKey, setRefreshKey] = useState(0)
   const [weights, setWeights]       = useState<Weights>(DEFAULT_WEIGHTS)
+  const [enabled, setEnabled]       = useState<Record<ToggleKey, boolean>>(DEFAULT_ENABLED)
   const [hovered, setHovered]       = useState<ZipScore | null>(null)
   const [sortKey, setSortKey]       = useState<SortKey>('fitScore')
   const [sortAsc, setSortAsc]       = useState(false)
@@ -376,6 +409,13 @@ export default function SiteScorerPage() {
     if (p.get('coverage') === 'all') setCoverage('all')
     const fromUrl = weightsFromSearch(window.location.search)
     if (fromUrl) setWeights(fromUrl)
+    const off = (p.get('off') ?? '').split(',').filter(Boolean)
+    if (off.length || p.get('dist') === '1') {
+      const e = { ...DEFAULT_ENABLED }
+      for (const k of off) if (k in e) e[k as ToggleKey] = false
+      if (p.get('dist') === '1') e.distance = true
+      if (TOGGLE_KEYS.some(k => e[k])) setEnabled(e) // never leave the score empty
+    }
   }, [])
 
   // Sync weights + coverage to URL whenever they change (skip first render)
@@ -384,8 +424,12 @@ export default function SiteScorerPage() {
     const p = new URLSearchParams()
     if (coverage === 'all') p.set('coverage', 'all')
     for (const k of WEIGHT_KEYS) p.set(k, String(weights[k]))
+    // Distance defaults off, so encode it as dist=1 (on) and only list the other off signals.
+    const offKeys = TOGGLE_KEYS.filter(k => k !== 'distance' && !enabled[k])
+    if (offKeys.length) p.set('off', offKeys.join(','))
+    if (enabled.distance) p.set('dist', '1')
     window.history.replaceState(null, '', `/site-scorer?${p.toString()}`)
-  }, [weights, coverage])
+  }, [weights, coverage, enabled])
 
   // Fetch site-scorer data
   useEffect(() => {
@@ -400,12 +444,27 @@ export default function SiteScorerPage() {
       .catch(() => { setError('Failed to load data'); setLoading(false) })
   }, [coverage, refreshKey])
 
+  function toggleSignal(k: ToggleKey) {
+    const turningOn = !enabled[k]
+    setEnabled(prev => {
+      const next = { ...prev, [k]: !prev[k] }
+      if (!TOGGLE_KEYS.some(key => next[key])) return prev // keep at least one signal in the score
+      return next
+    })
+    // Distance defaults to weight 0; give it a usable weight the first time it's switched on.
+    if (k === 'distance' && turningOn) {
+      setWeights(w => (w.distance === 0 ? { ...w, distance: DISTANCE_DEFAULT_WEIGHT } : w))
+    }
+  }
+
   function handleNormalize() {
-    const total = WEIGHT_KEYS.reduce((s, k) => s + weights[k], 0)
-    if (total === 0) return
-    setWeights(Object.fromEntries(
-      WEIGHT_KEYS.map(k => [k, Math.round(weights[k] / total * 100)])
-    ) as unknown as Weights)
+    const enabledTotal = TOGGLE_KEYS.filter(k => enabled[k]).reduce((s, k) => s + weights[k], 0)
+    if (enabledTotal === 0) return
+    setWeights(w => {
+      const nw = { ...w }
+      for (const k of TOGGLE_KEYS) if (enabled[k]) nw[k] = Math.round(w[k] / enabledTotal * 100)
+      return nw
+    })
   }
 
   function handleCoverageChange(val: 'core' | 'all') {
@@ -419,7 +478,12 @@ export default function SiteScorerPage() {
     })
   }
 
-  const eff = effectivePct(weights)
+  // Mask out toggled-off signals before normalizing, so the score uses only the
+  // enabled signals (the remaining weights renormalize to 100%).
+  const maskedWeights: Weights = { ...weights }
+  for (const k of TOGGLE_KEYS) if (!enabled[k]) maskedWeights[k] = 0
+  const eff = effectivePct(maskedWeights)
+  const isDefaultEnabled = TOGGLE_KEYS.every(k => enabled[k] === DEFAULT_ENABLED[k])
 
   // Score all ZIPs and compute percentile ranks
   const scored = data.map(z => ({ ...z, fitScore: computeFitScore(z, eff) }))
@@ -448,16 +512,16 @@ export default function SiteScorerPage() {
   function handleExport() {
     downloadCsv('site-scorer.csv', [
       'ZIP', 'Area', 'County', 'Fit Score', 'Percentile', 'Growth %', 'Churches/10K',
-      'SES Score', 'SES Class', 'YFI', 'WFI', 'Enrollment Growth Score', 'Population', 'Total Churches',
+      'SES Score', 'SES Class', 'YFI', 'WFI', 'Enrollment Growth Score', 'Dist to Campus (mi)', 'Population', 'Total Churches',
     ], sorted.map(z => [
       z.zip, z.label, z.county ?? '', z.fitScore, `top ${topPct(z.zip)}%`,
       z.populationGrowth ?? '', z.churchesPer10k, z.sesScore, z.sesLabel,
-      z.yfi, z.wfi, z.enrollmentGrowthScore, z.population, z.totalChurches,
+      z.yfi, z.wfi, z.enrollmentGrowthScore, z.distanceToCampusMi ?? '', z.population, z.totalChurches,
     ]))
   }
 
   const thStyle = (key: SortKey): React.CSSProperties => ({
-    textAlign: ['fitScore', 'population', 'yfi', 'wfi', 'sesScore', 'populationGrowth', 'churchesPer10k', 'enrollmentGrowthScore'].includes(key) ? 'right' : 'left',
+    textAlign: ['fitScore', 'population', 'yfi', 'wfi', 'sesScore', 'populationGrowth', 'churchesPer10k', 'enrollmentGrowthScore', 'distanceToCampusMi'].includes(key) ? 'right' : 'left',
     padding: '6px 10px 10px',
     color: sortKey === key ? '#E8B84B' : '#5a6478',
     fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
@@ -528,7 +592,7 @@ export default function SiteScorerPage() {
                     Scoring Weights
                   </div>
                   <div style={{ fontSize: 11, color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace" }}>
-                    Adjust sliders, then Normalize to snap to 100% · share scenario via Copy Link
+                    Toggle which signals count, weight them with the sliders · share scenario via Copy Link
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -536,12 +600,12 @@ export default function SiteScorerPage() {
                   {Object.keys(PRESETS).map(name => (
                     <button
                       key={name}
-                      onClick={() => setWeights(PRESETS[name])}
+                      onClick={() => { setWeights(PRESETS[name]); setEnabled(DEFAULT_ENABLED) }}
                       style={{
                         fontFamily: "'IBM Plex Mono',monospace", fontSize: 10,
-                        background: JSON.stringify(weights) === JSON.stringify(PRESETS[name])
+                        background: isDefaultEnabled && JSON.stringify(weights) === JSON.stringify(PRESETS[name])
                           ? 'rgba(232,184,75,0.15)' : 'transparent',
-                        border: JSON.stringify(weights) === JSON.stringify(PRESETS[name])
+                        border: isDefaultEnabled && JSON.stringify(weights) === JSON.stringify(PRESETS[name])
                           ? '1px solid rgba(232,184,75,0.5)' : '1px solid #232940',
                         borderRadius: 4, color: '#A8B4C5', padding: '5px 10px',
                         cursor: 'pointer', letterSpacing: '0.06em',
@@ -553,7 +617,7 @@ export default function SiteScorerPage() {
                     style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'rgba(232,184,75,0.08)', border: '1px solid rgba(232,184,75,0.3)', borderRadius: 4, color: '#E8B84B', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                   >Normalize</button>
                   <button
-                    onClick={() => setWeights(DEFAULT_WEIGHTS)}
+                    onClick={() => { setWeights(DEFAULT_WEIGHTS); setEnabled(DEFAULT_ENABLED) }}
                     style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'transparent', border: '1px solid #232940', borderRadius: 4, color: '#8A98AE', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                   >Reset</button>
                   <button
@@ -562,22 +626,58 @@ export default function SiteScorerPage() {
                   >{copied ? '✓ Copied!' : '⎘ Copy Link'}</button>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-                <WeightSlider label="Young Family Index (YFI)"   color="#4EAEFF" value={weights.yfi}        effPct={eff.yfi}        onChange={v => setWeights(w => ({ ...w, yfi: v }))} />
-                <WeightSlider label="Working Family Index (WFI)" color="#2DD4BF" value={weights.wfi}        effPct={eff.wfi}        onChange={v => setWeights(w => ({ ...w, wfi: v }))} />
-                <WeightSlider label="SES Score"                  color="#A78BFA" value={weights.ses}        effPct={eff.ses}        onChange={v => setWeights(w => ({ ...w, ses: v }))} />
-                <WeightSlider label="Population Growth"          color="#FF6B6B" value={weights.growth}     effPct={eff.growth}     onChange={v => setWeights(w => ({ ...w, growth: v }))} />
-                <WeightSlider label="Church Saturation Opp."     color="#E8B84B" value={weights.saturation} effPct={eff.saturation} onChange={v => setWeights(w => ({ ...w, saturation: v }))} />
-                <WeightSlider label="School Enrollment Growth"   color="#2DD4BF" value={weights.enrollment} effPct={eff.enrollment} onChange={v => setWeights(w => ({ ...w, enrollment: v }))} />
-                <div style={{ borderTop: '1px solid #1a1f2e', marginTop: 4, paddingTop: 14 }}>
-                  <WeightSlider label="Distance Penalty ⁰"       color="#5a6478" value={weights.distance}  effPct={eff.distance}  onChange={v => setWeights(w => ({ ...w, distance: v }))} />
-                  <div style={{ marginTop: 6, fontSize: 10, color: '#3d4a5c', fontFamily: "'IBM Plex Mono',monospace", paddingLeft: 190 }}>
-                    ⁰ Reserved — ZIP centroid data not yet loaded. Keep at 0.
-                  </div>
+              {/* Signal toggles — pick which signals are in the score */}
+              <div style={{ marginBottom: 18 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 9 }}>
+                  Signals in score · click to include / exclude
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {SIGNALS.map(s => {
+                    const on = enabled[s.key]
+                    return (
+                      <button
+                        key={s.key}
+                        onClick={() => toggleSignal(s.key)}
+                        title={on ? `${s.full} — included (${eff[s.key].toFixed(0)}% of score)` : `${s.full} — excluded from score`}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: 7,
+                          fontFamily: "'IBM Plex Mono',monospace", fontSize: 11,
+                          padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
+                          background: on ? `${s.color}1A` : 'transparent',
+                          border: `1px solid ${on ? s.color + '80' : '#232940'}`,
+                          color: on ? '#E8E8EC' : '#5a6478',
+                          transition: 'all 0.12s',
+                        }}
+                      >
+                        <span style={{
+                          width: 9, height: 9, borderRadius: '50%', flexShrink: 0,
+                          background: on ? s.color : 'transparent',
+                          border: `1.5px solid ${on ? s.color : '#3d4a5c'}`,
+                        }} />
+                        {s.label}
+                        <span style={{ color: on ? s.color : '#3d4a5c', fontWeight: 600 }}>
+                          {on ? `${eff[s.key].toFixed(0)}%` : 'off'}
+                        </span>
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {SIGNALS.filter(s => enabled[s.key]).map(s => (
+                  <WeightSlider
+                    key={s.key}
+                    label={s.full}
+                    color={s.color}
+                    value={weights[s.key]}
+                    effPct={eff[s.key]}
+                    onChange={v => setWeights(w => ({ ...w, [s.key]: v }))}
+                  />
+                ))}
+              </div>
               <div style={{ marginTop: 16, fontSize: 10, color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace" }}>
-                Church Saturation Opportunity = inverse of churches/10K. School Enrollment Growth = TEA PEIMS county CAGR (0 when not loaded). See <a href="/methodology#site-scorer" style={{ color: '#5a6478', textDecoration: 'underline' }}>/methodology</a>.
+                Church Saturation Opportunity = inverse of churches/10K. School Enrollment Growth = TEA PEIMS county CAGR (0 when not loaded). <span style={{ color: '#FB923C' }}>Distance</span> = straight-line miles to the nearest existing campus (farther = more open territory); off by default. See <a href="/methodology#site-scorer" style={{ color: '#5a6478', textDecoration: 'underline' }}>/methodology</a>.
               </div>
             </div>
 
@@ -668,6 +768,7 @@ export default function SiteScorerPage() {
                       <th style={thStyle('yfi')} onClick={() => handleSort('yfi')}>YFI <SortArrow k="yfi" /></th>
                       <th style={thStyle('wfi')} onClick={() => handleSort('wfi')}>WFI <SortArrow k="wfi" /></th>
                       <th style={thStyle('enrollmentGrowthScore')} onClick={() => handleSort('enrollmentGrowthScore')}>Enroll. <SortArrow k="enrollmentGrowthScore" /></th>
+                      <th style={thStyle('distanceToCampusMi')} onClick={() => handleSort('distanceToCampusMi')}>Dist mi <SortArrow k="distanceToCampusMi" /></th>
                       <th style={thStyle('population')} onClick={() => handleSort('population')}>Pop. <SortArrow k="population" /></th>
                     </tr>
                   </thead>
@@ -721,6 +822,9 @@ export default function SiteScorerPage() {
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#2DD4BF' }}>{z.wfi}</td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: z.enrollmentGrowthScore > 0 ? '#2DD4BF' : '#3d4a5c' }}>
                             {z.enrollmentGrowthScore > 0 ? z.enrollmentGrowthScore : '—'}
+                          </td>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.distanceToCampusMi != null ? '#FB923C' : '#3d4a5c' }}>
+                            {z.distanceToCampusMi != null ? z.distanceToCampusMi.toFixed(1) : '—'}
                           </td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#5a6478' }}>{z.population.toLocaleString()}</td>
                         </tr>

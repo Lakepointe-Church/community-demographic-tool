@@ -156,7 +156,7 @@ export default function MethodologyPage() {
       <div id="site-scorer">
         <Section title="Site Scorer">
           <p style={bodyStyle}>
-            The Site Scorer combines six signals into a single 0–100 Fit Score per ZIP, with user-adjustable weights visible and editable on the <a href="/site-scorer" style={{ color: '#E8B84B' }}>Site Scorer page</a>. All weights default to the values below and are normalized to sum to 100% before scoring.
+            The Site Scorer combines a chosen set of signals into a single 0–100 Fit Score per ZIP, with user-adjustable weights visible and editable on the <a href="/site-scorer" style={{ color: '#E8B84B' }}>Site Scorer page</a>. Leadership can toggle each signal in or out of the score; only the enabled signals are normalized to sum to 100% before scoring. Six demand/supply signals are on by default; <span style={{ color: '#FB923C' }}>Distance from campus</span> is available but off by default.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '20px' }}>
@@ -169,6 +169,7 @@ export default function MethodologyPage() {
                 <div><span style={{ color: '#FF6B6B' }}>14%</span> — Population Growth</div>
                 <div><span style={{ color: '#E8B84B' }}>12%</span> — Church Saturation Opportunity</div>
                 <div><span style={{ color: '#2DD4BF' }}>10%</span> — School Enrollment Growth</div>
+                <div><span style={{ color: '#FB923C' }}>off</span> — Distance from Campus (opt-in; 10% when enabled)</div>
               </div>
             </div>
 
@@ -178,6 +179,7 @@ export default function MethodologyPage() {
                 <div>Growth score: <span style={{ color: '#5a6478' }}>(growth + 10) / 50 × 100, capped 0–100</span></div>
                 <div>Saturation opp.: <span style={{ color: '#5a6478' }}>100 − min(100, churches/10K / 30 × 100)</span></div>
                 <div>Enrollment growth: <span style={{ color: '#5a6478' }}>county ISD CAGR × 12, capped 0–100</span></div>
+                <div>Distance from campus: <span style={{ color: '#5a6478' }}>straight-line mi to nearest existing campus / 30 × 100, capped 0–100 (farther = higher)</span></div>
                 <div>YFI / WFI / SES: <span style={{ color: '#5a6478' }}>already 0–100 (see above)</span></div>
               </div>
             </div>
