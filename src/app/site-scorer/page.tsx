@@ -189,13 +189,13 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
         <text x={xDiv + 6} y={MT + 12} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="rgba(232,184,75,0.7)">
           HIGH GROWTH · LOW SATURATION ▲
         </text>
-        <text x={ML + 6} y={MT + 12} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#3d4a5c">
+        <text x={ML + 6} y={MT + 12} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#6E7C92">
           LOW GROWTH · LOW SAT.
         </text>
-        <text x={xDiv + 6} y={MT + CH - 4} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#3d4a5c">
+        <text x={xDiv + 6} y={MT + CH - 4} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#6E7C92">
           HIGH GROWTH · HIGH SAT.
         </text>
-        <text x={ML + 6} y={MT + CH - 4} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#3d4a5c">
+        <text x={ML + 6} y={MT + CH - 4} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#6E7C92">
           LOW GROWTH · HIGH SAT.
         </text>
 
@@ -206,7 +206,7 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
           return (
             <g key={t}>
               <line x1={ML - 4} y1={y} x2={ML} y2={y} stroke="#232940" strokeWidth={1} />
-              <text x={ML - 7} y={y + 3} fontSize={9} fontFamily="'IBM Plex Mono',monospace" fill="#5a6478" textAnchor="end">{t}</text>
+              <text x={ML - 7} y={y + 3} fontSize={9} fontFamily="'IBM Plex Mono',monospace" fill="#7A8699" textAnchor="end">{t}</text>
             </g>
           )
         })}
@@ -216,7 +216,7 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
         >Churches / 10K</text>
         <text
           transform={`translate(11,${MT + 10})`}
-          fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#5a6478" textAnchor="middle"
+          fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#7A8699" textAnchor="middle"
         >← opportunity</text>
 
         {/* X axis */}
@@ -226,7 +226,7 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
           return (
             <g key={t}>
               <line x1={x} y1={MT + CH} x2={x} y2={MT + CH + 4} stroke="#232940" strokeWidth={1} />
-              <text x={x} y={MT + CH + 14} fontSize={9} fontFamily="'IBM Plex Mono',monospace" fill="#5a6478" textAnchor="middle">{t}%</text>
+              <text x={x} y={MT + CH + 14} fontSize={9} fontFamily="'IBM Plex Mono',monospace" fill="#7A8699" textAnchor="middle">{t}%</text>
             </g>
           )
         })}
@@ -295,7 +295,7 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
       )}
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: 16, marginTop: 10, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: 16, marginTop: 10, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', flexWrap: 'wrap' }}>
         {[['#E8B84B', '≥ 75'], ['#4EAEFF', '60–74'], ['#2DD4BF', '45–59'], ['#8A98AE', '< 45']].map(([c, l]) => (
           <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: c, display: 'inline-block' }} />
@@ -475,7 +475,7 @@ export default function SiteScorerPage() {
   const thStyle = (key: SortKey): React.CSSProperties => ({
     textAlign: ['fitScore', 'population', 'yfi', 'wfi', 'sesScore', 'populationGrowth', 'churchesPer10k', 'enrollmentGrowthScore', 'distanceToCampusMi'].includes(key) ? 'right' : 'left',
     padding: '6px 10px 10px',
-    color: sortKey === key ? '#E8B84B' : '#5a6478',
+    color: sortKey === key ? '#E8B84B' : '#7A8699',
     fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
     borderBottom: '1px solid #1e2b3c', cursor: 'pointer', whiteSpace: 'nowrap' as const,
     fontFamily: "'IBM Plex Mono',monospace",
@@ -531,7 +531,7 @@ export default function SiteScorerPage() {
         )}
 
         {loading && (
-          <div style={{ color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, padding: '40px 0' }}>Loading…</div>
+          <div style={{ color: '#7A8699', fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, padding: '40px 0' }}>Loading…</div>
         )}
 
         {!loading && !error && (
@@ -543,7 +543,7 @@ export default function SiteScorerPage() {
                   <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 4 }}>
                     Scoring Weights
                   </div>
-                  <div style={{ fontSize: 11, color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace" }}>
+                  <div style={{ fontSize: 11, color: '#7A8699', fontFamily: "'IBM Plex Mono',monospace" }}>
                     Toggle which signals count, weight them with the sliders · share scenario via Copy Link
                   </div>
                 </div>
@@ -580,7 +580,7 @@ export default function SiteScorerPage() {
               </div>
               {/* Signal toggles — pick which signals are in the score */}
               <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 9 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7A8699', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 9 }}>
                   Signals in score · click to include / exclude
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -597,17 +597,17 @@ export default function SiteScorerPage() {
                           padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
                           background: on ? `${s.color}1A` : 'transparent',
                           border: `1px solid ${on ? s.color + '80' : '#232940'}`,
-                          color: on ? '#E8E8EC' : '#5a6478',
+                          color: on ? '#E8E8EC' : '#7A8699',
                           transition: 'all 0.12s',
                         }}
                       >
                         <span style={{
                           width: 9, height: 9, borderRadius: '50%', flexShrink: 0,
                           background: on ? s.color : 'transparent',
-                          border: `1.5px solid ${on ? s.color : '#3d4a5c'}`,
+                          border: `1.5px solid ${on ? s.color : '#6E7C92'}`,
                         }} />
                         {s.label}
-                        <span style={{ color: on ? s.color : '#3d4a5c', fontWeight: 600 }}>
+                        <span style={{ color: on ? s.color : '#6E7C92', fontWeight: 600 }}>
                           {on ? `${eff[s.key].toFixed(0)}%` : 'off'}
                         </span>
                       </button>
@@ -628,8 +628,8 @@ export default function SiteScorerPage() {
                   />
                 ))}
               </div>
-              <div style={{ marginTop: 16, fontSize: 10, color: '#5a6478', fontFamily: "'IBM Plex Mono',monospace" }}>
-                Church Saturation Opportunity = inverse of churches/10K. School Enrollment Growth = TEA PEIMS county CAGR (0 when not loaded). <span style={{ color: '#FB923C' }}>Distance</span> = straight-line miles to the nearest existing campus (farther = more open territory); off by default. See <a href="/methodology#site-scorer" style={{ color: '#5a6478', textDecoration: 'underline' }}>/methodology</a>.
+              <div style={{ marginTop: 16, fontSize: 10, color: '#7A8699', fontFamily: "'IBM Plex Mono',monospace" }}>
+                Church Saturation Opportunity = inverse of churches/10K. School Enrollment Growth = TEA PEIMS county CAGR (0 when not loaded). <span style={{ color: '#FB923C' }}>Distance</span> = straight-line miles to the nearest existing campus (farther = more open territory); off by default. See <a href="/methodology#site-scorer" style={{ color: '#7A8699', textDecoration: 'underline' }}>/methodology</a>.
               </div>
             </div>
 
@@ -656,7 +656,7 @@ export default function SiteScorerPage() {
                     const [d1, d2] = topDrivers(z, eff)
                     return (
                       <div key={z.zip} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 9 ? '1px solid #1a1f2e' : 'none' }}>
-                        <div style={{ width: 20, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ width: 20, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', textAlign: 'right', flexShrink: 0 }}>
                           #{i + 1}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -669,7 +669,7 @@ export default function SiteScorerPage() {
                             )}
                           </div>
                           <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 10, color: '#8A98AE', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{z.label}</div>
-                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#3d4a5c', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#6E7C92', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {d1} + {d2}
                           </div>
                         </div>
@@ -677,7 +677,7 @@ export default function SiteScorerPage() {
                           <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color, lineHeight: 1 }}>
                             {z.fitScore}
                           </div>
-                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#5a6478', marginTop: 2 }}>
+                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#7A8699', marginTop: 2 }}>
                             top {pct}%
                           </div>
                         </div>
@@ -695,7 +695,7 @@ export default function SiteScorerPage() {
                   <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace" }}>
                     All ZIPs · Ranked by Fit Score
                   </div>
-                  <div style={{ fontSize: 10, color: '#3d4a5c', fontFamily: "'IBM Plex Mono',monospace", marginTop: 3 }}>
+                  <div style={{ fontSize: 10, color: '#6E7C92', fontFamily: "'IBM Plex Mono',monospace", marginTop: 3 }}>
                     {totalZips} ZIPs · gold rows = existing Lakepointe campuses
                   </div>
                 </div>
@@ -740,7 +740,7 @@ export default function SiteScorerPage() {
                           onMouseEnter={() => setHovered(z)}
                           onMouseLeave={() => setHovered(null)}
                         >
-                          <td style={{ padding: '7px 10px', color: '#5a6478', textAlign: 'center' }}>{i + 1}</td>
+                          <td style={{ padding: '7px 10px', color: '#7A8699', textAlign: 'center' }}>{i + 1}</td>
                           <td style={{ padding: '7px 10px', color: '#E8B84B' }}>
                             {z.zip}
                             {isCampus && (
@@ -753,9 +753,9 @@ export default function SiteScorerPage() {
                           <td style={{ padding: '7px 10px', textAlign: 'right' }}>
                             <span style={{ color, fontWeight: 600, fontSize: 13 }}>{z.fitScore}</span>
                           </td>
-                          <td style={{ padding: '7px 10px', color: '#5a6478', fontSize: 10 }}>
+                          <td style={{ padding: '7px 10px', color: '#7A8699', fontSize: 10 }}>
                             top {pct}%
-                            <span style={{ color: '#3d4a5c', marginLeft: 3 }}>of {totalZips}</span>
+                            <span style={{ color: '#6E7C92', marginLeft: 3 }}>of {totalZips}</span>
                           </td>
                           <td
                             style={{ padding: '7px 10px', textAlign: 'right', color: (z.populationGrowth ?? 0) > 0 ? '#2DD4BF' : '#FF6B6B' }}
@@ -768,17 +768,17 @@ export default function SiteScorerPage() {
                           </td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#A78BFA' }}>
                             {z.sesScore.toFixed(0)}
-                            <span style={{ fontSize: 9, color: '#5a6478', marginLeft: 4 }}>{z.sesLabel.replace(' Income', '').replace(' Middle', 'M').replace('Upper', 'U')}</span>
+                            <span style={{ fontSize: 9, color: '#7A8699', marginLeft: 4 }}>{z.sesLabel.replace(' Income', '').replace(' Middle', 'M').replace('Upper', 'U')}</span>
                           </td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#4EAEFF' }}>{z.yfi}</td>
                           <td style={{ padding: '7px 10px', textAlign: 'right', color: '#2DD4BF' }}>{z.wfi}</td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.enrollmentGrowthScore > 0 ? '#2DD4BF' : '#3d4a5c' }}>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.enrollmentGrowthScore > 0 ? '#2DD4BF' : '#6E7C92' }}>
                             {z.enrollmentGrowthScore > 0 ? z.enrollmentGrowthScore : '—'}
                           </td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.distanceToCampusMi != null ? '#FB923C' : '#3d4a5c' }}>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.distanceToCampusMi != null ? '#FB923C' : '#6E7C92' }}>
                             {z.distanceToCampusMi != null ? z.distanceToCampusMi.toFixed(1) : '—'}
                           </td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#5a6478' }}>{z.population.toLocaleString()}</td>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#7A8699' }}>{z.population.toLocaleString()}</td>
                         </tr>
                       )
                     })}
@@ -798,13 +798,13 @@ export default function SiteScorerPage() {
 
             {/* Footer */}
             <div style={{ marginTop: 32, padding: '16px 0', borderTop: '1px solid #1e2b3c', display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699' }}>
                 Church saturation: IRS BMF Christian orgs (NTEE X20/X21/X22) · Updated monthly
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699' }}>
                 BMF undercounts congregations — use index for relative comparison only
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699' }}>
                 * ZCTA boundaries approximate USPS ZIP codes
               </span>
               <a

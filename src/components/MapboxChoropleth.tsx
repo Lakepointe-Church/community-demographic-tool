@@ -347,7 +347,7 @@ export default function MapboxChoropleth({
               <div style="font-size:10px;color:#8A98AE;margin-bottom:6px">${p.zip}</div>
               <div style="font-size:10px;color:#C8D4E4;margin-bottom:3px">${Number(p.households).toLocaleString()} attendee households</div>
               ${campus ? `<div style="font-size:10px;color:${color};margin-top:4px">Primary: ${campus}</div>` : ''}
-              <div style="font-size:9px;color:#5a6478;margin-top:6px">Click for campus breakdown</div>
+              <div style="font-size:10px;color:#7A8699;margin-top:6px">Click for campus breakdown</div>
             </div>
           `).addTo(map)
         })
@@ -393,8 +393,8 @@ export default function MapboxChoropleth({
             <div style="font-family:'IBM Plex Mono',monospace;min-width:220px">
               <div style="font-size:13px;color:#F0F2F7;font-weight:600;margin-bottom:2px">${p.label ?? p.zip}</div>
               <div style="font-size:10px;color:#8A98AE;margin-bottom:12px">${p.zip}${pct ? ` · ${pct} of census HH` : ''}</div>
-              <div style="font-size:9px;letter-spacing:0.1em;color:#5a6478;text-transform:uppercase;margin-bottom:6px">Campus Attendance</div>
-              ${breakdownRows || `<div style="font-size:10px;color:#5a6478">No breakdown available</div>`}
+              <div style="font-size:10px;letter-spacing:0.1em;color:#7A8699;text-transform:uppercase;margin-bottom:6px">Campus Attendance</div>
+              ${breakdownRows || `<div style="font-size:10px;color:#7A8699">No breakdown available</div>`}
               <div style="margin-top:8px;font-size:11px;color:#E8B84B;font-weight:600">${Number(p.households).toLocaleString()} total households</div>
             </div>
           `).addTo(map)
@@ -654,25 +654,25 @@ export default function MapboxChoropleth({
           ].map(({ label, color }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 10, height: 10, background: color }} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{label}</span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{label}</span>
             </div>
           ))}
           {campuses.some(c => c.status === 'existing') && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#E8B84B', border: '2px solid #fff' }} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Campus</span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Campus</span>
             </div>
           )}
           {showAttendees && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(232,184,75,0.75)', border: '1px solid #E8B84B' }} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Attendees</span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Attendees</span>
             </div>
           )}
           {isochroneGeoJson && isochroneMinutes && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 16, height: 3, background: '#4EAEFF' }} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{isochroneMinutes}-min drive</span>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{isochroneMinutes}-min drive</span>
             </div>
           )}
           <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '8px', color: '#3a4154', marginLeft: '8px' }}>
@@ -686,7 +686,7 @@ export default function MapboxChoropleth({
             position: 'absolute', top: 12, left: 12,
             background: 'rgba(13,15,20,0.88)', border: '1px solid rgba(167,139,250,0.4)',
             padding: '6px 12px',
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px',
+            fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
             color: '#A78BFA', letterSpacing: '0.08em',
             backdropFilter: 'blur(8px)',
           }}>

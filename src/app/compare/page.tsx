@@ -334,8 +334,8 @@ export default function ComparePage() {
                   <div key={group.label} style={{ marginBottom: '14px' }}>
                     <div style={{
                       fontFamily: "'IBM Plex Mono', monospace",
-                      fontSize: '9px',
-                      color: '#5a6478',
+                      fontSize: '10px',
+                      color: '#7A8699',
                       letterSpacing: '0.15em',
                       textTransform: 'uppercase' as const,
                       padding: '0 0 5px 2px',
@@ -396,7 +396,7 @@ export default function ComparePage() {
                 background: 'transparent',
                 border: 'none',
                 borderTop: '1px solid #1e2b3c',
-                color: '#5a6478',
+                color: '#7A8699',
                 fontFamily: "'IBM Plex Mono', monospace",
                 fontSize: '10px',
                 letterSpacing: '0.12em',
@@ -411,7 +411,7 @@ export default function ComparePage() {
                 transition: 'color 0.15s ease',
               }}
               onMouseEnter={e => (e.currentTarget.style.color = '#A8B4C5')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#5a6478')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#7A8699')}
             >
               {zipExpanded
                 ? <>&#9650; Collapse</>
@@ -463,7 +463,7 @@ export default function ComparePage() {
 
               {/* Stat Cards Row 2 — Lakepointe Indexes */}
               <div className="fade-up-3" style={{ marginBottom: '24px' }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.2em', color: '#5a6478', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
+                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.2em', color: '#7A8699', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
                   Lakepointe Indexes
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
@@ -571,14 +571,14 @@ export default function ComparePage() {
           {/* Footer */}
           <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em' }}>
                 Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · api.census.gov
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em' }}>
                 Lakepointe Church · Community Intelligence Platform · Internal Use Only
               </span>
             </div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', letterSpacing: '0.06em' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6E7C92', letterSpacing: '0.06em' }}>
               Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
             </div>
           </div>

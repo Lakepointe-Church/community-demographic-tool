@@ -79,7 +79,7 @@ export default function DecisionsPage() {
           <h1 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 44, margin: '0 0 4px', color: '#C8D4E4', letterSpacing: '0.02em' }}>
             Decision Log
           </h1>
-          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#5a6478' }}>
+          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#7A8699' }}>
             Record site decisions for future retrospective — revisit in 2 years.
           </div>
         </div>
@@ -92,7 +92,7 @@ export default function DecisionsPage() {
           <form onSubmit={handleSubmit}>
             <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 1fr', gap: 12, marginBottom: 12 }}>
               <div>
-                <label style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', display: 'block', marginBottom: 4 }}>ZIP *</label>
+                <label style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', display: 'block', marginBottom: 4 }}>ZIP *</label>
                 <input
                   value={zip}
                   onChange={e => setZip(e.target.value.replace(/\D/g, '').slice(0, 5))}
@@ -103,7 +103,7 @@ export default function DecisionsPage() {
                 />
               </div>
               <div>
-                <label style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', display: 'block', marginBottom: 4 }}>Your name</label>
+                <label style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', display: 'block', marginBottom: 4 }}>Your name</label>
                 <input
                   value={decidedBy}
                   onChange={e => setDecidedBy(e.target.value)}
@@ -112,14 +112,14 @@ export default function DecisionsPage() {
                 />
               </div>
               <div>
-                <label style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', display: 'block', marginBottom: 4 }}>
+                <label style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', display: 'block', marginBottom: 4 }}>
                   Area {zip && LABEL_MAP[zip] ? <span style={{ color: '#E8B84B' }}>· {LABEL_MAP[zip]}</span> : null}
                 </label>
-                <input value={LABEL_MAP[zip] ?? ''} readOnly style={{ ...inputStyle, color: '#5a6478' }} />
+                <input value={LABEL_MAP[zip] ?? ''} readOnly style={{ ...inputStyle, color: '#7A8699' }} />
               </div>
             </div>
             <div style={{ marginBottom: 12 }}>
-              <label style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', display: 'block', marginBottom: 4 }}>Notes — why this site? what's the context?</label>
+              <label style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', display: 'block', marginBottom: 4 }}>Notes — why this site? what's the context?</label>
               <textarea
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
@@ -145,7 +145,7 @@ export default function DecisionsPage() {
               {saved && (
                 <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#2DD4BF' }}>✓ Saved</span>
               )}
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#3d4a5c', marginLeft: 'auto' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#6E7C92', marginLeft: 'auto' }}>
                 Scenario URL auto-captured from current Site Scorer state
               </span>
             </div>
@@ -158,9 +158,9 @@ export default function DecisionsPage() {
             Decision History · {decisions.length} entries
           </div>
           {loading ? (
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: '#5a6478' }}>Loading…</div>
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: '#7A8699' }}>Loading…</div>
           ) : decisions.length === 0 ? (
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: '#3d4a5c', padding: '24px 0' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 12, color: '#6E7C92', padding: '24px 0' }}>
               No decisions logged yet. Use the form above to record the first one.
             </div>
           ) : (
@@ -169,19 +169,19 @@ export default function DecisionsPage() {
                 <thead>
                   <tr>
                     {['Date', 'ZIP', 'Area', 'Score', 'By', 'Notes', 'Scenario'].map(h => (
-                      <th key={h} style={{ textAlign: 'left', padding: '6px 10px 10px', color: '#5a6478', fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ textAlign: 'left', padding: '6px 10px 10px', color: '#7A8699', fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {decisions.map(d => (
                     <tr key={d.id} style={{ borderBottom: '1px solid #1a1f2e' }}>
-                      <td style={{ padding: '8px 10px', color: '#5a6478', whiteSpace: 'nowrap' }}>
+                      <td style={{ padding: '8px 10px', color: '#7A8699', whiteSpace: 'nowrap' }}>
                         {new Date(d.logged_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                       </td>
                       <td style={{ padding: '8px 10px', color: '#E8B84B' }}>{d.zip}</td>
                       <td style={{ padding: '8px 10px', color: '#A8B4C5', maxWidth: 160, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.area ?? '—'}</td>
-                      <td style={{ padding: '8px 10px', color: d.fit_score != null ? '#E8B84B' : '#3d4a5c', textAlign: 'right' }}>{d.fit_score ?? '—'}</td>
+                      <td style={{ padding: '8px 10px', color: d.fit_score != null ? '#E8B84B' : '#6E7C92', textAlign: 'right' }}>{d.fit_score ?? '—'}</td>
                       <td style={{ padding: '8px 10px', color: '#8A98AE' }}>{d.decided_by ?? '—'}</td>
                       <td style={{ padding: '8px 10px', color: '#8A98AE', maxWidth: 280, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.notes ?? '—'}</td>
                       <td style={{ padding: '8px 10px' }}>

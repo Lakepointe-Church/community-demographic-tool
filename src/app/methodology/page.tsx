@@ -61,11 +61,11 @@ export default function MethodologyPage() {
             <div style={cardLabelStyle}>Composite formula</div>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#C8D4E4', lineHeight: 2 }}>
               <div><span style={{ color: '#E8B84B' }}>50%</span> — Median household income</div>
-              <div style={{ fontSize: '10px', color: '#5a6478', marginTop: '-6px', marginBottom: '4px', paddingLeft: '32px' }}>capped at $200,000 → 0–100 scale</div>
+              <div style={{ fontSize: '10px', color: '#7A8699', marginTop: '-6px', marginBottom: '4px', paddingLeft: '32px' }}>capped at $200,000 → 0–100 scale</div>
               <div><span style={{ color: '#4EAEFF' }}>30%</span> — Bachelor's degree rate</div>
-              <div style={{ fontSize: '10px', color: '#5a6478', marginTop: '-6px', marginBottom: '4px', paddingLeft: '32px' }}>% of adults 25+; ×2 → 0–100 scale, cap 100</div>
+              <div style={{ fontSize: '10px', color: '#7A8699', marginTop: '-6px', marginBottom: '4px', paddingLeft: '32px' }}>% of adults 25+; ×2 → 0–100 scale, cap 100</div>
               <div><span style={{ color: '#2DD4BF' }}>20%</span> — Median home value</div>
-              <div style={{ fontSize: '10px', color: '#5a6478', marginTop: '-6px', paddingLeft: '32px' }}>capped at $800,000 → 0–100 scale</div>
+              <div style={{ fontSize: '10px', color: '#7A8699', marginTop: '-6px', paddingLeft: '32px' }}>capped at $800,000 → 0–100 scale</div>
             </div>
           </div>
 
@@ -106,10 +106,10 @@ export default function MethodologyPage() {
               Measures the concentration of young families with children — Lakepointe's primary ministry target demographic.
             </p>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-              <div>· Young children share <span style={{ color: '#5a6478' }}>(B09001)</span></div>
-              <div>· Family HH rate <span style={{ color: '#5a6478' }}>(B11003)</span></div>
-              <div>· Fertility signal <span style={{ color: '#5a6478' }}>(B13016 — births/women 15–50)</span></div>
-              <div>· Average HH size <span style={{ color: '#5a6478' }}>(B25010)</span></div>
+              <div>· Young children share <span style={{ color: '#7A8699' }}>(B09001)</span></div>
+              <div>· Family HH rate <span style={{ color: '#7A8699' }}>(B11003)</span></div>
+              <div>· Fertility signal <span style={{ color: '#7A8699' }}>(B13016 — births/women 15–50)</span></div>
+              <div>· Average HH size <span style={{ color: '#7A8699' }}>(B25010)</span></div>
             </div>
           </div>
 
@@ -119,10 +119,10 @@ export default function MethodologyPage() {
               Measures economic engagement and life-stage stability — families that are working, commuting, and embedded in the local economy.
             </p>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-              <div>· Dual-earner rate <span style={{ color: '#5a6478' }}>(B23007)</span></div>
-              <div>· Working parent rate <span style={{ color: '#5a6478' }}>(B11003)</span></div>
-              <div>· Commute burden <span style={{ color: '#5a6478' }}>(B08303 — workers 30+ min)</span></div>
-              <div>· Occupational diversity <span style={{ color: '#5a6478' }}>(C24010 — mgmt/prof share)</span></div>
+              <div>· Dual-earner rate <span style={{ color: '#7A8699' }}>(B23007)</span></div>
+              <div>· Working parent rate <span style={{ color: '#7A8699' }}>(B11003)</span></div>
+              <div>· Commute burden <span style={{ color: '#7A8699' }}>(B08303 — workers 30+ min)</span></div>
+              <div>· Occupational diversity <span style={{ color: '#7A8699' }}>(C24010 — mgmt/prof share)</span></div>
             </div>
           </div>
         </div>
@@ -147,7 +147,7 @@ export default function MethodologyPage() {
             </div>
           </div>
         </div>
-        <p style={{ ...bodyStyle, marginTop: '12px', fontSize: '12px', color: '#5a6478' }}>
+        <p style={{ ...bodyStyle, marginTop: '12px', fontSize: '12px', color: '#7A8699' }}>
           Each component is normalized to 0–100 before weighting. All components are capped at 100.
         </p>
       </Section>
@@ -176,11 +176,11 @@ export default function MethodologyPage() {
             <div style={cardStyle}>
               <div style={cardLabelStyle}>Component normalization</div>
               <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-                <div>Growth score: <span style={{ color: '#5a6478' }}>(growth + 10) / 50 × 100, capped 0–100</span></div>
-                <div>Saturation opp.: <span style={{ color: '#5a6478' }}>100 − min(100, churches/10K / 30 × 100)</span></div>
-                <div>Enrollment growth: <span style={{ color: '#5a6478' }}>county ISD CAGR × 12, capped 0–100</span></div>
-                <div>Distance from campus: <span style={{ color: '#5a6478' }}>straight-line mi to nearest existing campus / 30 × 100, capped 0–100 (farther = higher)</span></div>
-                <div>YFI / WFI / SES: <span style={{ color: '#5a6478' }}>already 0–100 (see above)</span></div>
+                <div>Growth score: <span style={{ color: '#7A8699' }}>(growth + 10) / 50 × 100, capped 0–100</span></div>
+                <div>Saturation opp.: <span style={{ color: '#7A8699' }}>100 − min(100, churches/10K / 30 × 100)</span></div>
+                <div>Enrollment growth: <span style={{ color: '#7A8699' }}>county ISD CAGR × 12, capped 0–100</span></div>
+                <div>Distance from campus: <span style={{ color: '#7A8699' }}>straight-line mi to nearest existing campus / 30 × 100, capped 0–100 (farther = higher)</span></div>
+                <div>YFI / WFI / SES: <span style={{ color: '#7A8699' }}>already 0–100 (see above)</span></div>
               </div>
             </div>
           </div>
@@ -285,7 +285,7 @@ export default function MethodologyPage() {
             <thead>
               <tr>
                 {['Country / Group', 'ACS Variable', 'Notes'].map(h => (
-                  <th key={h} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '1px solid #232940', color: '#5a6478', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '10px' }}>{h}</th>
+                  <th key={h} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '1px solid #232940', color: '#7A8699', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '10px' }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -294,16 +294,16 @@ export default function MethodologyPage() {
                 <tr key={i} style={{ borderBottom: '1px solid #1a1f2e' }}>
                   <td style={{ padding: '7px 12px', color: r.flagged ? '#FF6B6B' : '#A8B4C5' }}>
                     {r.country}
-                    {r.flagged && <span style={{ fontSize: '9px', color: '#FF6B6B', marginLeft: '6px' }}>★ FLAGGED</span>}
+                    {r.flagged && <span style={{ fontSize: '10px', color: '#FF6B6B', marginLeft: '6px' }}>★ FLAGGED</span>}
                   </td>
-                  <td style={{ padding: '7px 12px', color: '#5a6478' }}>{r.variable}</td>
+                  <td style={{ padding: '7px 12px', color: '#7A8699' }}>{r.variable}</td>
                   <td style={{ padding: '7px 12px', color: '#8A98AE', fontSize: '11px' }}>{r.note}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p style={{ ...bodyStyle, fontSize: '11px', color: '#5a6478' }}>
+        <p style={{ ...bodyStyle, fontSize: '11px', color: '#7A8699' }}>
           ★ Flagged countries include significant non-Muslim minority populations in their diaspora communities.
           Excluded countries: Iran (large secular/non-Muslim DFW diaspora), Lebanon (large Maronite Christian community),
           India (mixed Hindu/Muslim/Sikh diaspora), Israel (Jewish state).
@@ -578,7 +578,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ZctaNote() {
   return (
-    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478' }}>
+    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699' }}>
       * ZIP-level data uses ZCTA boundaries (Census ZIP Code Tabulation Areas), which approximate but do not exactly match USPS ZIP codes.
     </span>
   )

@@ -41,7 +41,7 @@ export default function TopNav() {
       {/* Right badge */}
       <div style={{
         fontFamily: "'IBM Plex Mono', monospace",
-        fontSize: '10px', color: '#5a6478', letterSpacing: '0.1em', flexShrink: 0,
+        fontSize: '10px', color: '#7A8699', letterSpacing: '0.1em', flexShrink: 0,
       }}>
         DFW · 2026
       </div>

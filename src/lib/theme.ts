@@ -20,9 +20,9 @@ export const colors = {
   textStrong: '#F0F2F7',
   text:       '#C8D4E4',
   label:      '#A8B4C5',
-  muted:      '#8A98AE',
-  footer:     '#5a6478',
-  faint:      '#3d4a5c',
+  muted:      '#8A98AE', // ~6.5:1 on bg — passes WCAG AA
+  footer:     '#7A8699', // bumped from #5a6478 (~3.2:1, failed AA) → ~5.2:1 for 55+ readability
+  faint:      '#6E7C92', // bumped from #3d4a5c (~2:1, failed AA) → ~4.5:1 (AA floor)
 } as const
 
 export const fonts = {

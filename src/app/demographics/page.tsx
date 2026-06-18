@@ -147,8 +147,8 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
             <div key={group.label}>
               <div style={{
                 fontFamily: "'IBM Plex Mono', monospace",
-                fontSize: '9px',
-                color: '#5a6478',
+                fontSize: '10px',
+                color: '#7A8699',
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
                 padding: '10px 14px 4px',
@@ -710,7 +710,7 @@ export default function DemographicsPage() {
 
           {/* Lakepointe Indexes row */}
           <div className="fade-up-3" style={{ marginBottom: '36px' }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.2em', color: '#5a6478', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.2em', color: '#7A8699', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
               Lakepointe Indexes
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
@@ -843,7 +843,7 @@ export default function DemographicsPage() {
                 </div>
               </div>
             )}
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.06em', marginTop: '16px', lineHeight: 1.7 }}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.06em', marginTop: '16px', lineHeight: 1.7 }}>
               Source: U.S. Dept. of Education College Scorecard · collegescorecard.ed.gov<br />
               — indicates data not reported: institution below Scorecard disclosure threshold · trade/vocational schools excluded
             </div>
@@ -905,9 +905,9 @@ export default function DemographicsPage() {
                       Building Permits
                     </div>
                     {!leadingIndicators.permits.available ? (
-                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#3d4a5c' }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#6E7C92' }}>
                         Not loaded yet — run<br />
-                        <code style={{ color: '#5a6478' }}>scripts/import-permits.ts</code>
+                        <code style={{ color: '#7A8699' }}>scripts/import-permits.ts</code>
                       </div>
                     ) : (
                       <>
@@ -924,7 +924,7 @@ export default function DemographicsPage() {
                             <span style={{ color: leadingIndicators.permits.momentumPct >= 0 ? '#2DD4BF' : '#FF6B6B' }}>
                               {leadingIndicators.permits.momentumPct >= 0 ? '+' : ''}{leadingIndicators.permits.momentumPct.toFixed(1)}%
                             </span>
-                            <span style={{ color: '#5a6478' }}> vs prior year</span>
+                            <span style={{ color: '#7A8699' }}> vs prior year</span>
                           </div>
                         )}
                         <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '36px' }}>
@@ -938,12 +938,12 @@ export default function DemographicsPage() {
                             )
                           })}
                         </div>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '6px' }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '6px' }}>
                           SF: {leadingIndicators.permits.trend[0]?.sfPermits.toLocaleString() ?? '—'} · MF: {leadingIndicators.permits.trend[0]?.mfPermits.toLocaleString() ?? '—'}
                         </div>
                       </>
                     )}
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '8px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '8px' }}>
                       Census BPS · County-level · {leadingIndicators.county} County
                     </div>
                   </div>
@@ -954,9 +954,9 @@ export default function DemographicsPage() {
                       School Enrollment
                     </div>
                     {!leadingIndicators.enrollment.available ? (
-                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#3d4a5c' }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#6E7C92' }}>
                         Not loaded yet — run<br />
-                        <code style={{ color: '#5a6478' }}>scripts/import-tea.ts</code>
+                        <code style={{ color: '#7A8699' }}>scripts/import-tea.ts</code>
                       </div>
                     ) : (
                       <>
@@ -973,7 +973,7 @@ export default function DemographicsPage() {
                             <span style={{ color: leadingIndicators.enrollment.cagrPct >= 0 ? '#4EAEFF' : '#FF6B6B' }}>
                               {leadingIndicators.enrollment.cagrPct >= 0 ? '+' : ''}{leadingIndicators.enrollment.cagrPct.toFixed(1)}%
                             </span>
-                            <span style={{ color: '#5a6478' }}> CAGR</span>
+                            <span style={{ color: '#7A8699' }}> CAGR</span>
                           </div>
                         )}
                         <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '36px' }}>
@@ -987,13 +987,13 @@ export default function DemographicsPage() {
                             )
                           })}
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '6px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '6px' }}>
                           <span>{leadingIndicators.enrollment.trend[0]?.year}</span>
                           <span>{leadingIndicators.enrollment.trend[leadingIndicators.enrollment.trend.length - 1]?.year}</span>
                         </div>
                       </>
                     )}
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '8px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '8px' }}>
                       TEA PEIMS · County aggregate · {leadingIndicators.county} County ISDs
                     </div>
                   </div>
@@ -1004,9 +1004,9 @@ export default function DemographicsPage() {
                       Population Projection
                     </div>
                     {!leadingIndicators.projection.available ? (
-                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#3d4a5c' }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#6E7C92' }}>
                         Not loaded yet — run<br />
-                        <code style={{ color: '#5a6478' }}>scripts/import-tdc.ts</code>
+                        <code style={{ color: '#7A8699' }}>scripts/import-tdc.ts</code>
                       </div>
                     ) : (
                       <>
@@ -1029,7 +1029,7 @@ export default function DemographicsPage() {
                         )}
                       </>
                     )}
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '8px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '8px' }}>
                       Texas Demographic Center Vintage 2024 · Mid scenario · County level
                     </div>
                   </div>
@@ -1059,7 +1059,7 @@ export default function DemographicsPage() {
                                 {place.totalPermits.toLocaleString()}
                               </div>
                               {place.yoyPct != null && (
-                                <div style={{ width: '48px', flexShrink: 0, fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: place.yoyPct >= 0 ? '#2DD4BF' : '#FF6B6B' }}>
+                                <div style={{ width: '48px', flexShrink: 0, fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: place.yoyPct >= 0 ? '#2DD4BF' : '#FF6B6B' }}>
                                   {place.yoyPct >= 0 ? '+' : ''}{place.yoyPct.toFixed(0)}%
                                 </div>
                               )}
@@ -1068,7 +1068,7 @@ export default function DemographicsPage() {
                         })
                       })()}
                     </div>
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '10px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '10px' }}>
                       Census BPS · Place-level · SF + MF units authorized
                     </div>
                   </div>
@@ -1078,9 +1078,9 @@ export default function DemographicsPage() {
                     <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '8px' }}>
                       City-level Permits
                     </div>
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#3d4a5c' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#6E7C92' }}>
                       Not loaded yet — run<br />
-                      <code style={{ color: '#5a6478' }}>scripts/import-bps-places.ts</code>
+                      <code style={{ color: '#7A8699' }}>scripts/import-bps-places.ts</code>
                     </div>
                   </div>
                 )}
@@ -1103,10 +1103,10 @@ export default function DemographicsPage() {
                   <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#E8B84B', lineHeight: 1 }}>
                     {giving.avgGiftPerGivingReturn != null ? `$${giving.avgGiftPerGivingReturn.toLocaleString()}` : '—'}
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Avg gift · giving return
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                     {giving.charitableReturns?.toLocaleString()} returns claimed charity
                   </div>
                 </div>
@@ -1119,10 +1119,10 @@ export default function DemographicsPage() {
                     </span>
                     <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#2DD4BF' }}>%</span>
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Charitable share of AGI
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                     {giving.totalCharitable != null ? `$${(giving.totalCharitable / 1e6).toFixed(1)}M total` : ''}
                   </div>
                 </div>
@@ -1135,16 +1135,16 @@ export default function DemographicsPage() {
                     </span>
                     <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#A78BFA' }}>%</span>
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Filers who itemize
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                     {giving.avgAgiPerReturn != null ? `$${giving.avgAgiPerReturn.toLocaleString()} avg AGI` : ''}
                   </div>
                 </div>
               </div>
 
-              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px', lineHeight: 1.6 }}>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '12px', lineHeight: 1.6 }}>
                 IRS SOI ZIP-code data · {giving.year} · charitable deductions on Schedule A. Post-2017 TCJA only ~{giving.itemizerRate != null ? giving.itemizerRate.toFixed(0) : '10'}% of filers here itemize, so deductions undercount true giving and skew toward higher-income households — read as a <span style={{ color: '#8A98AE' }}>relative</span> generosity signal, not a giving total. Counts rounded to nearest 10; small ZIPs are volatile.
               </div>
             </Surface>
@@ -1164,10 +1164,10 @@ export default function DemographicsPage() {
                   <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#E8B84B', lineHeight: 1 }}>
                     ${homeValues.zhvi.toLocaleString()}
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Typical home value
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                     Smoothed · seasonally adjusted
                   </div>
                 </div>
@@ -1176,7 +1176,7 @@ export default function DemographicsPage() {
                 <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
                   {(() => {
                     const v = homeValues.zhviYoy
-                    const color = v == null ? '#5a6478' : v >= 0 ? '#2DD4BF' : '#FF6B6B'
+                    const color = v == null ? '#7A8699' : v >= 0 ? '#2DD4BF' : '#FF6B6B'
                     return (
                       <>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
@@ -1185,10 +1185,10 @@ export default function DemographicsPage() {
                           </span>
                           <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color }}>%</span>
                         </div>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                           Year-over-year change
                         </div>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                           vs. same month last year
                         </div>
                       </>
@@ -1199,7 +1199,7 @@ export default function DemographicsPage() {
                 {/* Sparkline */}
                 {homeValues.series && homeValues.series.length > 1 && (
                   <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
                       Trailing-year trend
                     </div>
                     <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '40px' }}>
@@ -1215,7 +1215,7 @@ export default function DemographicsPage() {
                         )
                       })}
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '6px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '6px' }}>
                       <span>{homeValues.series[0]?.month}</span>
                       <span>{homeValues.series[homeValues.series.length - 1]?.month}</span>
                     </div>
@@ -1223,7 +1223,7 @@ export default function DemographicsPage() {
                 )}
               </div>
 
-              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px', lineHeight: 1.6 }}>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '12px', lineHeight: 1.6 }}>
                 Zillow Home Value Index (ZHVI) · all-homes, 35th–65th-percentile tier (SFR + condo) · ZIP level · updated monthly. A smoothed, seasonally adjusted measure of typical value — fresher than the ACS self-reported median, which lags ~2 years. Context signal, not scored.
               </div>
             </Surface>
@@ -1243,10 +1243,10 @@ export default function DemographicsPage() {
                   <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#F0F2F7', lineHeight: 1 }}>
                     {addressMomentum.resActive?.toLocaleString() ?? '—'}
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Active residential addresses
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                     {addressMomentum.latestQuarter}
                   </div>
                 </div>
@@ -1258,7 +1258,7 @@ export default function DemographicsPage() {
                     const fallback = addressMomentum.qoqPct
                     const val = m ?? fallback
                     const label = m != null ? 'Trailing 4-quarter' : 'Quarter-over-quarter'
-                    const color = val == null ? '#5a6478' : val >= 0 ? '#2DD4BF' : '#FF6B6B'
+                    const color = val == null ? '#7A8699' : val >= 0 ? '#2DD4BF' : '#FF6B6B'
                     return (
                       <>
                         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
@@ -1267,10 +1267,10 @@ export default function DemographicsPage() {
                           </span>
                           <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color }}>%</span>
                         </div>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                           {label} change
                         </div>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                           {m != null ? 'vs. same quarter last year' : 'vs. prior quarter'}
                         </div>
                       </>
@@ -1280,7 +1280,7 @@ export default function DemographicsPage() {
 
                 {/* Sparkline */}
                 <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
                     Quarterly trend
                   </div>
                   <div style={{ display: 'flex', gap: '4px', alignItems: 'flex-end', height: '40px' }}>
@@ -1297,14 +1297,14 @@ export default function DemographicsPage() {
                       )
                     })}
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '6px' }}>
                     <span>{addressMomentum.series[0]?.quarter}</span>
                     <span>{addressMomentum.series[addressMomentum.series.length - 1]?.quarter}</span>
                   </div>
                 </div>
               </div>
 
-              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '12px' }}>
                 HUD Aggregated USPS Administrative Data · ZIP level · active residential = addresses with mail collected in the prior 90 days · updated quarterly
               </div>
             </Surface>
@@ -1326,17 +1326,17 @@ export default function DemographicsPage() {
                       <svg width="26" height="26" viewBox="0 0 24 24" style={{ transform: `rotate(${commute.direction.bearingDeg}deg)` }}>
                         <path d="M12 2 L18 20 L12 16 L6 20 Z" fill="#4EAEFF" />
                       </svg>
-                    ) : <span style={{ color: '#3d4a5c' }}>—</span>}
+                    ) : <span style={{ color: '#6E7C92' }}>—</span>}
                   </div>
                   <div>
                     <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#F0F2F7', lineHeight: 1 }}>
                       {commute.direction?.label ?? '—'}
                     </div>
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '4px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '4px' }}>
                       Net direction
                     </div>
                     {commute.direction?.concentration != null && (
-                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '2px' }}>
+                      <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '2px' }}>
                         {Math.round(commute.direction.concentration * 100)}% aligned
                       </div>
                     )}
@@ -1348,11 +1348,11 @@ export default function DemographicsPage() {
                   <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#F0F2F7', lineHeight: 1 }}>
                     {commute.totalWorkers?.toLocaleString() ?? '—'}
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Resident workers
                   </div>
                   {commute.topDestLabel && (
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
                       Top: {commute.topDestLabel}
                     </div>
                   )}
@@ -1366,10 +1366,10 @@ export default function DemographicsPage() {
                     </span>
                     <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#2DD4BF' }}>%</span>
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Live &amp; work in-ZIP
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                     {commute.workInZip?.toLocaleString()} of {commute.totalWorkers?.toLocaleString()}
                   </div>
                 </div>
@@ -1387,7 +1387,7 @@ export default function DemographicsPage() {
                     return (
                       <div key={c.zip} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '150px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                          {c.label} <span style={{ color: '#3d4a5c' }}>{c.zip}</span>
+                          {c.label} <span style={{ color: '#6E7C92' }}>{c.zip}</span>
                         </div>
                         <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
                           <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'linear-gradient(90deg,#4EAEFF,#4EAEFF50)' }} />
@@ -1395,7 +1395,7 @@ export default function DemographicsPage() {
                         <div style={{ width: '52px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#4EAEFF', fontWeight: 600 }}>
                           {c.jobs.toLocaleString()}
                         </div>
-                        <div style={{ width: '40px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#2DD4BF' }}>
+                        <div style={{ width: '40px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#2DD4BF' }}>
                           ▸{c.highPct}%
                         </div>
                       </div>
@@ -1403,7 +1403,7 @@ export default function DemographicsPage() {
                   })
                 })()}
               </div>
-              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '12px' }}>
                 LEHD LODES8 · {commute.year} · intra-DFW resident worker flows · block→ZCTA · &quot;Net direction&quot; is the job-weighted bearing toward work
               </div>
             </Surface>
@@ -1432,10 +1432,10 @@ export default function DemographicsPage() {
                       </div>
                     )
                   })()}
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Net households / yr
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                     inbound − outbound returns
                   </div>
                 </div>
@@ -1445,11 +1445,11 @@ export default function DemographicsPage() {
                   <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#2DD4BF', lineHeight: 1 }}>
                     {migration.inboundHouseholds?.toLocaleString() ?? '—'}
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Households in
                   </div>
                   {migration.inboundAvgAgi != null && (
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                       avg AGI ${Math.round(migration.inboundAvgAgi / 1000)}k
                     </div>
                   )}
@@ -1460,11 +1460,11 @@ export default function DemographicsPage() {
                   <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#FF6B6B', lineHeight: 1 }}>
                     {migration.outboundHouseholds?.toLocaleString() ?? '—'}
                   </div>
-                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
                     Households out
                   </div>
                   {migration.outboundAvgAgi != null && (
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', marginTop: '4px' }}>
                       avg AGI ${Math.round(migration.outboundAvgAgi / 1000)}k
                     </div>
                   )}
@@ -1484,7 +1484,7 @@ export default function DemographicsPage() {
                     return (
                       <div key={o.fips} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <div style={{ width: '170px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
-                          {o.name} <span style={{ color: '#3d4a5c' }}>{o.state}</span>
+                          {o.name} <span style={{ color: '#6E7C92' }}>{o.state}</span>
                         </div>
                         <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
                           <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'linear-gradient(90deg,#2DD4BF,#2DD4BF50)' }} />
@@ -1492,7 +1492,7 @@ export default function DemographicsPage() {
                         <div style={{ width: '52px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#2DD4BF', fontWeight: 600 }}>
                           {o.returns.toLocaleString()}
                         </div>
-                        <div style={{ width: '52px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#E8B84B' }}>
+                        <div style={{ width: '52px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#E8B84B' }}>
                           {o.avgAgi != null ? `▸$${Math.round(o.avgAgi / 1000)}k` : '—'}
                         </div>
                       </div>
@@ -1500,7 +1500,7 @@ export default function DemographicsPage() {
                   })
                 })()}
               </div>
-              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '12px' }}>
                 IRS SOI county-to-county migration · TY{migration.year != null ? `${migration.year - 1}→${migration.year}` : '2022→2023'} · county level (ZIP&apos;s county) · 1 return ≈ 1 household · AGI = adjusted gross income · context only, not scored
               </div>
             </Surface>
@@ -1509,14 +1509,14 @@ export default function DemographicsPage() {
           {/* Footer */}
           <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em' }}>
                 Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · api.census.gov
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em' }}>
                 Lakepointe Church · Community Intelligence Platform · Internal Use Only
               </span>
             </div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', letterSpacing: '0.06em' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6E7C92', letterSpacing: '0.06em' }}>
               Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
             </div>
           </div>

@@ -53,7 +53,7 @@ function fmtPct(n: number | null) {
 }
 
 function trend(growth: number | null): { label: string; color: string } {
-  if (growth == null) return { label: '—', color: '#5a6478' }
+  if (growth == null) return { label: '—', color: '#7A8699' }
   if (growth > 2)  return { label: '↑ Growing',   color: '#2DD4BF' }
   if (growth >= 0) return { label: '→ Stable',    color: '#E8B84B' }
   return              { label: '↓ Declining',  color: '#FF6B6B' }
@@ -85,7 +85,7 @@ function DistributionChart({ countByTier, total }: { countByTier: Record<string,
         return (
           <g key={pct}>
             <line x1={padLeft} y1={y} x2={width - 10} y2={y} stroke="#1e2b3c" strokeWidth="1" />
-            <text x={padLeft - 6} y={y + 4} textAnchor="end" fill="#5a6478" fontSize="9" fontFamily="IBM Plex Mono">{count}</text>
+            <text x={padLeft - 6} y={y + 4} textAnchor="end" fill="#7A8699" fontSize="9" fontFamily="IBM Plex Mono">{count}</text>
           </g>
         )
       })}
@@ -132,13 +132,13 @@ function ScatterPlot({ zips }: { zips: ZipSes[] }) {
         {yTicks.map(v => (
           <g key={v}>
             <line x1={padL} y1={toY(v)} x2={padL + plotW} y2={toY(v)} stroke="#1e2b3c" strokeWidth="1" />
-            <text x={padL - 6} y={toY(v) + 4} textAnchor="end" fill="#5a6478" fontSize="9" fontFamily="IBM Plex Mono">{v}</text>
+            <text x={padL - 6} y={toY(v) + 4} textAnchor="end" fill="#7A8699" fontSize="9" fontFamily="IBM Plex Mono">{v}</text>
           </g>
         ))}
         {xTicks.map(v => (
           <g key={v}>
             <line x1={toX(v * 1000)} y1={padT} x2={toX(v * 1000)} y2={padT + plotH} stroke="#1e2b3c" strokeWidth="1" />
-            <text x={toX(v * 1000)} y={padT + plotH + 14} textAnchor="middle" fill="#5a6478" fontSize="9" fontFamily="IBM Plex Mono">{v}</text>
+            <text x={toX(v * 1000)} y={padT + plotH + 14} textAnchor="middle" fill="#7A8699" fontSize="9" fontFamily="IBM Plex Mono">{v}</text>
           </g>
         ))}
         {/* Axis labels */}
@@ -331,7 +331,7 @@ export default function SesClassesPage() {
               {TIERS.map(t => (
                 <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: TIER_COLOR[t] }} />
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#8A98AE' }}>{t}</span>
+                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE' }}>{t}</span>
                 </div>
               ))}
             </div>
@@ -444,7 +444,7 @@ export default function SesClassesPage() {
                       </td>
                       <td style={{ padding: '11px 16px 11px 0' }}>
                         <span style={{
-                          fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', letterSpacing: '0.1em',
+                          fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em',
                           textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: '3px',
                           background: `rgba(${rgb},0.15)`, color, border: `1px solid rgba(${rgb},0.3)`,
                           whiteSpace: 'nowrap' as const,
@@ -466,10 +466,10 @@ export default function SesClassesPage() {
               <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#8A98AE', padding: '24px 0', textAlign: 'center' as const }}>No ZIPs found for this filter.</div>
             )}
           </div>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', marginTop: '16px', letterSpacing: '0.06em' }}>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', marginTop: '16px', letterSpacing: '0.06em' }}>
             Showing {filtered.length} of {zips.length} {coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs{!showUnreliable && zips.some(z => z.lowReliability) ? ` · ${zips.filter(z => z.lowReliability).length} low-reliability ZIPs hidden` : ''} · Source: U.S. Census Bureau ACS 5-Year 2023 · Click column headers to sort
           </div>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '4px', letterSpacing: '0.06em' }}>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6E7C92', marginTop: '4px', letterSpacing: '0.06em' }}>
             Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
           </div>
         </Surface>

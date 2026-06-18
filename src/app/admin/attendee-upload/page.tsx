@@ -127,13 +127,13 @@ export default function AttendeeUploadPage() {
             Current Data
           </div>
           {lastUpload === (undefined as unknown as UploadStatus) ? (
-            <div style={{ ...MONO, fontSize: '12px', color: '#5a6478' }}>Loading…</div>
+            <div style={{ ...MONO, fontSize: '12px', color: '#7A8699' }}>Loading…</div>
           ) : lastUpload ? (
             <div style={{ ...MONO, fontSize: '12px', color: '#C8D4E4' }}>
               Last upload: <span style={{ color: '#4EAEFF' }}>{formatDate(lastUpload.uploadedAt)}</span>
               {' · '}<span style={{ color: '#E8B84B' }}>{lastUpload.zipCount.toLocaleString()} ZIPs</span>
               {' · '}<span style={{ color: '#2DD4BF' }}>{lastUpload.totalHouseholds.toLocaleString()} households</span>
-              {lastUpload.filename && <span style={{ color: '#5a6478' }}> · {lastUpload.filename}</span>}
+              {lastUpload.filename && <span style={{ color: '#7A8699' }}> · {lastUpload.filename}</span>}
             </div>
           ) : (
             <div style={{ ...MONO, fontSize: '12px', color: '#FF6B6B' }}>No data loaded</div>
@@ -192,7 +192,7 @@ Rockwall,75087,42
 Rockwall,75032,18
 Mesquite,75150,31`}
             </div>
-            <div style={{ ...MONO, fontSize: '10px', color: '#5a6478', marginTop: '6px' }}>
+            <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', marginTop: '6px' }}>
               Direct output from Rock RMS. No renaming needed.
             </div>
           </div>
@@ -211,7 +211,7 @@ Mesquite,75150,31`}
 75087,Rockwall,42
 75150,Mesquite,18`}
             </div>
-            <div style={{ ...MONO, fontSize: '10px', color: '#5a6478', marginTop: '6px' }}>
+            <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', marginTop: '6px' }}>
               Campus column optional. Rows for the same ZIP are aggregated.
             </div>
           </div>
@@ -299,7 +299,7 @@ Mesquite,75150,31`}
               </div>
               {result.skipped && (
                 <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '10px' }}>
-                  <div style={{ ...MONO, fontSize: '9px', letterSpacing: '0.1em', color: '#5a6478', textTransform: 'uppercase', marginBottom: '8px' }}>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.1em', color: '#7A8699', textTransform: 'uppercase', marginBottom: '8px' }}>
                     Rows Skipped
                   </div>
                   <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
@@ -311,11 +311,11 @@ Mesquite,75150,31`}
                     ].map(({ label, count, color }) => count > 0 && (
                       <div key={label} style={{ ...MONO, fontSize: '10px' }}>
                         <span style={{ color }}>{count.toLocaleString()}</span>
-                        <span style={{ color: '#5a6478' }}> {label}</span>
+                        <span style={{ color: '#7A8699' }}> {label}</span>
                       </div>
                     ))}
                     {Object.values(result.skipped).every(v => v === 0) && (
-                      <div style={{ ...MONO, fontSize: '10px', color: '#5a6478' }}>None — all rows processed</div>
+                      <div style={{ ...MONO, fontSize: '10px', color: '#7A8699' }}>None — all rows processed</div>
                     )}
                   </div>
                 </div>
@@ -327,7 +327,7 @@ Mesquite,75150,31`}
 
       {/* Footer note */}
       <div style={{ marginTop: '32px', borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>
-        <div style={{ ...MONO, fontSize: '10px', color: '#5a6478', lineHeight: 1.7 }}>
+        <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', lineHeight: 1.7 }}>
           Data is stored in the Neon PostgreSQL database under the <code>attendee_density</code> table.
           Uploading a new file overwrites existing rows for matching ZIPs.
           ZIPs not present in the upload are not deleted — re-upload the full export each time.

@@ -88,7 +88,7 @@ function SourceTag({ label = BMF_SOURCE_LABEL }: { label?: string }) {
   return (
     <span style={{
       fontFamily: "'IBM Plex Mono', monospace", fontSize: 9,
-      color: '#5a6478', background: 'rgba(255,255,255,0.04)',
+      color: '#7A8699', background: 'rgba(255,255,255,0.04)',
       border: '1px solid #1e2b3c', borderRadius: 3,
       padding: '2px 6px', letterSpacing: '0.06em', whiteSpace: 'nowrap',
     }}>
@@ -152,7 +152,7 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (z: string)
           {ZIP_GROUPS.map(group => (
             <div key={group.label}>
               <div style={{
-                padding: '6px 12px 4px', fontSize: 10, color: '#5a6478',
+                padding: '6px 12px 4px', fontSize: 10, color: '#7A8699',
                 fontFamily: "'IBM Plex Mono', monospace", letterSpacing: '0.08em',
                 textTransform: 'uppercase', position: 'sticky', top: 0,
                 background: '#13161f', borderBottom: '1px solid #1e2b3c',
@@ -176,7 +176,7 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (z: string)
                     }}
                   >
                     {campus && <CampusDot status={campus} />}
-                    <span style={{ color: '#5a6478' }}>{z.zip}</span>
+                    <span style={{ color: '#7A8699' }}>{z.zip}</span>
                     <span>{z.label}</span>
                   </div>
                 )
@@ -225,7 +225,7 @@ function FaithBar({ counts, total }: { counts: { ntee_category: string; count: n
               rx={3} fill={`url(#fg-${i})`} />
             <text x={LABEL_X} y={y + barH - 6} fontSize={11}
               fontFamily="'IBM Plex Mono', monospace" fill={color}>
-              {c.count} <tspan fill="#5a6478">({pct}%)</tspan>
+              {c.count} <tspan fill="#7A8699">({pct}%)</tspan>
             </text>
           </g>
         )
@@ -283,13 +283,13 @@ function AdherencePanel({ data }: { data: AdherenceData }) {
 
   const pct = (n: number, pop: number) => pop > 0 ? ((n / pop) * 100).toFixed(1) + '%' : '—'
   const SortArrow = ({ k }: { k: SortKey }) => (
-    <span style={{ color: sortKey === k ? '#E8B84B' : '#5a6478', marginLeft: 3, fontSize: 9 }}>
+    <span style={{ color: sortKey === k ? '#E8B84B' : '#7A8699', marginLeft: 3, fontSize: 9 }}>
       {sortKey === k ? (sortDir === 'desc' ? '▼' : '▲') : '⇅'}
     </span>
   )
   const thStyle = (k: SortKey): React.CSSProperties => ({
     textAlign: 'right', padding: '4px 8px 10px',
-    color: sortKey === k ? '#E8B84B' : '#5a6478',
+    color: sortKey === k ? '#E8B84B' : '#7A8699',
     fontWeight: 400, fontSize: 10, letterSpacing: '0.08em',
     textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c',
     cursor: 'pointer', whiteSpace: 'nowrap',
@@ -312,7 +312,7 @@ function AdherencePanel({ data }: { data: AdherenceData }) {
             }}>
               ESTIMATE · 2020 U.S. Religion Census (ASARB)
             </span>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#5a6478' }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#7A8699' }}>
               County level · Adherent estimates · Not ZIP-level data
             </span>
           </div>
@@ -347,7 +347,7 @@ function AdherencePanel({ data }: { data: AdherenceData }) {
           { label: 'Muslim · Core MSA',      value: summary.muslim_pct.toFixed(2) + '%',      color: '#F59E0B' },
         ].map(s => (
           <div key={s.label} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid #232940', borderRadius: 6, minWidth: 140 }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#5a6478', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#7A8699', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</div>
             <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, color: s.color, lineHeight: 1 }}>{s.value}</div>
           </div>
         ))}
@@ -387,9 +387,9 @@ function AdherencePanel({ data }: { data: AdherenceData }) {
               const isMSA = r.region === 'core_msa'
               return (
                 <tr key={r.fips} style={{ borderBottom: '1px solid #1a1f2e' }}>
-                  <td style={{ padding: '8px 8px', color: isMSA ? '#C8D4E4' : '#5a6478' }}>
+                  <td style={{ padding: '8px 8px', color: isMSA ? '#C8D4E4' : '#7A8699' }}>
                     {r.county}
-                    {!isMSA && <span style={{ color: '#5a6478', fontSize: 9, marginLeft: 4 }}>ext</span>}
+                    {!isMSA && <span style={{ color: '#7A8699', fontSize: 9, marginLeft: 4 }}>ext</span>}
                   </td>
                   <td style={{ padding: '8px 8px', textAlign: 'right', color: '#8A98AE' }}>{r.population.toLocaleString()}</td>
                   <td style={{ padding: '8px 8px', textAlign: 'right', color: '#E8B84B', fontWeight: 600 }}>{pct(r.unclaimed, r.population)}</td>
@@ -409,7 +409,7 @@ function AdherencePanel({ data }: { data: AdherenceData }) {
 
       {/* Attribution */}
       <div style={{ marginTop: 16, padding: '10px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid #1e2b3c', borderRadius: 5 }}>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#5a6478', lineHeight: 1.6 }}>
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#7A8699', lineHeight: 1.6 }}>
           <strong style={{ color: '#8A98AE' }}>Source:</strong> 2020 U.S. Religion Census (ASARB) · County level · Adherent estimates ·
           Released 2022, updated June 2023. Distributed via theARDA.com (RCMSCY20).
           Tradition classification follows Steensland et al. RELTRAD schema.{' '}
@@ -451,13 +451,13 @@ function ProxyPanel({ data }: { data: ProxyData }) {
   const totalLang = data.rows.reduce((s, r) => s + r.proxyLanguage, 0)
 
   const SortArrow = ({ k }: { k: ProxySortKey }) => (
-    <span style={{ color: sortKey === k ? '#E8B84B' : '#5a6478', marginLeft: 3, fontSize: 9 }}>
+    <span style={{ color: sortKey === k ? '#E8B84B' : '#7A8699', marginLeft: 3, fontSize: 9 }}>
       {sortKey === k ? (sortDir === 'desc' ? '▼' : '▲') : '⇅'}
     </span>
   )
   const thStyle = (k: ProxySortKey, align: 'left' | 'right' = 'right'): React.CSSProperties => ({
     textAlign: align, padding: '4px 8px 10px',
-    color: sortKey === k ? '#E8B84B' : '#5a6478',
+    color: sortKey === k ? '#E8B84B' : '#7A8699',
     fontWeight: 400, fontSize: 10, letterSpacing: '0.08em',
     textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c',
     cursor: 'pointer', whiteSpace: 'nowrap',
@@ -467,7 +467,7 @@ function ProxyPanel({ data }: { data: ProxyData }) {
   if (data.rows.length === 0) {
     return (
       <div style={{ background: '#13161f', border: '1px solid rgba(232,184,75,0.15)', borderRadius: 10, padding: '24px 28px' }}>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#5a6478' }}>
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#7A8699' }}>
           ACS proxy data not yet populated. Run <code style={{ color: '#E8B84B' }}>POST /api/refresh</code> to compute proxy_born and proxy_language columns.
         </div>
       </div>
@@ -489,7 +489,7 @@ function ProxyPanel({ data }: { data: ProxyData }) {
           }}>
             PROXY · ACS 5-Year 2023 (B05006 birthplace + C16001 Arabic speakers)
           </span>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#5a6478' }}>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#7A8699' }}>
             ZIP-level directional signal · Not a population estimate
           </span>
         </div>
@@ -520,7 +520,7 @@ function ProxyPanel({ data }: { data: ProxyData }) {
           { label: `Arabic speakers · ${data.coverage === 'all' ? 'All ZIPs' : 'Core MSA'}`, value: totalLang.toLocaleString(), color: '#2DD4BF' },
         ].map(s => (
           <div key={s.label} style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.03)', border: '1px solid #232940', borderRadius: 6, minWidth: 180 }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#5a6478', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 9, color: '#7A8699', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>{s.label}</div>
             <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 28, color: s.color, lineHeight: 1 }}>{s.value}</div>
           </div>
         ))}
@@ -550,7 +550,7 @@ function ProxyPanel({ data }: { data: ProxyData }) {
           <tbody>
             {visible.map((row) => (
               <tr key={row.zip} className="org-row" style={{ borderBottom: '1px solid #1a1f2e' }}>
-                <td style={{ padding: '7px 8px', color: '#5a6478', fontSize: 10 }}>{sorted.indexOf(row) + 1}</td>
+                <td style={{ padding: '7px 8px', color: '#7A8699', fontSize: 10 }}>{sorted.indexOf(row) + 1}</td>
                 <td style={{ padding: '7px 8px', color: '#E8B84B' }}>{row.zip}</td>
                 <td style={{ padding: '7px 8px', color: '#A8B4C5', maxWidth: 200, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.label}</td>
                 <td style={{ padding: '7px 8px', textAlign: 'right', color: '#E8B84B', fontWeight: 600 }}>{row.proxyBorn.toLocaleString()}</td>
@@ -573,7 +573,7 @@ function ProxyPanel({ data }: { data: ProxyData }) {
 
       {/* Attribution footnotes */}
       <div style={{ marginTop: 18, padding: '10px 14px', background: 'rgba(255,255,255,0.02)', border: '1px solid #1e2b3c', borderRadius: 5 }}>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#5a6478', lineHeight: 1.7 }}>
+        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 10, color: '#7A8699', lineHeight: 1.7 }}>
           <strong style={{ color: '#8A98AE' }}>† Born:</strong> Sum of ACS B05006 foreign-born from Afghanistan, Bangladesh, Pakistan, Uzbekistan,
           Iraq*, Jordan, Kuwait, Saudi Arabia, Syria*, Turkey, UAE, Yemen, Other Western Asia (Bahrain/Qatar/Oman/W. Bank), Somalia,
           Algeria, Egypt*, Morocco, Sudan, Other N. Africa (Libya/Tunisia), Senegal.
@@ -627,9 +627,9 @@ function CountyComparison({ data }: { data: CountyRow[] }) {
           return (
             <div key={row.county}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                <div style={{ width: 90, flexShrink: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: isMSA ? '#A8B4C5' : '#5a6478', textAlign: 'right' }}>
+                <div style={{ width: 90, flexShrink: 0, fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: isMSA ? '#A8B4C5' : '#7A8699', textAlign: 'right' }}>
                   {row.county}
-                  {!isMSA && <span style={{ color: '#5a6478', fontSize: 9, marginLeft: 3 }}>ext</span>}
+                  {!isMSA && <span style={{ color: '#7A8699', fontSize: 9, marginLeft: 3 }}>ext</span>}
                 </div>
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
                   {/* Islamic bar */}
@@ -797,7 +797,7 @@ export default function ReligiousPage() {
                 <thead>
                   <tr>
                     {['ZIP', 'Area', 'Orgs'].map(h => (
-                      <th key={h} style={{ textAlign: h === 'Orgs' ? 'right' : 'left', padding: '4px 8px 10px', color: '#5a6478', fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c' }}>{h}</th>
+                      <th key={h} style={{ textAlign: h === 'Orgs' ? 'right' : 'left', padding: '4px 8px 10px', color: '#7A8699', fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
@@ -819,7 +819,7 @@ export default function ReligiousPage() {
                   </tbody>
                 </table>
               </div>
-              <div style={{ fontSize: 10, color: '#5a6478', marginTop: 12, fontFamily: "'IBM Plex Mono', monospace" }}>Click a ZIP to explore</div>
+              <div style={{ fontSize: 10, color: '#7A8699', marginTop: 12, fontFamily: "'IBM Plex Mono', monospace" }}>Click a ZIP to explore</div>
             </div>
           )}
         </div>
@@ -855,7 +855,7 @@ export default function ReligiousPage() {
           </div>
           {proxy && <ProxyPanel data={proxy} />}
           {!proxy && (
-            <div style={{ background: '#13161f', border: '1px solid rgba(232,184,75,0.1)', borderRadius: 10, padding: '24px 28px', fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#5a6478' }}>
+            <div style={{ background: '#13161f', border: '1px solid rgba(232,184,75,0.1)', borderRadius: 10, padding: '24px 28px', fontFamily: "'IBM Plex Mono', monospace", fontSize: 12, color: '#7A8699' }}>
               Proxy data not yet available. Run <code style={{ color: '#E8B84B' }}>POST /api/refresh</code> to populate.
             </div>
           )}
@@ -870,7 +870,7 @@ export default function ReligiousPage() {
         </div>
 
         {loadingZip && (
-          <div style={{ color: '#5a6478', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, padding: '40px 0' }}>Loading…</div>
+          <div style={{ color: '#7A8699', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13, padding: '40px 0' }}>Loading…</div>
         )}
 
         {zipData && !loadingZip && (
@@ -889,7 +889,7 @@ export default function ReligiousPage() {
               </div>
               {zipData.counts.length > 0
                 ? <FaithBar counts={zipData.counts} total={zipData.orgs.length} />
-                : <div style={{ color: '#5a6478', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}>No registered religious organizations in this ZIP.</div>
+                : <div style={{ color: '#7A8699', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}>No registered religious organizations in this ZIP.</div>
               }
             </div>
 
@@ -928,7 +928,7 @@ export default function ReligiousPage() {
                   <thead>
                     <tr>
                       {['Name', 'Type', 'Est.'].map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '4px 8px 8px', color: '#5a6478', fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c' }}>{h}</th>
+                        <th key={h} style={{ textAlign: 'left', padding: '4px 8px 8px', color: '#7A8699', fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -937,7 +937,7 @@ export default function ReligiousPage() {
                       <tr key={o.ein} className="org-row" style={{ borderBottom: '1px solid #1a1f2e' }}>
                         <td style={{ padding: '8px 8px', color: '#C8D4E4', maxWidth: 200, wordBreak: 'break-word' }}>{o.name}</td>
                         <td style={{ padding: '8px 8px', color: '#2DD4BF', whiteSpace: 'nowrap' }}>{o.ntee_label}</td>
-                        <td style={{ padding: '8px 8px', color: o.ruling_year && o.ruling_year >= 2015 ? '#E8B84B' : '#5a6478', whiteSpace: 'nowrap' }}>
+                        <td style={{ padding: '8px 8px', color: o.ruling_year && o.ruling_year >= 2015 ? '#E8B84B' : '#7A8699', whiteSpace: 'nowrap' }}>
                           {o.ruling_year ?? '—'}
                           {o.ruling_year && o.ruling_year >= 2015 && <span style={{ color: '#E8B84B', marginLeft: 4, fontSize: 10 }}>NEW</span>}
                         </td>
@@ -946,7 +946,7 @@ export default function ReligiousPage() {
                   </tbody>
                 </table>
               ) : (
-                <div style={{ color: '#5a6478', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}>
+                <div style={{ color: '#7A8699', fontFamily: "'IBM Plex Mono', monospace", fontSize: 13 }}>
                   No Islamic organizations registered in this ZIP code.
                 </div>
               )}
@@ -965,7 +965,7 @@ export default function ReligiousPage() {
                   <thead>
                     <tr>
                       {['Name', 'Faith', 'Type', 'City', 'Est.'].map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '4px 8px 10px', color: '#5a6478', fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c' }}>{h}</th>
+                        <th key={h} style={{ textAlign: 'left', padding: '4px 8px 10px', color: '#7A8699', fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', borderBottom: '1px solid #1e2b3c' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -980,7 +980,7 @@ export default function ReligiousPage() {
                           </td>
                           <td style={{ padding: '8px 8px', color: '#8A98AE' }}>{o.ntee_label}</td>
                           <td style={{ padding: '8px 8px', color: '#8A98AE' }}>{o.city}</td>
-                          <td style={{ padding: '8px 8px', color: o.ruling_year && o.ruling_year >= 2015 ? '#E8B84B' : '#5a6478' }}>
+                          <td style={{ padding: '8px 8px', color: o.ruling_year && o.ruling_year >= 2015 ? '#E8B84B' : '#7A8699' }}>
                             {o.ruling_year ?? '—'}
                           </td>
                         </tr>
@@ -1002,8 +1002,8 @@ export default function ReligiousPage() {
         )}
 
         <div style={{ marginTop: 48, padding: '16px 0', borderTop: '1px solid #1e2b3c', display: 'flex', gap: 32, flexWrap: 'wrap' }}>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#5a6478' }}>Source: IRS EO Business Master File · Updated monthly</span>
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#5a6478' }}>Only 501(c) registered orgs — mosques and churches below 990-filing threshold may not appear</span>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#7A8699' }}>Source: IRS EO Business Master File · Updated monthly</span>
+          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: 11, color: '#7A8699' }}>Only 501(c) registered orgs — mosques and churches below 990-filing threshold may not appear</span>
         </div>
       </div>
     </div>

@@ -12,7 +12,7 @@ export function SectionHeader({ title, sub, marginBottom = '16px', style }: {
   return (
     <div style={{ marginBottom, ...style }}>
       <div style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.14em', color: colors.muted, textTransform: 'uppercase', marginBottom: sub ? '4px' : 0 }}>{title}</div>
-      {sub && <div style={{ fontFamily: fonts.mono, fontSize: '9px', color: colors.footer, letterSpacing: '0.08em' }}>{sub}</div>}
+      {sub && <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: colors.footer, letterSpacing: '0.08em' }}>{sub}</div>}
     </div>
   )
 }

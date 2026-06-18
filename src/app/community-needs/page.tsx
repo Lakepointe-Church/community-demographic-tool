@@ -80,7 +80,7 @@ function MetricRow({ label, value, warn, danger, benchmark, unit = '%' }: {
         {value != null ? value.toFixed(1) + unit : '—'}
       </span>
       {benchmark != null && (
-        <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', width:'52px', textAlign:'right', flexShrink:0 }}>
+        <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', width:'52px', textAlign:'right', flexShrink:0 }}>
           DFW: {benchmark.toFixed(1)}{unit}
         </span>
       )}
@@ -185,7 +185,7 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
           ))}
         </tbody>
       </table>
-      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'12px' }}>
+      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'12px' }}>
         {zips.length} ZIPs · Color: teal = below avg, gold = elevated, red = high · Click headers to sort
       </div>
     </div>
@@ -312,7 +312,7 @@ export default function CommunityNeedsPage() {
             ? <div style={{ height:'300px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
             : overview?.zips?.length
               ? <ZipTable zips={overview.zips} />
-              : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#5a6478', padding:'24px 0' }}>No data yet — run the PLACES import script to populate.</div>
+              : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#7A8699', padding:'24px 0' }}>No data yet — run the PLACES import script to populate.</div>
           }
         </Surface>
 
@@ -341,7 +341,7 @@ export default function CommunityNeedsPage() {
           </div>
 
           {!selectedZip && (
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#5a6478', padding:'24px 0' }}>
+            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#7A8699', padding:'24px 0' }}>
               Select a ZIP to see its full health profile compared to the DFW average.
             </div>
           )}
@@ -364,31 +364,31 @@ export default function CommunityNeedsPage() {
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px' }}>
                 <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'20px' }}>
                   <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>Health Metrics vs DFW Avg</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name} · % of adults</div>
+                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name} · % of adults</div>
                   <ComparisonChart zipData={zipData} overview={overview} />
                 </div>
 
                 <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'20px' }}>
                   <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>Financial Stress Indicators</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#5a6478', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name}</div>
+                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name}</div>
 
                   <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
                     <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>CFPB Consumer Complaints</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>CFPB Consumer Complaints</div>
                       <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color: healthColor(zipData.cfpbComplaints, 500, 1500), lineHeight:1 }}>{fmtN(zipData.cfpbComplaints)}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'4px' }}>trailing 36 mo · {zipData.cfpbPer1k != null ? zipData.cfpbPer1k + '/1K residents' : ''}</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'4px' }}>trailing 36 mo · {zipData.cfpbPer1k != null ? zipData.cfpbPer1k + '/1K residents' : ''}</div>
                     </div>
 
                     <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>Physical Inactivity</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>Physical Inactivity</div>
                       <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color: healthColor(zipData.physInactivity, 22, 30), lineHeight:1 }}>{fmtPct(zipData.physInactivity)}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'4px' }}>% adults · DFW avg: {fmtPct(overview.avgPhysInactivity)}</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'4px' }}>% adults · DFW avg: {fmtPct(overview.avgPhysInactivity)}</div>
                     </div>
 
                     <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>SES Class</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>SES Class</div>
                       <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color:'#E8B84B', lineHeight:1 }}>{zipData.sesLabel ?? '—'}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'4px' }}>socioeconomic tier</div>
+                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'4px' }}>socioeconomic tier</div>
                     </div>
                   </div>
                 </div>
@@ -397,10 +397,10 @@ export default function CommunityNeedsPage() {
           )}
         </Surface>
 
-        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'16px', letterSpacing:'0.06em' }}>
+        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'16px', letterSpacing:'0.06em' }}>
           Health data: CDC PLACES 2023 (age-adjusted prevalence estimates) · Complaints: CFPB Consumer Complaint Database (trailing 36 months) · HMDA mortgage denial rates — Phase 2
         </div>
-        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#3d4a5c', marginTop:'6px', letterSpacing:'0.06em' }}>
+        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#6E7C92', marginTop:'6px', letterSpacing:'0.06em' }}>
           Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
           {coverage === 'core' && ' · Averages use Core MSA (11 counties). Toggle to "All ZIPs" to include extended coverage area.'}
         </div>

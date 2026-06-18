@@ -52,7 +52,7 @@ function fmtK(n: number) {
 }
 
 function growthColor(g: number | null) {
-  if (g == null) return '#5a6478'
+  if (g == null) return '#7A8699'
   if (g >= 20)   return '#2DD4BF'
   if (g >= 8)    return '#4EAEFF'
   if (g >= 0)    return '#8A98AE'
@@ -511,7 +511,7 @@ export default function OverviewPage() {
               </div>
               <a
                 href="/site-scorer"
-                style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', textDecoration: 'none', border: '1px solid #232940', borderRadius: 4, padding: '5px 10px', letterSpacing: '0.06em' }}
+                style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', textDecoration: 'none', border: '1px solid #232940', borderRadius: 4, padding: '5px 10px', letterSpacing: '0.06em' }}
               >Full Rankings →</a>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
@@ -527,7 +527,7 @@ export default function OverviewPage() {
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                       <div>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', marginBottom: 2 }}>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', marginBottom: 2 }}>
                           #{z.rank} of {z.total}
                         </div>
                         <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, color: '#E8B84B', fontWeight: 600 }}>{z.zip}</div>
@@ -535,7 +535,7 @@ export default function OverviewPage() {
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
                         <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, color, lineHeight: 1 }}>{z.fitScore}</div>
-                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#5a6478' }}>top {topPct}%</div>
+                        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#7A8699' }}>top {topPct}%</div>
                       </div>
                     </div>
                     <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#4EAEFF', marginBottom: 6 }}>
@@ -551,7 +551,7 @@ export default function OverviewPage() {
                         {z.churchesPer10k.toFixed(1)} chr/10K
                       </span>
                     </div>
-                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#5a6478', borderTop: '1px solid #1a1f2e', paddingTop: 8 }}>
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', borderTop: '1px solid #1a1f2e', paddingTop: 8 }}>
                       Driven by {z.driver1} + {z.driver2}
                     </div>
                   </div>
@@ -609,14 +609,14 @@ export default function OverviewPage() {
 
             {/* Isochrone status */}
             {isochroneLoading || candidateIsoLoading ? (
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#4EAEFF', letterSpacing: '0.1em' }}>
+              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#4EAEFF', letterSpacing: '0.1em' }}>
                 FETCHING ISOCHRONE…
               </span>
             ) : (isochroneGeoJson || candidateIsochrone) ? (
               <button
                 onClick={() => { setSelectedCampusZip(''); setIsochroneGeoJson(null); setCandidatePin(null); setCandidateIsochrone(null) }}
                 style={{
-                  fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', letterSpacing: '0.1em',
+                  fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em',
                   background: 'rgba(78,174,255,0.1)', color: '#4EAEFF',
                   border: '1px solid rgba(78,174,255,0.3)', borderRadius: '3px',
                   padding: '4px 10px', cursor: 'pointer',
@@ -637,7 +637,7 @@ export default function OverviewPage() {
                     : undefined
               }
               style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', letterSpacing: '0.1em',
+                fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em',
                 background: showAttendees ? 'rgba(232,184,75,0.12)' : 'transparent',
                 color: showAttendees ? '#E8B84B' : (!attendeeData.length ? '#3a4154' : '#8A98AE'),
                 border: `1px solid ${showAttendees ? 'rgba(232,184,75,0.4)' : '#232940'}`,
@@ -646,8 +646,8 @@ export default function OverviewPage() {
             >
               {showAttendees ? '● ' : '○ '}Attendees
               {!attendeeData.length
-                ? <span style={{ color: '#5a6478' }}> (no data)</span>
-                : attendeeUploadDate && <span style={{ color: '#5a6478' }}> · {attendeeUploadDate}</span>
+                ? <span style={{ color: '#7A8699' }}> (no data)</span>
+                : attendeeUploadDate && <span style={{ color: '#7A8699' }}> · {attendeeUploadDate}</span>
               }
             </button>
 
@@ -662,7 +662,7 @@ export default function OverviewPage() {
                 setIsochroneGeoJson(null)
               }}
               style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', letterSpacing: '0.1em',
+                fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em',
                 background: pinMode ? 'rgba(167,139,250,0.12)' : 'transparent',
                 color: pinMode ? '#A78BFA' : '#8A98AE',
                 border: `1px solid ${pinMode ? 'rgba(167,139,250,0.4)' : '#232940'}`,
@@ -689,32 +689,32 @@ export default function OverviewPage() {
                 fontFamily: "'IBM Plex Mono', monospace",
               }}>
                 <div>
-                  <div style={{ fontSize: '9px', color: '#4EAEFF', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '2px' }}>
+                  <div style={{ fontSize: '10px', color: '#4EAEFF', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '2px' }}>
                     Drive-time Isochrone
                   </div>
                   <div style={{ fontSize: '12px', color: '#F0F2F7' }}>
                     {label} · {minutes}-min
                   </div>
                 </div>
-                <div style={{ fontSize: '9px', color: '#8A98AE', lineHeight: 1.6, flex: 1 }}>
+                <div style={{ fontSize: '10px', color: '#8A98AE', lineHeight: 1.6, flex: 1 }}>
                   Polygon shows approximate drive-time coverage area.
                   {!showCannib && ' Toggle Attendees on and drop a candidate pin to see cannibalization.'}
                 </div>
                 {showCannib && (
                   <div style={{ borderLeft: '1px solid rgba(255,107,107,0.3)', paddingLeft: '16px' }}>
-                    <div style={{ fontSize: '9px', color: '#FF6B6B', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '2px' }}>
+                    <div style={{ fontSize: '10px', color: '#FF6B6B', letterSpacing: '0.1em', textTransform: 'uppercase' as const, marginBottom: '2px' }}>
                       Cannibalization Risk
                     </div>
                     <div style={{ fontSize: '13px', color: '#F0F2F7', fontWeight: 600 }}>
                       {cannibalizationResult!.totalHH.toLocaleString()} HH · {cannibalizationResult!.zipCount} ZIPs
                     </div>
-                    <div style={{ fontSize: '9px', color: '#8A98AE', marginTop: '2px' }}>
+                    <div style={{ fontSize: '10px', color: '#8A98AE', marginTop: '2px' }}>
                       existing attendees within this drive area
                     </div>
                   </div>
                 )}
                 {candidatePin && attendeeData.length > 0 && !cannibalizationResult && (
-                  <div style={{ borderLeft: '1px solid rgba(78,174,255,0.2)', paddingLeft: '16px', fontSize: '9px', color: '#5a6478' }}>
+                  <div style={{ borderLeft: '1px solid rgba(78,174,255,0.2)', paddingLeft: '16px', fontSize: '10px', color: '#7A8699' }}>
                     No existing attendees within drive area
                   </div>
                 )}
@@ -765,7 +765,7 @@ export default function OverviewPage() {
                   {activeCampuses !== null && (
                     <button
                       onClick={() => setActiveCampuses(null)}
-                      style={{ ...MONO, fontSize: '9px', letterSpacing: '0.08em', marginTop: '6px', background: 'rgba(232,184,75,0.1)', color: '#E8B84B', border: '1px solid rgba(232,184,75,0.3)', borderRadius: '3px', padding: '3px 8px', cursor: 'pointer' }}
+                      style={{ ...MONO, fontSize: '10px', letterSpacing: '0.08em', marginTop: '6px', background: 'rgba(232,184,75,0.1)', color: '#E8B84B', border: '1px solid rgba(232,184,75,0.3)', borderRadius: '3px', padding: '3px 8px', cursor: 'pointer' }}
                     >
                       ✕ Show all campuses
                     </button>
@@ -773,15 +773,15 @@ export default function OverviewPage() {
                 </div>
                 <div style={{ display: 'flex', gap: '24px', textAlign: 'right' }}>
                   <div>
-                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>Total HH</div>
+                    <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>Total HH</div>
                     <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#E8B84B' }}>{attendeeTotal.toLocaleString()}</div>
                   </div>
                   <div>
-                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>ZIPs</div>
+                    <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>ZIPs</div>
                     <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#4EAEFF' }}>{validAttendees.length}</div>
                   </div>
                   <div>
-                    <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>Campuses</div>
+                    <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', textTransform: 'uppercase' as const, letterSpacing: '0.1em' }}>Campuses</div>
                     <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '26px', color: '#2DD4BF' }}>{campusList.length}</div>
                   </div>
                 </div>
@@ -795,7 +795,7 @@ export default function OverviewPage() {
                   <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase' as const, marginBottom: '6px' }}>
                     Households by Campus
                   </div>
-                  <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', marginBottom: '10px' }}>
+                  <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', marginBottom: '10px' }}>
                     Click a campus to isolate its draw area on the map
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
@@ -816,7 +816,7 @@ export default function OverviewPage() {
                           <div style={{ width: '60px', flexShrink: 0, textAlign: 'right' as const, ...MONO, fontSize: '11px', color: c.color, fontWeight: 600 }}>
                             {c.total.toLocaleString()}
                           </div>
-                          <div style={{ width: '36px', flexShrink: 0, textAlign: 'right' as const, ...MONO, fontSize: '10px', color: '#5a6478' }}>
+                          <div style={{ width: '36px', flexShrink: 0, textAlign: 'right' as const, ...MONO, fontSize: '10px', color: '#7A8699' }}>
                             {Math.round((c.total / attendeeTotal) * 100)}%
                           </div>
                         </div>
@@ -859,7 +859,7 @@ export default function OverviewPage() {
                   <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.12em', color: '#A8B4C5', textTransform: 'uppercase' as const, marginBottom: '4px' }}>
                     Underserved Clusters
                   </div>
-                  <div style={{ ...MONO, fontSize: '9px', color: '#5a6478', marginBottom: '12px' }}>
+                  <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', marginBottom: '12px' }}>
                     Growing ZIPs where Lakepointe attendance is low relative to population · ranked by growth ÷ penetration
                   </div>
                   <div style={{ overflowX: 'auto' as const }}>
@@ -867,7 +867,7 @@ export default function OverviewPage() {
                       <thead>
                         <tr>
                           {['ZIP', 'Area', 'Growth', 'Penetration', 'Primary Campus'].map(h => (
-                            <th key={h} style={{ ...MONO, fontSize: '9px', color: '#5a6478', letterSpacing: '0.08em', textTransform: 'uppercase' as const, textAlign: 'left' as const, padding: '5px 12px 7px 0', borderBottom: '1px solid #1e2b3c', fontWeight: 400 }}>{h}</th>
+                            <th key={h} style={{ ...MONO, fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em', textTransform: 'uppercase' as const, textAlign: 'left' as const, padding: '5px 12px 7px 0', borderBottom: '1px solid #1e2b3c', fontWeight: 400 }}>{h}</th>
                           ))}
                         </tr>
                       </thead>
@@ -878,7 +878,7 @@ export default function OverviewPage() {
                             <td style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: '12px', color: '#C8D4E4', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020' }}>{u.label}</td>
                             <td style={{ ...MONO, fontSize: '11px', color: '#4EAEFF', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020' }}>↑ {u.growth}%</td>
                             <td style={{ ...MONO, fontSize: '11px', color: '#FF6B6B', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020' }}>{u.penetration.toFixed(2)}%</td>
-                            <td style={{ ...MONO, fontSize: '10px', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020', color: u.primaryCampus ? (campusColorMap[u.primaryCampus] ?? '#8A98AE') : '#5a6478' }}>
+                            <td style={{ ...MONO, fontSize: '10px', padding: '6px 12px 6px 0', borderBottom: '1px solid #0d1020', color: u.primaryCampus ? (campusColorMap[u.primaryCampus] ?? '#8A98AE') : '#7A8699' }}>
                               {u.primaryCampus ?? '—'}
                             </td>
                           </tr>
@@ -968,14 +968,14 @@ export default function OverviewPage() {
         {/* Footer */}
         <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em' }}>
               Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · BLS LAUS · FRED
             </span>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#5a6478', letterSpacing: '0.08em' }}>
+            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em' }}>
               Lakepointe Church · Community Intelligence Platform · Internal Use Only
             </span>
           </div>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '9px', color: '#3d4a5c', letterSpacing: '0.06em' }}>
+          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6E7C92', letterSpacing: '0.06em' }}>
             Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
             {coverage === 'core' && ' · Averages computed over Core MSA (11 counties). Toggle to "All ZIPs" to include extended coverage area.'}
           </div>
