@@ -380,12 +380,6 @@ export default function CommunityNeedsPage() {
                     </div>
 
                     <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>Physical Inactivity</div>
-                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color: healthColor(zipData.physInactivity, 22, 30), lineHeight:1 }}>{fmtPct(zipData.physInactivity)}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'4px' }}>% adults · DFW avg: {fmtPct(overview.avgPhysInactivity)}</div>
-                    </div>
-
-                    <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
                       <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>SES Class</div>
                       <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color:'#E8B84B', lineHeight:1 }}>{zipData.sesLabel ?? '—'}</div>
                       <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'4px' }}>socioeconomic tier</div>
