@@ -16,6 +16,41 @@ export default function MethodologyPage() {
         </p>
       </div>
 
+      {/* ── COVERAGE AREA ────────────────────────────── */}
+      <Section title="Coverage Area">
+        <p style={bodyStyle}>
+          The platform covers <strong style={{ color: '#C8D4E4' }}>370 ZIP codes</strong> across the full DFW metro (a 75-mile radius from Dallas center). Every page that shows aggregates or rankings defaults to the <strong style={{ color: '#E8B84B' }}>Core MSA</strong> — switch the coverage dropdown to &ldquo;All ZIPs&rdquo; to include the outer/extended counties.
+        </p>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '20px' }}>
+          {/* Core MSA card */}
+          <div style={cardStyle}>
+            <div style={{ ...cardLabelStyle, color: '#E8B84B' }}>Core MSA · default scope</div>
+            <p style={{ ...bodyStyle, fontSize: '12px', marginBottom: '12px' }}>
+              The standard 11-county Dallas&ndash;Fort Worth&ndash;Plano&ndash;Arlington Metropolitan Statistical Area &mdash; <strong style={{ color: '#C8D4E4' }}>273 ZIPs</strong> across 21 ZIP groups. All weighted averages and rankings use this set unless coverage is changed.
+            </p>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
+              <div>Dallas · Tarrant · Collin · Denton</div>
+              <div>Rockwall · Ellis · Johnson · Kaufman</div>
+              <div>Parker · Wise · Hunt</div>
+            </div>
+          </div>
+
+          {/* Extended card */}
+          <div style={cardStyle}>
+            <div style={{ ...cardLabelStyle, color: '#8A98AE' }}>Extended · all ZIPs only</div>
+            <p style={{ ...bodyStyle, fontSize: '12px', marginBottom: '12px' }}>
+              Outer counties beyond the MSA &mdash; <strong style={{ color: '#C8D4E4' }}>97 ZIPs</strong> across 9 ZIP groups. Included only when coverage is set to &ldquo;All ZIPs &middot; Full coverage.&rdquo;
+            </p>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
+              <div>Hood · Cooke/Montague · Grayson</div>
+              <div>Fanin · Van Zandt/Rains · Henderson</div>
+              <div>Navarro · Hill · Hopkins/Wood</div>
+            </div>
+          </div>
+        </div>
+      </Section>
+
       {/* ── DATA SOURCES ─────────────────────────────── */}
       <Section title="Data Sources">
         <p style={bodyStyle}>
