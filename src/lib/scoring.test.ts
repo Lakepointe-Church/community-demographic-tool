@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  sesScore, sesLabel,
+  sesScore, sesComponents, sesLabel,
   yfiScore, wfiScore,
   growthScore, satOpportunityScore, distanceScore, enrollmentCagrScore,
   effectivePct, computeFitScore, weightedMean,
@@ -27,6 +27,21 @@ describe('sesScore (income 50% · bachelor 30% · home 20%, absolute caps)', () 
   })
   it('zeros → 0', () => {
     expect(sesScore(0, 0, 0)).toBe(0)
+  })
+})
+
+describe('sesComponents (weighted contributions sum to the score)', () => {
+  it('half of every cap → 25 / 15 / 10 (sum 50)', () => {
+    const c = sesComponents(100_000, 25, 400_000)
+    expect(c).toEqual({ income: 25, bachelors: 15, homeValue: 10 })
+    expect(Math.round(c.income + c.bachelors + c.homeValue)).toBe(sesScore(100_000, 25, 400_000))
+  })
+  it('caps each component at its max (50 / 30 / 20)', () => {
+    expect(sesComponents(300_000, 80, 1_000_000)).toEqual({ income: 50, bachelors: 30, homeValue: 20 })
+  })
+  it('rounded sum equals sesScore for an arbitrary point', () => {
+    const c = sesComponents(50_000, 10, 200_000)
+    expect(Math.round(c.income + c.bachelors + c.homeValue)).toBe(sesScore(50_000, 10, 200_000))
   })
 })
 

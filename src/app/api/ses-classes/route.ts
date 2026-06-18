@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
     const allRows = await sql`
       SELECT
         zip, name, ses_label, ses_score,
-        median_household_income, bachelors_rate, unemployment_rate,
+        median_household_income, median_home_value, bachelors_rate, unemployment_rate,
         occ_mgmt_prof_pct, population_growth, low_reliability
       FROM zip_demographics
       WHERE ses_label IS NOT NULL
@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
         sesLabel:             d.ses_label,
         sesScore:             score,
         medianHouseholdIncome: d.median_household_income,
+        medianHomeValue:      d.median_home_value,
         bachelorsRate:        d.bachelors_rate != null ? parseFloat(d.bachelors_rate) : null,
         unemploymentRate:     d.unemployment_rate != null ? parseFloat(d.unemployment_rate) : null,
         occMgmtProfPct:       d.occ_mgmt_prof_pct != null ? parseFloat(d.occ_mgmt_prof_pct) : null,

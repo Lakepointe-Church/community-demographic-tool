@@ -1,7 +1,9 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { downloadCsv } from '@/lib/csv'
+import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
+import { sesComponents } from '@/lib/scoring'
 import { StatCard } from '@/components/ui/StatCard'
 import { Surface } from '@/components/ui/Surface'
 import { SectionHeader } from '@/components/ui/SectionHeader'
@@ -12,6 +14,7 @@ interface ZipSes {
   sesLabel: string
   sesScore: number
   medianHouseholdIncome: number | null
+  medianHomeValue: number | null
   bachelorsRate: number | null
   unemploymentRate: number | null
   occMgmtProfPct: number | null
@@ -180,6 +183,206 @@ function ScatterPlot({ zips }: { zips: ZipSes[] }) {
   )
 }
 
+// ── Campus Dot ────────────────────────────────────────────────────
+function CampusDot({ status, size = 7 }: { status: 'existing' | 'soon'; size?: number }) {
+  return (
+    <span style={{
+      width: size, height: size, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
+      background: status === 'existing' ? '#E8B84B' : 'transparent',
+      border: status === 'soon' ? '1.5px solid #E8B84B' : 'none',
+      boxShadow: status === 'existing' ? '0 0 5px rgba(232,184,75,0.5)' : 'none',
+    }} />
+  )
+}
+
+// ── ZIP Dropdown (mirrors the Employers page selector) ────────────
+function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const [hovered, setHovered] = useState<string | null>(null)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    return () => document.removeEventListener('mousedown', handleClick)
+  }, [open])
+
+  const selected = value ? ZIP_GROUPS.flatMap(g => g.zips).find(z => z.zip === value) : null
+  const selectedCampus = value ? CAMPUS_ZIPS[value] : undefined
+
+  return (
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block', background: '#13161f', borderRadius: '4px', zIndex: 10 }}>
+      <button onClick={() => setOpen(v => !v)} style={{
+        WebkitAppearance: 'none', appearance: 'none', backgroundColor: '#13161f',
+        border: `1px solid ${open ? '#E8B84B' : '#232940'}`, color: '#F0F2F7',
+        padding: '8px 34px 8px 12px', fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px',
+        letterSpacing: '0.04em', cursor: 'pointer', outline: 'none', minWidth: '230px',
+        position: 'relative', textAlign: 'left', transition: 'border-color 0.15s ease', borderRadius: '4px',
+        display: 'flex', alignItems: 'center', gap: '8px',
+      }}>
+        {selectedCampus && <CampusDot status={selectedCampus} />}
+        <span style={{ flex: 1 }}>{selected ? `${value} — ${selected.label}` : 'DFW Overview'}</span>
+        <svg width="12" height="7" viewBox="0 0 12 7" fill="none" style={{
+          position: 'absolute', right: '12px', top: '50%',
+          transform: `translateY(-50%) rotate(${open ? 180 : 0}deg)`, transition: 'transform 0.15s ease',
+        }}>
+          <path d="M1 1l5 5 5-5" stroke="#E8B84B" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+        </svg>
+      </button>
+
+      {open && (
+        <div style={{
+          position: 'absolute', top: 'calc(100% + 4px)', right: 0,
+          minWidth: '230px', maxHeight: '360px', overflowY: 'auto',
+          background: '#0d0f14', border: '1px solid #232940', zIndex: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+        }}>
+          <div onClick={() => { onChange(''); setOpen(false) }}
+            onMouseEnter={() => setHovered('__metro')} onMouseLeave={() => setHovered(null)}
+            style={{
+              padding: '10px 14px', fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px',
+              color: value === '' ? '#E8B84B' : hovered === '__metro' ? '#F0F2F7' : '#A8B4C5',
+              background: value === '' ? 'rgba(232,184,75,0.08)' : hovered === '__metro' ? 'rgba(255,255,255,0.04)' : 'transparent',
+              cursor: 'pointer', letterSpacing: '0.04em', borderBottom: '1px solid #1e2b3c',
+            }}>DFW Overview</div>
+          {ZIP_GROUPS.map(group => (
+            <div key={group.label}>
+              <div style={{
+                fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699',
+                letterSpacing: '0.15em', textTransform: 'uppercase', padding: '10px 14px 4px',
+                position: 'sticky', top: 0, background: '#0d0f14', zIndex: 1,
+              }}>{group.label}</div>
+              {group.zips.map(({ zip, label }) => {
+                const isSelected = zip === value, isHov = hovered === zip
+                const campus = CAMPUS_ZIPS[zip]
+                return (
+                  <div key={zip}
+                    onClick={() => { onChange(zip); setOpen(false) }}
+                    onMouseEnter={() => setHovered(zip)} onMouseLeave={() => setHovered(null)}
+                    style={{
+                      padding: '7px 14px', fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px',
+                      color: isSelected ? '#E8B84B' : isHov ? '#F0F2F7' : '#A8B4C5',
+                      background: isSelected ? 'rgba(232,184,75,0.08)' : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
+                      cursor: 'pointer', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '8px',
+                    }}>
+                    <span style={{ color: isSelected ? '#E8B84B' : '#7A8699', flexShrink: 0, width: '38px' }}>{zip}</span>
+                    {campus && <CampusDot status={campus} />}
+                    <span>{label}</span>
+                  </div>
+                )
+              })}
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ── Per-ZIP SES Detail ────────────────────────────────────────────
+function SesDetail({ z, rank, total, coverageAll }: { z: ZipSes | null; rank: number | null; total: number; coverageAll: boolean }) {
+  if (!z) {
+    return (
+      <Surface className="fade-up-2" style={{ marginBottom: '16px' }}>
+        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#8A98AE', lineHeight: 1.7, padding: '8px 0' }}>
+          No SES data for this ZIP{!coverageAll ? ' in the Core MSA set' : ''}.
+          {!coverageAll && ' Switch the coverage selector to "All ZIPs" if this is an outer-county ZIP.'}
+        </div>
+      </Surface>
+    )
+  }
+  const color = TIER_COLOR[z.sesLabel] ?? '#8A98AE'
+  const rgb = TIER_RGB[z.sesLabel] ?? '138,152,174'
+  const t = trend(z.populationGrowth)
+  const comp = sesComponents(z.medianHouseholdIncome ?? 0, z.bachelorsRate ?? 0, z.medianHomeValue ?? 0)
+  // contribution out of each component's max (income 50 / bachelor 30 / home 20)
+  const parts = [
+    { label: 'Income', weight: '50%', value: comp.income, max: 50, color: '#4EAEFF', detail: fmt$(z.medianHouseholdIncome) },
+    { label: "Bachelor's+", weight: '30%', value: comp.bachelors, max: 30, color: '#2DD4BF', detail: fmtPct(z.bachelorsRate) },
+    { label: 'Home Value', weight: '20%', value: comp.homeValue, max: 20, color: '#A78BFA', detail: fmt$(z.medianHomeValue) },
+  ]
+
+  return (
+    <>
+      {/* ZIP header + class + score */}
+      <Surface className="fade-up-2" style={{ marginBottom: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+              <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '34px', color: '#F0F2F7', lineHeight: 1, letterSpacing: '0.03em' }}>{z.zip}</span>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '13px', color: '#A8B4C5' }}>{z.name}</span>
+              {z.lowReliability && <span title="Low reliability: small population, zero income, or high Census margin of error (CV > 30%)" style={{ color: '#FF6B6B', cursor: 'help', fontSize: '12px' }}>⚠</span>}
+            </div>
+            <span style={{
+              fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', letterSpacing: '0.1em',
+              textTransform: 'uppercase', padding: '4px 10px', borderRadius: '3px',
+              background: `rgba(${rgb},0.15)`, color, border: `1px solid rgba(${rgb},0.3)`,
+            }}>{z.sesLabel}</span>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', justifyContent: 'flex-end' }}>
+              <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '44px', color, lineHeight: 1 }}>{z.sesScore}</span>
+              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '13px', color: '#7A8699' }}>/100</span>
+            </div>
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em', marginTop: '2px' }}>
+              SES Score{rank != null ? ` · rank #${rank} of ${total}` : ''}
+            </div>
+          </div>
+        </div>
+      </Surface>
+
+      <div className="fade-up-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+        {/* Composite breakdown */}
+        <Surface>
+          <SectionHeader title="Score Composition" sub="Weighted contribution to the 0–100 SES score" />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '6px' }}>
+            {parts.map(p => (
+              <div key={p.label}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
+                  <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#A8B4C5' }}>
+                    {p.label} <span style={{ color: '#7A8699' }}>· {p.weight}</span>
+                  </span>
+                  <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: p.color }}>
+                    +{p.value.toFixed(1)} <span style={{ color: '#7A8699' }}>/ {p.max} · {p.detail}</span>
+                  </span>
+                </div>
+                <div style={{ height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
+                  <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${(p.value / p.max) * 100}%`, background: `linear-gradient(90deg,${p.color},${p.color}60)`, borderRadius: '2px' }} />
+                </div>
+              </div>
+            ))}
+          </div>
+          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '14px', letterSpacing: '0.04em' }}>
+            Income capped at $200K · home value at $800K · bachelor&apos;s rate ×2 (50% → cap). See /methodology.
+          </div>
+        </Surface>
+
+        {/* Underlying stats */}
+        <Surface>
+          <SectionHeader title="Indicators" sub={`${z.name} · ACS 5-Year`} />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '6px' }}>
+            {[
+              { label: 'Median HHI', value: fmt$(z.medianHouseholdIncome) },
+              { label: 'Median Home Value', value: fmt$(z.medianHomeValue) },
+              { label: '% Bachelor’s+', value: fmtPct(z.bachelorsRate) },
+              { label: '% Mgmt/Prof', value: fmtPct(z.occMgmtProfPct) },
+              { label: 'Unemployment', value: fmtPct(z.unemploymentRate), color: z.unemploymentRate != null && z.unemploymentRate > 5 ? '#FF6B6B' : '#F0F2F7' },
+              { label: 'Pop. Trend', value: t.label, color: t.color },
+            ].map(s => (
+              <div key={s.label} style={{ background: '#0d0f14', border: '1px solid #1e2b3c', borderRadius: '4px', padding: '12px 14px' }}>
+                <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.12em', color: '#8A98AE', textTransform: 'uppercase', marginBottom: '5px' }}>{s.label}</div>
+                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '24px', color: s.color ?? '#F0F2F7', lineHeight: 1 }}>{s.value}</div>
+              </div>
+            ))}
+          </div>
+        </Surface>
+      </div>
+    </>
+  )
+}
+
 // ── Page ─────────────────────────────────────────────────────────
 export default function SesClassesPage() {
   const [zips, setZips] = useState<ZipSes[]>([])
@@ -191,6 +394,7 @@ export default function SesClassesPage() {
   const [showUnreliable, setShowUnreliable] = useState(false)
   const [coverage, setCoverage] = useState<'core' | 'all'>('core')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [selectedZip, setSelectedZip] = useState('')
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -233,6 +437,15 @@ export default function SesClassesPage() {
 
   const FILTER_TABS = ['All', ...TIERS]
 
+  // Selected-ZIP detail + its rank by SES score within the loaded coverage set
+  const selectedData = selectedZip ? zips.find(z => z.zip === selectedZip) ?? null : null
+  const selectedRank = useMemo(() => {
+    if (!selectedData) return null
+    const sorted = [...zips].sort((a, b) => b.sesScore - a.sesScore)
+    const idx = sorted.findIndex(z => z.zip === selectedData.zip)
+    return idx >= 0 ? idx + 1 : null
+  }, [zips, selectedData])
+
   return (
     <>
       <style>{`
@@ -257,8 +470,13 @@ export default function SesClassesPage() {
               ACS-Derived Class Classification · {summary?.total ?? '—'} {coverage === 'core' ? 'Core MSA' : 'All DFW'} ZIPs
             </div>
           </div>
-          {/* Coverage + Reliability + Refresh controls */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0, marginTop: '4px' }}>
+          {/* ZIP selector + Coverage / Reliability / Refresh controls */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0, marginTop: '4px', position: 'relative', zIndex: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Select ZIP Code</div>
+            <ZipDropdown value={selectedZip} onChange={setSelectedZip} />
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <select
               value={coverage}
               onChange={e => handleCoverageChange(e.target.value as 'core' | 'all')}
@@ -301,8 +519,17 @@ export default function SesClassesPage() {
               ↺ Reload
             </button>
           </div>
+          </div>
         </div>
 
+        {/* ── Per-ZIP detail ── */}
+        {selectedZip && (
+          <SesDetail z={selectedData} rank={selectedRank} total={zips.length} coverageAll={coverage === 'all'} />
+        )}
+
+        {/* ── DFW Overview ── */}
+        {!selectedZip && (
+        <>
         {/* Stat cards */}
         <div className="fade-up-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '24px' }}>
           <StatCard label="Avg SES Score" value={loading ? '—' : String(summary?.avgScore ?? '—')} sub={coverage === 'core' ? 'Core MSA avg' : 'All DFW avg'} color="#E8B84B" loading={loading} />
@@ -342,7 +569,7 @@ export default function SesClassesPage() {
         <Surface className="fade-up-4">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const }}>
-              All ZIPs by SES Classification
+              Top ZIPs by SES Classification
             </div>
             <button
               disabled={!filtered.length}
@@ -422,7 +649,7 @@ export default function SesClassesPage() {
                       ))}
                     </tr>
                   ))
-                ) : filtered.map(z => {
+                ) : filtered.slice(0, 10).map(z => {
                   const color = TIER_COLOR[z.sesLabel] ?? '#8A98AE'
                   const rgb   = TIER_RGB[z.sesLabel] ?? '138,152,174'
                   const t = trend(z.populationGrowth)
@@ -467,12 +694,14 @@ export default function SesClassesPage() {
             )}
           </div>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', marginTop: '16px', letterSpacing: '0.06em' }}>
-            Showing {filtered.length} of {zips.length} {coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs{!showUnreliable && zips.some(z => z.lowReliability) ? ` · ${zips.filter(z => z.lowReliability).length} low-reliability ZIPs hidden` : ''} · Source: U.S. Census Bureau ACS 5-Year 2023 · Click column headers to sort
+            Showing top {Math.min(10, filtered.length)} of {filtered.length} {filter === 'All' ? '' : `${filter} · `}{coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs{!showUnreliable && zips.some(z => z.lowReliability) ? ` · ${zips.filter(z => z.lowReliability).length} low-reliability hidden` : ''} · pick a ZIP above for detail · CSV exports all · Source: ACS 5-Year 2023 · click headers to sort
           </div>
           <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6E7C92', marginTop: '4px', letterSpacing: '0.06em' }}>
             Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
           </div>
         </Surface>
+        </>
+        )}
 
       </div>
     </>

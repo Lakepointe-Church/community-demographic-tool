@@ -14,12 +14,20 @@
 
 // ── SES composite (income 50% · bachelor's 30% · home value 20%) ──────────────
 // Absolute caps: income $200K, home value $800K, bachelor's rate ×2 (i.e. 50% → 100).
+// Weighted contribution of each component toward the 0–100 score (income 0–50,
+// bachelor's 0–30, home value 0–20). Their sum, rounded, is the SES score — so a
+// UI can show the breakdown without forking the formula.
+export interface SesComponents { income: number; bachelors: number; homeValue: number }
+export function sesComponents(income: number, bachelorsRate: number, homeValue: number): SesComponents {
+  return {
+    income:    Math.min(100, (income / 200000) * 100)   * 0.5,
+    bachelors: Math.min(100, bachelorsRate * 2)          * 0.3,
+    homeValue: Math.min(100, (homeValue / 800000) * 100) * 0.2,
+  }
+}
 export function sesScore(income: number, bachelorsRate: number, homeValue: number): number {
-  return Math.round(
-    Math.min(100, (income / 200000) * 100)    * 0.5 +
-    Math.min(100, bachelorsRate * 2)           * 0.3 +
-    Math.min(100, (homeValue / 800000) * 100)  * 0.2
-  )
+  const c = sesComponents(income, bachelorsRate, homeValue)
+  return Math.round(c.income + c.bachelors + c.homeValue)
 }
 
 export function sesLabel(score: number): string {
