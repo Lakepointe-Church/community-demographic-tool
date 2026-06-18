@@ -15,6 +15,7 @@ interface Overview {
   avgWage: number | null
   zipCount: number
   sectors: SectorRow[]
+  sizeDist: { label: string; estab: number }[]
   topZips: { zip: string; name: string; totalEstab: number; totalEmp: number }[]
 }
 
@@ -174,6 +175,29 @@ function SizeChart({ sizeDist }: { sizeDist: { label: string; estab: number }[] 
         )
       })}
     </svg>
+  )
+}
+
+// ── Top Employers (named) — labeled placeholder ───────────────────
+// Census CBP is anonymized aggregate data and cannot name individual
+// businesses. Named-employer data needs a licensed source (Data Axle) or
+// on-demand Google Places. Kept as a visible slot until that lands (Phase 3).
+function TopEmployersPlaceholder({ scope }: { scope: string }) {
+  return (
+    <Surface padding="20px" style={{ marginBottom: '12px' }}>
+      <SectionHeader title="Top Employers in Area" sub={scope} marginBottom="12px" />
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '12px',
+        padding: '16px', background: 'rgba(255,255,255,0.02)',
+        border: '1px dashed #2a3350', borderRadius: '4px',
+      }}>
+        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 1.7 }}>
+          Company-level employer names aren&apos;t available from anonymized Census CBP (it reports establishment
+          counts by sector &amp; size band only). Reinstating the named top-employer list needs a licensed business
+          directory (Data Axle) or an on-demand Google Places lookup — <span style={{ color: '#7A8699' }}>pending Phase 3</span>.
+        </div>
+      </div>
+    </Surface>
   )
 }
 
@@ -338,35 +362,41 @@ export default function EmployersPage() {
               <StatCard compact label="Avg Annual Wage"      value={loading || !dfw?.avgWage ? '—' : fmt$(dfw.avgWage)} sub="payroll ÷ employment" color="#A78BFA" loading={loading} />
             </div>
 
-            {/* Industry mix + Wage by sector — side by side */}
+            {/* Industry Mix (donut) + Size Distribution — mirrors the per-ZIP view */}
             <div className="fade-up-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'12px' }}>
 
-              {/* Industry Mix */}
+              {/* Industry Mix — donut */}
               <Surface padding="20px">
                 <SectionHeader title="DFW Industry Mix" sub="Establishments by sector" marginBottom="14px" />
                 {loading
                   ? <div style={{ height:'220px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
-                  : <BarList
-                      rows={(dfw?.sectors ?? []).slice(0,14).map(s => ({ label: s.label, value: s.estab }))}
-                      formatValue={v => v.toLocaleString()}
-                    />
+                  : <DonutChart sectors={dfw?.sectors ?? []} />
                 }
               </Surface>
 
-              {/* Avg Wage by Sector */}
+              {/* Employer Size Distribution */}
               <Surface padding="20px">
-                <SectionHeader title="Avg Annual Wage by Sector" sub="DFW Metro · county-level CBP (Dallas / Tarrant / Collin / Denton)" marginBottom="14px" />
+                <SectionHeader title="Employer Size Distribution" sub="DFW Metro · establishments by employee-count band" marginBottom="14px" />
                 {loading
                   ? <div style={{ height:'220px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
-                  : (() => {
-                      const wageRows = (dfw?.sectors ?? []).filter(s => s.avgWage != null).map(s => ({ label: s.label, value: s.avgWage! })).sort((a,b) => b.value - a.value)
-                      return wageRows.length
-                        ? <BarList rows={wageRows} formatValue={v => `$${(v/1000).toFixed(0)}K`} singleColor="#4EAEFF" />
-                        : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#7A8699', padding:'8px 0' }}>Available after next /api/refresh run</div>
-                    })()
+                  : <SizeChart sizeDist={dfw?.sizeDist ?? []} />
                 }
               </Surface>
             </div>
+
+            {/* Avg Wage by Sector — full width */}
+            <Surface className="fade-up-3" padding="20px" style={{ marginBottom:'12px' }}>
+              <SectionHeader title="Avg Annual Wage by Sector" sub="DFW Metro · county-level CBP (Dallas / Tarrant / Collin / Denton)" marginBottom="14px" />
+              {loading
+                ? <div style={{ height:'220px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
+                : (() => {
+                    const wageRows = (dfw?.sectors ?? []).filter(s => s.avgWage != null).map(s => ({ label: s.label, value: s.avgWage! })).sort((a,b) => b.value - a.value)
+                    return wageRows.length
+                      ? <BarList rows={wageRows} formatValue={v => `$${(v/1000).toFixed(0)}K`} singleColor="#4EAEFF" />
+                      : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#7A8699', padding:'8px 0' }}>Available after next /api/refresh run</div>
+                  })()
+              }
+            </Surface>
 
             {/* Top ZIPs — compact table */}
             <Surface className="fade-up-4" padding="16px 20px" style={{ marginBottom:'16px' }}>
@@ -387,6 +417,9 @@ export default function EmployersPage() {
                 )
               }
             </Surface>
+
+            {/* Top Employers — named (labeled placeholder) */}
+            <TopEmployersPlaceholder scope="DFW Metro · all coverage ZIPs" />
           </>
         )}
 
@@ -431,6 +464,9 @@ export default function EmployersPage() {
                   </div>
                 )}
 
+                {/* Top Employers — named (labeled placeholder) */}
+                <TopEmployersPlaceholder scope={zipData.name} />
+
                 <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', letterSpacing:'0.06em' }}>
                   {zipData.name} · {zipData.sectors.length} active sectors · CBP 2022 · per-sector employment suppressed for privacy in most ZIPs
                 </div>
@@ -440,7 +476,7 @@ export default function EmployersPage() {
         )}
 
         <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'16px', letterSpacing:'0.06em' }}>
-          Source: U.S. Census Bureau County Business Patterns 2022 · Named employer data requires Data Axle — Phase 3
+          Source: U.S. Census Bureau County Business Patterns 2022 · establishment, employment &amp; payroll aggregates (anonymized; no company-level names)
         </div>
 
       </div>

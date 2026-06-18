@@ -855,7 +855,7 @@ const LIMITATIONS = [
   },
   {
     source: 'College Scorecard',
-    limitation: 'The Scorecard API returns schools within a specified radius of the ZIP centroid. Schools near the edge of the radius may appear or disappear depending on slight centroid placement differences. Trade and vocational schools (ICLEVEL=3) are filtered from display but are still present in the underlying data. The platform uses a 10-mile radius by default.',
+    limitation: 'The "Undergrads" column is the Scorecard "size" field (latest.student.size) — undergraduate degree-seeking enrollment only. It excludes graduate and non-degree-seeking students, so a graduate-focused institution (e.g. Amberton University) shows a small number that is correct for undergraduates but well below its total headcount. The Scorecard API returns schools within a specified radius of the ZIP centroid. Schools near the edge of the radius may appear or disappear depending on slight centroid placement differences. Trade and vocational schools (ICLEVEL=3) are filtered from display but are still present in the underlying data. The platform uses a 10-mile radius by default.',
   },
   {
     source: 'SES Class Score',

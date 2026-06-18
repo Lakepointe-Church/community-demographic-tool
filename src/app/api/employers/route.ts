@@ -53,13 +53,17 @@ export async function GET(req: NextRequest) {
 
   // DFW overview
   const [rows, metaRows] = await Promise.all([
-    sql`SELECT zip, total_estab, total_emp, total_payroll, sectors FROM zip_employers WHERE total_estab > 0 ORDER BY total_estab DESC`,
+    sql`SELECT zip, total_estab, total_emp, total_payroll, sectors, size_dist FROM zip_employers WHERE total_estab > 0 ORDER BY total_estab DESC`,
     sql`SELECT sector_wages FROM metro_stats WHERE id = 1 LIMIT 1`,
   ])
   const storedSectorWages: { label: string; avgWage: number }[] = metaRows[0]?.sector_wages ?? []
 
+  // Canonical employer-size-band order (mirrors SIZE_CLASSES in lib/cbp.ts)
+  const SIZE_ORDER = ['1–4', '5–9', '10–19', '20–49', '50–99', '100–249', '250–499', '500–999', '1000+']
+
   let totalEstab = 0, totalEmp = 0, totalPayroll = 0
   const sectorMap: Record<string, { estab: number; emp: number; payroll: number }> = {}
+  const sizeMap: Record<string, number> = {}
   const topZips = rows.slice(0, 20).map(r => ({
     zip: r.zip,
     name: ZIP_LABEL[r.zip] ?? r.zip,
@@ -77,7 +81,14 @@ export async function GET(req: NextRequest) {
       sectorMap[s.label].emp     += s.emp     ?? 0
       sectorMap[s.label].payroll += s.payroll ?? 0
     }
+    for (const sz of (r.size_dist ?? [])) {
+      sizeMap[sz.label] = (sizeMap[sz.label] ?? 0) + (sz.estab ?? 0)
+    }
   }
+
+  const sizeDist = SIZE_ORDER
+    .filter(label => sizeMap[label] != null)
+    .map(label => ({ label, estab: sizeMap[label] }))
 
   const wageByLabel = Object.fromEntries(storedSectorWages.map(w => [w.label, w.avgWage]))
   const sectors = Object.entries(sectorMap)
@@ -93,6 +104,6 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     totalEstab, totalEmp, totalPayroll, avgWage,
     zipCount: rows.length,
-    sectors, topZips,
+    sectors, sizeDist, topZips,
   })
 }

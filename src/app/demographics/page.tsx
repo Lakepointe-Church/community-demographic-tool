@@ -820,7 +820,7 @@ export default function DemographicsPage() {
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 120px 110px 140px', gap: '0', minWidth: '560px' }}>
-                  {['School', 'Enrollment', '4-Yr Completion', 'Median Earnings (10yr)'].map(h => (
+                  {['School', 'Undergrads', '4-Yr Completion', 'Median Earnings (10yr)'].map(h => (
                     <div key={h} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE', letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '0 12px 10px 0', borderBottom: '1px solid #232940' }}>{h}</div>
                   ))}
                   {colleges.map((c, idx) => (
@@ -845,6 +845,7 @@ export default function DemographicsPage() {
             )}
             <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.06em', marginTop: '16px', lineHeight: 1.7 }}>
               Source: U.S. Dept. of Education College Scorecard · collegescorecard.ed.gov<br />
+              Undergrads = undergraduate degree-seeking enrollment (Scorecard &quot;size&quot;) — excludes graduate &amp; non-degree students, so graduate-focused schools read low<br />
               — indicates data not reported: institution below Scorecard disclosure threshold · trade/vocational schools excluded
             </div>
           </Surface>
