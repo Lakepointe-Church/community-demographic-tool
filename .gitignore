@@ -51,3 +51,15 @@ data/soi-zpallagi-*.csv
 
 # Zillow ZHVI source cache (~120 MB; streamed/re-fetched by scripts/import-zillow.ts)
 data/zillow-zhvi-zip.csv
+
+# Attendee export from Rock RMS — DB-only, NEVER commit (privacy boundary, spec §0.6/§2.3)
+data/FamilyCount*.csv
+
+# TEA PEIMS enrollment manual downloads (re-downloadable; loaded by scripts/import-tea.ts)
+data/tea-enrollment-*.csv
+
+# TDC county projections manual download (re-downloadable; loaded by scripts/import-tdc.ts)
+data/tdc-projections-*.csv
+
+# IRS SOI county migration source cache (re-fetched by scripts/import-soi-migration.ts)
+data/countyin*flow*.csv
