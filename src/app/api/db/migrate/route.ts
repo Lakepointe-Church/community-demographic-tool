@@ -292,6 +292,29 @@ export async function POST(req: NextRequest) {
       )
     `
 
+    // IRS SOI county-to-county migration flows (Phase 4.6) — context/narrative tier.
+    // One row per (direction, DFW focus county, counterpart county, year).
+    // kind 'total' = the IRS grand-total pseudo-row (all in/out-migrants); 'county' = a real county pair.
+    // Amounts in $1000s (IRS convention). direction 'in' = counterpart is origin; 'out' = counterpart is destination.
+    await sql`
+      CREATE TABLE IF NOT EXISTS county_migration (
+        direction    TEXT NOT NULL,
+        fips         TEXT NOT NULL,
+        county       TEXT NOT NULL,
+        year         INTEGER NOT NULL,
+        kind         TEXT NOT NULL,
+        other_fips   TEXT NOT NULL,
+        other_name   TEXT,
+        other_state  TEXT,
+        returns      INTEGER,
+        individuals  INTEGER,
+        agi          BIGINT,
+        updated_at   TIMESTAMPTZ DEFAULT NOW(),
+        PRIMARY KEY (direction, fips, other_fips, year)
+      )
+    `
+    await sql`CREATE INDEX IF NOT EXISTS idx_county_migration_fips ON county_migration(fips, direction, year)`
+
     return NextResponse.json({ ok: true, message: 'Tables created successfully' })
   } catch (error) {
     console.error('Migration error:', error)

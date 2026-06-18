@@ -496,6 +496,27 @@ export default function MethodologyPage() {
             </div>
           </div>
 
+          {/* IRS SOI County Migration Flows */}
+          <div>
+            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+              5.9 · Migration Flows (IRS SOI)
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              {[
+                { label: 'Source', definition: 'IRS Statistics of Income (SOI) County-to-County Migration Data — the inflow and outflow files (countyinflow2223.csv / countyoutflow2223.csv) downloaded directly from irs.gov/pub/irs-soi (no key). Built from year-over-year address changes on individual tax returns; current vintage is filing years 2022→2023 (released 2025). Import script: scripts/import-soi-migration.ts (re-run annually).' },
+                { label: 'Geography', definition: 'County level. The Demographics panel maps the selected ZIP to its county (zip-county.ts) and shows that county\'s flows — so all ZIPs within the same county share one migration picture. Counterpart counties can be anywhere in the U.S. (the file names them); foreign and small "Other flows" suppression aggregates are excluded from the displayed origin/destination lists.' },
+                { label: 'Metrics', definition: 'A "return" (n1) is treated as a household. Households in / out = the IRS grand-total inflow / outflow for the county (US + foreign). Net = inbound − outbound. Avg AGI of movers = total AGI ÷ returns for that flow (AGI is reported in thousands of dollars). Top origin counties are the largest real county-to-county inflows, each with the average AGI of the households that moved from there.' },
+                { label: 'Limitations', definition: 'Only filers who moved between two consecutive tax years and filed in both are captured — non-filers, late filers, and within-county moves are excluded. The IRS suppresses very small flows (rolled into "Other flows" aggregates that are dropped here), so a county\'s top-origin list omits the long tail of tiny flows. Data lags ~2–3 years. Because it is county level, it cannot distinguish a fast-growing ZIP from a stable one within the same county.' },
+                { label: 'Scoring use', definition: 'Context/narrative tier only — displayed on the Demographics page, never a Site Scorer input. It answers "who is moving into this county, from where, at what income," not a per-ZIP score.' },
+              ].map(m => (
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
+                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+
         </div>
       </Section>
 
@@ -867,6 +888,10 @@ const LIMITATIONS = [
   {
     source: 'HUD USPS — Address Momentum',
     limitation: 'Counts addresses, not people or housing units — a single address node serving a gated community or mobile-home park is one record regardless of how many homes sit behind it (HUD now reports "drop counts" for these, but coverage is imperfect). "Active" is defined by recent mail collection, so seasonal/second homes and temporarily-vacant units shift the count. The data is released quarterly with a lag and is a licensed gov/nonprofit dataset (manual download, not an API). It is the freshest growth signal available but is shown as context only and must be validated against known-growth ZIPs before any consideration for scoring. Awaiting first data load as of this writing.',
+  },
+  {
+    source: 'IRS SOI — County Migration Flows',
+    limitation: 'Captures only filers who moved between two consecutive tax years and filed a return in both — non-filers, late filers, and within-county moves are excluded. The IRS suppresses small flows into "Other flows" aggregates, which are dropped here, so a county\'s top-origin list omits the long tail of tiny flows. A "return" is treated as a household. The data is county level (filing years 2022→2023, lagging ~2–3 years) and cannot distinguish a fast-growing ZIP from a stable one within the same county. Context/narrative tier only — never a Site Scorer input.',
   },
   {
     source: 'LEHD LODES — Commute Corridors',

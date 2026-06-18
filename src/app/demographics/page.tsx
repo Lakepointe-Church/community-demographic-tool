@@ -459,6 +459,29 @@ interface AddressMomentum {
   series?: { quarter: string; resActive: number }[]
 }
 
+// ── Types for Migration Flows (IRS SOI, Phase 4.6) ──────────────
+interface MigrationCounty {
+  fips: string
+  name: string
+  state: string | null
+  returns: number
+  individuals: number
+  avgAgi: number | null
+}
+interface MigrationData {
+  available: boolean
+  zip: string
+  county: string | null
+  year?: number
+  inboundHouseholds?: number | null
+  outboundHouseholds?: number | null
+  netHouseholds?: number | null
+  inboundAvgAgi?: number | null
+  outboundAvgAgi?: number | null
+  topOrigins?: MigrationCounty[]
+  topDestinations?: MigrationCounty[]
+}
+
 // ── Types for Home Values (Zillow ZHVI, Phase 4.7) ──────────────
 interface HomeValues {
   available: boolean
@@ -482,6 +505,7 @@ export default function DemographicsPage() {
   const [addressMomentum, setAddressMomentum] = useState<AddressMomentum | null>(null)
   const [giving, setGiving] = useState<GivingCapacity | null>(null)
   const [homeValues, setHomeValues] = useState<HomeValues | null>(null)
+  const [migration, setMigration] = useState<MigrationData | null>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -530,6 +554,14 @@ export default function DemographicsPage() {
     fetch(`/api/home-values?zip=${selectedZip}`)
       .then(r => r.json())
       .then(d => { if (!d.error) setHomeValues(d) })
+      .catch(() => {})
+  }, [selectedZip])
+
+  useEffect(() => {
+    setMigration(null)
+    fetch(`/api/migration?zip=${selectedZip}`)
+      .then(r => r.json())
+      .then(d => { if (!d.error) setMigration(d) })
       .catch(() => {})
   }, [selectedZip])
 
@@ -1373,6 +1405,103 @@ export default function DemographicsPage() {
               </div>
               <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
                 LEHD LODES8 · {commute.year} · intra-DFW resident worker flows · block→ZCTA · &quot;Net direction&quot; is the job-weighted bearing toward work
+              </div>
+            </Surface>
+          )}
+
+          {/* Migration Flows — IRS SOI county-to-county (Phase 4.6) */}
+          {migration?.available && migration.topOrigins && migration.topOrigins.length > 0 && (
+            <Surface style={{ marginBottom: '16px' }}>
+              <SectionHeader
+                eyebrow={`${migration.county ?? ''} County · Who's Moving In · IRS SOI TY2022→2023`}
+                title="Migration Flows"
+              />
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '16px' }}>
+                {/* Net household migration */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  {(() => {
+                    const net = migration.netHouseholds ?? 0
+                    const color = net > 0 ? '#2DD4BF' : net < 0 ? '#FF6B6B' : '#8A98AE'
+                    return (
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                        <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '16px', color, lineHeight: 1 }}>{net > 0 ? '+' : net < 0 ? '−' : ''}</span>
+                        <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color, lineHeight: 1 }}>
+                          {Math.abs(net).toLocaleString()}
+                        </span>
+                      </div>
+                    )
+                  })()}
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Net households / yr
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                    inbound − outbound returns
+                  </div>
+                </div>
+
+                {/* Households in */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#2DD4BF', lineHeight: 1 }}>
+                    {migration.inboundHouseholds?.toLocaleString() ?? '—'}
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Households in
+                  </div>
+                  {migration.inboundAvgAgi != null && (
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                      avg AGI ${Math.round(migration.inboundAvgAgi / 1000)}k
+                    </div>
+                  )}
+                </div>
+
+                {/* Households out */}
+                <div style={{ border: '1px solid #1e2b3c', borderRadius: '6px', padding: '16px' }}>
+                  <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '30px', color: '#FF6B6B', lineHeight: 1 }}>
+                    {migration.outboundHouseholds?.toLocaleString() ?? '—'}
+                  </div>
+                  <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#8A98AE', marginTop: '6px' }}>
+                    Households out
+                  </div>
+                  {migration.outboundAvgAgi != null && (
+                    <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#5a6478', marginTop: '4px' }}>
+                      avg AGI ${Math.round(migration.outboundAvgAgi / 1000)}k
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Top origin counties */}
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#8A98AE', marginBottom: '12px' }}>
+                Top Origin Counties · households (▸ = avg AGI of movers)
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                {(() => {
+                  const top = migration.topOrigins!.slice(0, 10)
+                  const maxRet = Math.max(...top.map(o => o.returns))
+                  return top.map(o => {
+                    const pct = maxRet > 0 ? (o.returns / maxRet) * 100 : 0
+                    return (
+                      <div key={o.fips} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '170px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' as const }}>
+                          {o.name} <span style={{ color: '#3d4a5c' }}>{o.state}</span>
+                        </div>
+                        <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
+                          <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'linear-gradient(90deg,#2DD4BF,#2DD4BF50)' }} />
+                        </div>
+                        <div style={{ width: '52px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#2DD4BF', fontWeight: 600 }}>
+                          {o.returns.toLocaleString()}
+                        </div>
+                        <div style={{ width: '52px', flexShrink: 0, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#E8B84B' }}>
+                          {o.avgAgi != null ? `▸$${Math.round(o.avgAgi / 1000)}k` : '—'}
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
+              </div>
+              <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', color: '#3d4a5c', marginTop: '12px' }}>
+                IRS SOI county-to-county migration · TY{migration.year != null ? `${migration.year - 1}→${migration.year}` : '2022→2023'} · county level (ZIP&apos;s county) · 1 return ≈ 1 household · AGI = adjusted gross income · context only, not scored
               </div>
             </Surface>
           )}
