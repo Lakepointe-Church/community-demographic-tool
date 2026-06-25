@@ -35,26 +35,26 @@ function CoverageNavInner() {
             href={withCoverage(href)}
             className={active ? '' : 'nav-link-item'}
             style={active ? {
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Gotham'",
               fontSize: '11px',
               letterSpacing: '0.1em',
               textTransform: 'uppercase' as const,
               textDecoration: 'none',
               whiteSpace: 'nowrap' as const,
-              color: '#E8B84B',
-              background: 'rgba(232,184,75,0.12)',
+              color: '#F04B28',
+              background: 'rgba(240,75,40,0.12)',
               padding: '5px 10px',
               borderRadius: '4px',
-              border: '1px solid rgba(232,184,75,0.2)',
+              border: '1px solid rgba(240,75,40,0.2)',
               transition: 'all 0.15s ease',
             } : {
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Gotham'",
               fontSize: '11px',
               letterSpacing: '0.1em',
               textTransform: 'uppercase' as const,
               textDecoration: 'none',
               whiteSpace: 'nowrap' as const,
-              color: '#8A98AE',
+              color: '#A89A88',
               padding: '5px 10px',
               transition: 'all 0.15s ease',
             }}
@@ -78,13 +78,13 @@ export default function CoverageNav() {
             href={href}
             className="nav-link-item"
             style={{
-              fontFamily: "'IBM Plex Mono', monospace",
+              fontFamily: "'Gotham'",
               fontSize: '11px',
               letterSpacing: '0.1em',
               textTransform: 'uppercase' as const,
               textDecoration: 'none',
               whiteSpace: 'nowrap' as const,
-              color: '#8A98AE',
+              color: '#A89A88',
               padding: '5px 10px',
             }}
           >

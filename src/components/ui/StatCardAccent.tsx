@@ -15,7 +15,7 @@ const ACCENTS = {
 export type Accent = keyof typeof ACCENTS
 
 // Accent-bar stat card: named `accent` drives a 2px top bar + glow; the value
-// renders white (#F0F2F7). Optional `tooltip` shows an info icon top-right.
+// renders white (#FFFFFF). Optional `tooltip` shows an info icon top-right.
 // Used by Overview / Compare / Demographics. (Family B = `StatCard` w/ colored value.)
 export function StatCardAccent({ label, value, sub, accent = 'gold', loading = false, tooltip }: {
   label: string

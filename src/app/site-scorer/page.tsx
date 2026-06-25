@@ -38,12 +38,12 @@ const WEIGHT_KEYS = ['yfi', 'wfi', 'ses', 'growth', 'saturation', 'enrollment', 
 // Signals leadership can toggle in/out of the score. Distance is included but
 // defaults OFF (straight-line to nearest existing campus; penalises nearness).
 const SIGNALS = [
-  { key: 'yfi',        label: 'YFI',        full: 'Young Family Index (YFI)',   color: '#4EAEFF' },
-  { key: 'wfi',        label: 'WFI',        full: 'Working Family Index (WFI)', color: '#2DD4BF' },
-  { key: 'ses',        label: 'SES',        full: 'SES Score',                  color: '#A78BFA' },
-  { key: 'growth',     label: 'Growth',     full: 'Population Growth',          color: '#FF6B6B' },
-  { key: 'saturation', label: 'Saturation', full: 'Church Saturation Opp.',     color: '#E8B84B' },
-  { key: 'enrollment', label: 'Enrollment', full: 'School Enrollment Growth',   color: '#2DD4BF' },
+  { key: 'yfi',        label: 'YFI',        full: 'Young Family Index (YFI)',   color: '#7AA3AA' },
+  { key: 'wfi',        label: 'WFI',        full: 'Working Family Index (WFI)', color: '#D4883A' },
+  { key: 'ses',        label: 'SES',        full: 'SES Score',                  color: '#7A9E8A' },
+  { key: 'growth',     label: 'Growth',     full: 'Population Growth',          color: '#C45A46' },
+  { key: 'saturation', label: 'Saturation', full: 'Church Saturation Opp.',     color: '#F04B28' },
+  { key: 'enrollment', label: 'Enrollment', full: 'School Enrollment Growth',   color: '#D4883A' },
   { key: 'distance',   label: 'Distance',   full: 'Distance from Campus',       color: '#FB923C' },
 ] as const
 
@@ -94,10 +94,10 @@ function topDrivers(z: ZipScore, eff: Weights): [string, string] {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 75) return '#E8B84B'
-  if (score >= 60) return '#4EAEFF'
-  if (score >= 45) return '#2DD4BF'
-  return '#8A98AE'
+  if (score >= 75) return '#F04B28'
+  if (score >= 60) return '#7AA3AA'
+  if (score >= 45) return '#D4883A'
+  return '#A89A88'
 }
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
@@ -178,59 +178,59 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
         <rect
           x={xDiv} y={MT}
           width={ML + CW - xDiv} height={yDiv - MT}
-          fill="rgba(232,184,75,0.06)"
+          fill="rgba(240,75,40,0.06)"
         />
 
         {/* Quadrant dividers */}
-        <line x1={xDiv} y1={MT - 4} x2={xDiv} y2={MT + CH} stroke="#232940" strokeWidth={1} strokeDasharray="4,3" />
-        <line x1={ML} y1={yDiv} x2={ML + CW} y2={yDiv} stroke="#232940" strokeWidth={1} strokeDasharray="4,3" />
+        <line x1={xDiv} y1={MT - 4} x2={xDiv} y2={MT + CH} stroke="#4A4A4A" strokeWidth={1} strokeDasharray="4,3" />
+        <line x1={ML} y1={yDiv} x2={ML + CW} y2={yDiv} stroke="#4A4A4A" strokeWidth={1} strokeDasharray="4,3" />
 
         {/* Quadrant labels */}
-        <text x={xDiv + 6} y={MT + 12} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="rgba(232,184,75,0.7)">
+        <text x={xDiv + 6} y={MT + 12} fontSize={8} fontFamily="'Gotham'" fill="rgba(240,75,40,0.7)">
           HIGH GROWTH · LOW SATURATION ▲
         </text>
-        <text x={ML + 6} y={MT + 12} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#6E7C92">
+        <text x={ML + 6} y={MT + 12} fontSize={8} fontFamily="'Gotham'" fill="#A08E7A">
           LOW GROWTH · LOW SAT.
         </text>
-        <text x={xDiv + 6} y={MT + CH - 4} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#6E7C92">
+        <text x={xDiv + 6} y={MT + CH - 4} fontSize={8} fontFamily="'Gotham'" fill="#A08E7A">
           HIGH GROWTH · HIGH SAT.
         </text>
-        <text x={ML + 6} y={MT + CH - 4} fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#6E7C92">
+        <text x={ML + 6} y={MT + CH - 4} fontSize={8} fontFamily="'Gotham'" fill="#A08E7A">
           LOW GROWTH · HIGH SAT.
         </text>
 
         {/* Y axis */}
-        <line x1={ML} y1={MT} x2={ML} y2={MT + CH} stroke="#1e2b3c" strokeWidth={1} />
+        <line x1={ML} y1={MT} x2={ML} y2={MT + CH} stroke="#424242" strokeWidth={1} />
         {yTicks.map(t => {
           const y = toY(t)
           return (
             <g key={t}>
-              <line x1={ML - 4} y1={y} x2={ML} y2={y} stroke="#232940" strokeWidth={1} />
-              <text x={ML - 7} y={y + 3} fontSize={9} fontFamily="'IBM Plex Mono',monospace" fill="#7A8699" textAnchor="end">{t}</text>
+              <line x1={ML - 4} y1={y} x2={ML} y2={y} stroke="#4A4A4A" strokeWidth={1} />
+              <text x={ML - 7} y={y + 3} fontSize={9} fontFamily="'Gotham'" fill="#B4A490" textAnchor="end">{t}</text>
             </g>
           )
         })}
         <text
           transform={`translate(11,${MT + CH / 2}) rotate(-90)`}
-          fontSize={9} fontFamily="'IBM Plex Mono',monospace" fill="#8A98AE" textAnchor="middle"
+          fontSize={9} fontFamily="'Gotham'" fill="#A89A88" textAnchor="middle"
         >Churches / 10K</text>
         <text
           transform={`translate(11,${MT + 10})`}
-          fontSize={8} fontFamily="'IBM Plex Mono',monospace" fill="#7A8699" textAnchor="middle"
+          fontSize={8} fontFamily="'Gotham'" fill="#B4A490" textAnchor="middle"
         >← opportunity</text>
 
         {/* X axis */}
-        <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH} stroke="#1e2b3c" strokeWidth={1} />
+        <line x1={ML} y1={MT + CH} x2={ML + CW} y2={MT + CH} stroke="#424242" strokeWidth={1} />
         {xTicks.map(t => {
           const x = toX(t)
           return (
             <g key={t}>
-              <line x1={x} y1={MT + CH} x2={x} y2={MT + CH + 4} stroke="#232940" strokeWidth={1} />
-              <text x={x} y={MT + CH + 14} fontSize={9} fontFamily="'IBM Plex Mono',monospace" fill="#7A8699" textAnchor="middle">{t}%</text>
+              <line x1={x} y1={MT + CH} x2={x} y2={MT + CH + 4} stroke="#4A4A4A" strokeWidth={1} />
+              <text x={x} y={MT + CH + 14} fontSize={9} fontFamily="'Gotham'" fill="#B4A490" textAnchor="middle">{t}%</text>
             </g>
           )
         })}
-        <text x={ML + CW / 2} y={VH - 4} fontSize={9} fontFamily="'IBM Plex Mono',monospace" fill="#8A98AE" textAnchor="middle">
+        <text x={ML + CW / 2} y={VH - 4} fontSize={9} fontFamily="'Gotham'" fill="#A89A88" textAnchor="middle">
           Population Growth (%)
         </text>
 
@@ -249,7 +249,7 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
               r={isH ? 5.5 : isCampus ? 4.5 : 3.5}
               fill={color}
               fillOpacity={isH ? 1 : 0.65}
-              stroke={isCampus ? '#E8B84B' : isH ? color : 'none'}
+              stroke={isCampus ? '#F04B28' : isH ? color : 'none'}
               strokeWidth={isCampus ? 1.5 : isH ? 1.5 : 0}
               style={{ cursor: 'pointer' }}
               onMouseEnter={() => onHover(d)}
@@ -265,46 +265,46 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
           left: Math.min(tipPos.x + 14, 480),
           top: Math.max(tipPos.y - 80, 0),
           pointerEvents: 'none',
-          background: '#13161f',
+          background: '#3C3C3C',
           border: `1px solid ${scoreColor(computeFitScore(hovered, eff))}40`,
           borderRadius: 6,
           padding: '10px 14px',
-          fontFamily: "'IBM Plex Mono',monospace",
+          fontFamily: "'Gotham'",
           fontSize: 11,
           minWidth: 180,
           zIndex: 10,
           boxShadow: '0 4px 16px rgba(0,0,0,0.5)',
         }}>
-          <div style={{ color: '#E8B84B', fontWeight: 600, marginBottom: 6 }}>
+          <div style={{ color: '#F04B28', fontWeight: 600, marginBottom: 6 }}>
             {hovered.zip} · {hovered.label}
             {EXISTING_CAMPUS_ZIPS.has(hovered.zip) && (
-              <span style={{ marginLeft: 6, fontSize: 9, color: '#E8B84B', opacity: 0.7, border: '1px solid rgba(232,184,75,0.4)', borderRadius: 3, padding: '1px 4px' }}>
+              <span style={{ marginLeft: 6, fontSize: 9, color: '#F04B28', opacity: 0.7, border: '1px solid rgba(240,75,40,0.4)', borderRadius: 3, padding: '1px 4px' }}>
                 {CAMPUS_LABEL[hovered.zip]}
               </span>
             )}
           </div>
-          <div style={{ color: '#C8D4E4', marginBottom: 3 }}>
+          <div style={{ color: '#E8DDD0', marginBottom: 3 }}>
             Fit Score: <span style={{ color: scoreColor(computeFitScore(hovered, eff)) }}>{computeFitScore(hovered, eff)}</span>
           </div>
-          <div style={{ color: '#8A98AE' }}>Growth: {hovered.populationGrowth != null ? `${hovered.populationGrowth.toFixed(1)}%` : '—'}</div>
-          <div style={{ color: '#8A98AE' }}>Churches/10K: {hovered.churchesPer10k.toFixed(1)}</div>
-          <div style={{ color: '#8A98AE' }}>YFI: {hovered.yfi} · WFI: {hovered.wfi}</div>
-          <div style={{ color: '#8A98AE' }}>SES: {hovered.sesLabel}</div>
-          <div style={{ color: '#8A98AE' }}>Dist to campus: {hovered.distanceToCampusMi != null ? `${hovered.distanceToCampusMi} mi` : '—'}</div>
+          <div style={{ color: '#A89A88' }}>Growth: {hovered.populationGrowth != null ? `${hovered.populationGrowth.toFixed(1)}%` : '—'}</div>
+          <div style={{ color: '#A89A88' }}>Churches/10K: {hovered.churchesPer10k.toFixed(1)}</div>
+          <div style={{ color: '#A89A88' }}>YFI: {hovered.yfi} · WFI: {hovered.wfi}</div>
+          <div style={{ color: '#A89A88' }}>SES: {hovered.sesLabel}</div>
+          <div style={{ color: '#A89A88' }}>Dist to campus: {hovered.distanceToCampusMi != null ? `${hovered.distanceToCampusMi} mi` : '—'}</div>
         </div>
       )}
 
       {/* Legend */}
-      <div style={{ display: 'flex', gap: 16, marginTop: 10, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', flexWrap: 'wrap' }}>
-        {[['#E8B84B', '≥ 75'], ['#4EAEFF', '60–74'], ['#2DD4BF', '45–59'], ['#8A98AE', '< 45']].map(([c, l]) => (
+      <div style={{ display: 'flex', gap: 16, marginTop: 10, fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490', flexWrap: 'wrap' }}>
+        {[['#F04B28', '≥ 75'], ['#7AA3AA', '60–74'], ['#D4883A', '45–59'], ['#A89A88', '< 45']].map(([c, l]) => (
           <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <span style={{ width: 8, height: 8, borderRadius: '50%', background: c, display: 'inline-block' }} />
             Fit Score {l}
           </span>
         ))}
-        <span style={{ marginLeft: 8, color: 'rgba(232,184,75,0.5)' }}>■ Target quadrant</span>
+        <span style={{ marginLeft: 8, color: 'rgba(240,75,40,0.5)' }}>■ Target quadrant</span>
         <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(232,184,75,0.6)', border: '1.5px solid #E8B84B', display: 'inline-block' }} />
+          <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'rgba(240,75,40,0.6)', border: '1.5px solid #F04B28', display: 'inline-block' }} />
           Existing campus
         </span>
       </div>
@@ -321,7 +321,7 @@ function WeightSlider({
 }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-      <div style={{ width: 180, fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#A8B4C5', flexShrink: 0 }}>
+      <div style={{ width: 180, fontFamily: "'Gotham'", fontSize: 11, color: '#C8BCA8', flexShrink: 0 }}>
         {label}
       </div>
       <input
@@ -329,7 +329,7 @@ function WeightSlider({
         onChange={e => onChange(Number(e.target.value))}
         style={{ flex: 1, accentColor: color, cursor: 'pointer' }}
       />
-      <div style={{ width: 44, textAlign: 'right', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color, fontWeight: 600, flexShrink: 0 }}>
+      <div style={{ width: 44, textAlign: 'right', fontFamily: "'Gotham'", fontSize: 11, color, fontWeight: 600, flexShrink: 0 }}>
         {effPct.toFixed(0)}%
       </div>
     </div>
@@ -475,24 +475,24 @@ export default function SiteScorerPage() {
   const thStyle = (key: SortKey): React.CSSProperties => ({
     textAlign: ['fitScore', 'population', 'yfi', 'wfi', 'sesScore', 'populationGrowth', 'churchesPer10k', 'enrollmentGrowthScore', 'distanceToCampusMi'].includes(key) ? 'right' : 'left',
     padding: '6px 10px 10px',
-    color: sortKey === key ? '#E8B84B' : '#7A8699',
+    color: sortKey === key ? '#F04B28' : '#B4A490',
     fontWeight: 400, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase' as const,
-    borderBottom: '1px solid #1e2b3c', cursor: 'pointer', whiteSpace: 'nowrap' as const,
-    fontFamily: "'IBM Plex Mono',monospace",
+    borderBottom: '1px solid #424242', cursor: 'pointer', whiteSpace: 'nowrap' as const,
+    fontFamily: "'Gotham'",
   })
 
   const SortArrow = ({ k }: { k: SortKey }) =>
     sortKey === k ? <span style={{ marginLeft: 4 }}>{sortAsc ? '▲' : '▼'}</span> : null
 
   return (
-    <div style={{ minHeight: '100vh', background: '#0d0f14', color: '#C8D4E4' }}>
+    <div style={{ minHeight: '100vh', background: '#323232', color: '#E8DDD0' }}>
       <style>{`
         body { margin: 0; }
         @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap');
         input[type=range] { height: 4px; }
         .ss-row:hover { background: rgba(255,255,255,0.03) !important; }
-        .ss-campus-row { background: rgba(232,184,75,0.04) !important; }
-        .ss-campus-row:hover { background: rgba(232,184,75,0.08) !important; }
+        .ss-campus-row { background: rgba(240,75,40,0.04) !important; }
+        .ss-campus-row:hover { background: rgba(240,75,40,0.08) !important; }
       `}</style>
 
       <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
@@ -500,10 +500,10 @@ export default function SiteScorerPage() {
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
           <div>
-            <div style={{ fontSize: 11, letterSpacing: '0.12em', color: '#E8B84B', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 6, textTransform: 'uppercase' }}>
+            <div style={{ fontSize: 11, letterSpacing: '0.12em', color: '#F04B28', fontFamily: "'Gotham'", marginBottom: 6, textTransform: 'uppercase' }}>
               Lakepointe · Campus Opportunity
             </div>
-            <h1 style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 48, margin: 0, color: '#C8D4E4', letterSpacing: '0.02em' }}>
+            <h1 style={{ fontFamily: "'Gotham',sans-serif", fontSize: 48, margin: 0, color: '#E8DDD0', letterSpacing: '0.02em' }}>
               Site Scorer
             </h1>
           </div>
@@ -511,7 +511,7 @@ export default function SiteScorerPage() {
             <select
               value={coverage}
               onChange={e => handleCoverageChange(e.target.value as 'core' | 'all')}
-              style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', background: '#13161f', color: '#C8D4E4', border: '1px solid #232940', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', outline: 'none', appearance: 'none' as const, WebkitAppearance: 'none' as const }}
+              style={{ fontFamily: "'Gotham'", fontSize: '11px', background: '#3C3C3C', color: '#E8DDD0', border: '1px solid #4A4A4A', borderRadius: '4px', padding: '6px 10px', cursor: 'pointer', outline: 'none', appearance: 'none' as const, WebkitAppearance: 'none' as const }}
             >
               <option value="core">Core MSA · 11 counties</option>
               <option value="all">All ZIPs · Full coverage</option>
@@ -519,31 +519,31 @@ export default function SiteScorerPage() {
             <button
               onClick={() => setRefreshKey(k => k + 1)}
               title="Reload data from database"
-              style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', background: 'transparent', border: '1px solid #232940', borderRadius: '4px', color: '#8A98AE', padding: '6px 12px', cursor: 'pointer' }}
+              style={{ fontFamily: "'Gotham'", fontSize: '11px', background: 'transparent', border: '1px solid #4A4A4A', borderRadius: '4px', color: '#A89A88', padding: '6px 12px', cursor: 'pointer' }}
             >↺ Reload</button>
           </div>
         </div>
 
         {error && (
-          <div style={{ background: 'rgba(255,107,107,0.1)', border: '1px solid rgba(255,107,107,0.3)', borderRadius: 8, padding: '16px 20px', marginBottom: 24, color: '#FF6B6B', fontFamily: "'IBM Plex Mono',monospace", fontSize: 13 }}>
+          <div style={{ background: 'rgba(196,90,70,0.1)', border: '1px solid rgba(196,90,70,0.3)', borderRadius: 8, padding: '16px 20px', marginBottom: 24, color: '#C45A46', fontFamily: "'Gotham'", fontSize: 13 }}>
             {error}
           </div>
         )}
 
         {loading && (
-          <div style={{ color: '#7A8699', fontFamily: "'IBM Plex Mono',monospace", fontSize: 13, padding: '40px 0' }}>Loading…</div>
+          <div style={{ color: '#B4A490', fontFamily: "'Gotham'", fontSize: 13, padding: '40px 0' }}>Loading…</div>
         )}
 
         {!loading && !error && (
           <>
             {/* Weight controls */}
-            <div style={{ background: '#13161f', border: '1px solid #232940', borderRadius: 10, padding: '24px 28px', marginBottom: 32 }}>
+            <div style={{ background: '#3C3C3C', border: '1px solid #4A4A4A', borderRadius: 10, padding: '24px 28px', marginBottom: 32 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
                 <div>
-                  <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 4 }}>
+                  <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#A89A88', fontFamily: "'Gotham'", marginBottom: 4 }}>
                     Scoring Weights
                   </div>
-                  <div style={{ fontSize: 11, color: '#7A8699', fontFamily: "'IBM Plex Mono',monospace" }}>
+                  <div style={{ fontSize: 11, color: '#B4A490', fontFamily: "'Gotham'" }}>
                     Toggle which signals count, weight them with the sliders · share scenario via Copy Link
                   </div>
                 </div>
@@ -554,33 +554,33 @@ export default function SiteScorerPage() {
                       key={name}
                       onClick={() => { setWeights(PRESETS[name]); setEnabled(DEFAULT_ENABLED) }}
                       style={{
-                        fontFamily: "'IBM Plex Mono',monospace", fontSize: 10,
+                        fontFamily: "'Gotham'", fontSize: 10,
                         background: isDefaultEnabled && JSON.stringify(weights) === JSON.stringify(PRESETS[name])
-                          ? 'rgba(232,184,75,0.15)' : 'transparent',
+                          ? 'rgba(240,75,40,0.15)' : 'transparent',
                         border: isDefaultEnabled && JSON.stringify(weights) === JSON.stringify(PRESETS[name])
-                          ? '1px solid rgba(232,184,75,0.5)' : '1px solid #232940',
-                        borderRadius: 4, color: '#A8B4C5', padding: '5px 10px',
+                          ? '1px solid rgba(240,75,40,0.5)' : '1px solid #4A4A4A',
+                        borderRadius: 4, color: '#C8BCA8', padding: '5px 10px',
                         cursor: 'pointer', letterSpacing: '0.06em',
                       }}
                     >{name}</button>
                   ))}
                   <button
                     onClick={handleNormalize}
-                    style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'rgba(232,184,75,0.08)', border: '1px solid rgba(232,184,75,0.3)', borderRadius: 4, color: '#E8B84B', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                    style={{ fontFamily: "'Gotham'", fontSize: 10, background: 'rgba(240,75,40,0.08)', border: '1px solid rgba(240,75,40,0.3)', borderRadius: 4, color: '#F04B28', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                   >Normalize</button>
                   <button
                     onClick={() => { setWeights(DEFAULT_WEIGHTS); setEnabled(DEFAULT_ENABLED) }}
-                    style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'transparent', border: '1px solid #232940', borderRadius: 4, color: '#8A98AE', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                    style={{ fontFamily: "'Gotham'", fontSize: 10, background: 'transparent', border: '1px solid #4A4A4A', borderRadius: 4, color: '#A89A88', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                   >Reset</button>
                   <button
                     onClick={handleCopyLink}
-                    style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: copied ? 'rgba(45,212,191,0.1)' : 'transparent', border: `1px solid ${copied ? 'rgba(45,212,191,0.4)' : '#232940'}`, borderRadius: 4, color: copied ? '#2DD4BF' : '#8A98AE', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.06em' }}
+                    style={{ fontFamily: "'Gotham'", fontSize: 10, background: copied ? 'rgba(212,136,58,0.1)' : 'transparent', border: `1px solid ${copied ? 'rgba(212,136,58,0.4)' : '#4A4A4A'}`, borderRadius: 4, color: copied ? '#D4883A' : '#A89A88', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.06em' }}
                   >{copied ? '✓ Copied!' : '⎘ Copy Link'}</button>
                 </div>
               </div>
               {/* Signal toggles — pick which signals are in the score */}
               <div style={{ marginBottom: 18 }}>
-                <div style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7A8699', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 9 }}>
+                <div style={{ fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#B4A490', fontFamily: "'Gotham'", marginBottom: 9 }}>
                   Signals in score · click to include / exclude
                 </div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
@@ -593,21 +593,21 @@ export default function SiteScorerPage() {
                         title={on ? `${s.full} — included (${eff[s.key].toFixed(0)}% of score)` : `${s.full} — excluded from score`}
                         style={{
                           display: 'flex', alignItems: 'center', gap: 7,
-                          fontFamily: "'IBM Plex Mono',monospace", fontSize: 11,
+                          fontFamily: "'Gotham'", fontSize: 11,
                           padding: '6px 12px', borderRadius: 20, cursor: 'pointer',
                           background: on ? `${s.color}1A` : 'transparent',
-                          border: `1px solid ${on ? s.color + '80' : '#232940'}`,
-                          color: on ? '#E8E8EC' : '#7A8699',
+                          border: `1px solid ${on ? s.color + '80' : '#4A4A4A'}`,
+                          color: on ? '#E8E8EC' : '#B4A490',
                           transition: 'all 0.12s',
                         }}
                       >
                         <span style={{
                           width: 9, height: 9, borderRadius: '50%', flexShrink: 0,
                           background: on ? s.color : 'transparent',
-                          border: `1.5px solid ${on ? s.color : '#6E7C92'}`,
+                          border: `1.5px solid ${on ? s.color : '#A08E7A'}`,
                         }} />
                         {s.label}
-                        <span style={{ color: on ? s.color : '#6E7C92', fontWeight: 600 }}>
+                        <span style={{ color: on ? s.color : '#A08E7A', fontWeight: 600 }}>
                           {on ? `${eff[s.key].toFixed(0)}%` : 'off'}
                         </span>
                       </button>
@@ -628,8 +628,8 @@ export default function SiteScorerPage() {
                   />
                 ))}
               </div>
-              <div style={{ marginTop: 16, fontSize: 10, color: '#7A8699', fontFamily: "'IBM Plex Mono',monospace" }}>
-                Church Saturation Opportunity = inverse of churches/10K. School Enrollment Growth = TEA PEIMS county CAGR (0 when not loaded). <span style={{ color: '#FB923C' }}>Distance</span> = straight-line miles to the nearest existing campus (farther = more open territory); off by default. See <a href="/methodology#site-scorer" style={{ color: '#7A8699', textDecoration: 'underline' }}>/methodology</a>.
+              <div style={{ marginTop: 16, fontSize: 10, color: '#B4A490', fontFamily: "'Gotham'" }}>
+                Church Saturation Opportunity = inverse of churches/10K. School Enrollment Growth = TEA PEIMS county CAGR (0 when not loaded). <span style={{ color: '#FB923C' }}>Distance</span> = straight-line miles to the nearest existing campus (farther = more open territory); off by default. See <a href="/methodology#site-scorer" style={{ color: '#B4A490', textDecoration: 'underline' }}>/methodology</a>.
               </div>
             </div>
 
@@ -637,16 +637,16 @@ export default function SiteScorerPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 24, marginBottom: 32, alignItems: 'start' }}>
 
               {/* Scatter chart */}
-              <div style={{ background: '#13161f', border: '1px solid #232940', borderRadius: 10, padding: '24px 28px' }}>
-                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 16 }}>
+              <div style={{ background: '#3C3C3C', border: '1px solid #4A4A4A', borderRadius: 10, padding: '24px 28px' }}>
+                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#A89A88', fontFamily: "'Gotham'", marginBottom: 16 }}>
                   Opportunity Quadrant · Growth vs. Church Saturation
                 </div>
                 <ScatterChart data={data} eff={eff} onHover={setHovered} hovered={hovered} />
               </div>
 
               {/* Top 10 */}
-              <div style={{ background: '#13161f', border: '1px solid #232940', borderRadius: 10, padding: '24px 24px' }}>
-                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace", marginBottom: 16 }}>
+              <div style={{ background: '#3C3C3C', border: '1px solid #4A4A4A', borderRadius: 10, padding: '24px 24px' }}>
+                <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#A89A88', fontFamily: "'Gotham'", marginBottom: 16 }}>
                   Top 10 · Fit Score
                 </div>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -656,28 +656,28 @@ export default function SiteScorerPage() {
                     const [d1, d2] = topDrivers(z, eff)
                     return (
                       <div key={z.zip} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < 9 ? '1px solid #1a1f2e' : 'none' }}>
-                        <div style={{ width: 20, fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699', textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ width: 20, fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490', textAlign: 'right', flexShrink: 0 }}>
                           #{i + 1}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, color: '#E8B84B', marginBottom: 1 }}>
+                          <div style={{ fontFamily: "'Gotham'", fontSize: 11, color: '#F04B28', marginBottom: 1 }}>
                             {z.zip}
                             {EXISTING_CAMPUS_ZIPS.has(z.zip) && (
-                              <span style={{ marginLeft: 5, fontSize: 9, color: 'rgba(232,184,75,0.6)', border: '1px solid rgba(232,184,75,0.3)', borderRadius: 3, padding: '1px 3px' }}>
+                              <span style={{ marginLeft: 5, fontSize: 9, color: 'rgba(240,75,40,0.6)', border: '1px solid rgba(240,75,40,0.3)', borderRadius: 3, padding: '1px 3px' }}>
                                 {CAMPUS_LABEL[z.zip]}
                               </span>
                             )}
                           </div>
-                          <div style={{ fontFamily: "'IBM Plex Sans',sans-serif", fontSize: 10, color: '#8A98AE', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{z.label}</div>
-                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#6E7C92', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <div style={{ fontFamily: "'Gotham',sans-serif", fontSize: 10, color: '#A89A88', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{z.label}</div>
+                          <div style={{ fontFamily: "'Gotham'", fontSize: 9, color: '#A08E7A', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                             {d1} + {d2}
                           </div>
                         </div>
                         <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                          <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color, lineHeight: 1 }}>
+                          <div style={{ fontFamily: "'Gotham',sans-serif", fontSize: 22, color, lineHeight: 1 }}>
                             {z.fitScore}
                           </div>
-                          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 9, color: '#7A8699', marginTop: 2 }}>
+                          <div style={{ fontFamily: "'Gotham'", fontSize: 9, color: '#B4A490', marginTop: 2 }}>
                             top {pct}%
                           </div>
                         </div>
@@ -689,24 +689,24 @@ export default function SiteScorerPage() {
             </div>
 
             {/* Full ranked table */}
-            <div style={{ background: '#13161f', border: '1px solid #232940', borderRadius: 10, padding: '24px 28px' }}>
+            <div style={{ background: '#3C3C3C', border: '1px solid #4A4A4A', borderRadius: 10, padding: '24px 28px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
                 <div>
-                  <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace" }}>
+                  <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#A89A88', fontFamily: "'Gotham'" }}>
                     All ZIPs · Ranked by Fit Score
                   </div>
-                  <div style={{ fontSize: 10, color: '#6E7C92', fontFamily: "'IBM Plex Mono',monospace", marginTop: 3 }}>
+                  <div style={{ fontSize: 10, color: '#A08E7A', fontFamily: "'Gotham'", marginTop: 3 }}>
                     {totalZips} ZIPs · gold rows = existing Lakepointe campuses
                   </div>
                 </div>
                 <button
                   onClick={handleExport}
-                  style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, background: 'transparent', border: '1px solid #232940', borderRadius: 4, color: '#8A98AE', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
+                  style={{ fontFamily: "'Gotham'", fontSize: 10, background: 'transparent', border: '1px solid #4A4A4A', borderRadius: 4, color: '#A89A88', padding: '5px 12px', cursor: 'pointer', letterSpacing: '0.08em', textTransform: 'uppercase' }}
                 >↓ CSV</button>
               </div>
 
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'Gotham'", fontSize: 11 }}>
                   <thead>
                     <tr>
                       <th style={{ ...thStyle('fitScore'), textAlign: 'center' }} onClick={() => handleSort('fitScore')}>Rank</th>
@@ -735,50 +735,50 @@ export default function SiteScorerPage() {
                           className={isCampus ? 'ss-campus-row' : 'ss-row'}
                           style={{
                             borderBottom: '1px solid #1a1f2e',
-                            borderLeft: isCampus ? '2px solid rgba(232,184,75,0.4)' : '2px solid transparent',
+                            borderLeft: isCampus ? '2px solid rgba(240,75,40,0.4)' : '2px solid transparent',
                           }}
                           onMouseEnter={() => setHovered(z)}
                           onMouseLeave={() => setHovered(null)}
                         >
-                          <td style={{ padding: '7px 10px', color: '#7A8699', textAlign: 'center' }}>{i + 1}</td>
-                          <td style={{ padding: '7px 10px', color: '#E8B84B' }}>
+                          <td style={{ padding: '7px 10px', color: '#B4A490', textAlign: 'center' }}>{i + 1}</td>
+                          <td style={{ padding: '7px 10px', color: '#F04B28' }}>
                             {z.zip}
                             {isCampus && (
-                              <span style={{ marginLeft: 5, fontSize: 9, color: 'rgba(232,184,75,0.6)', border: '1px solid rgba(232,184,75,0.25)', borderRadius: 3, padding: '1px 3px' }}>
+                              <span style={{ marginLeft: 5, fontSize: 9, color: 'rgba(240,75,40,0.6)', border: '1px solid rgba(240,75,40,0.25)', borderRadius: 3, padding: '1px 3px' }}>
                                 {CAMPUS_LABEL[z.zip]}
                               </span>
                             )}
                           </td>
-                          <td style={{ padding: '7px 10px', color: '#A8B4C5', maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{z.label}</td>
+                          <td style={{ padding: '7px 10px', color: '#C8BCA8', maxWidth: 200, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{z.label}</td>
                           <td style={{ padding: '7px 10px', textAlign: 'right' }}>
                             <span style={{ color, fontWeight: 600, fontSize: 13 }}>{z.fitScore}</span>
                           </td>
-                          <td style={{ padding: '7px 10px', color: '#7A8699', fontSize: 10 }}>
+                          <td style={{ padding: '7px 10px', color: '#B4A490', fontSize: 10 }}>
                             top {pct}%
-                            <span style={{ color: '#6E7C92', marginLeft: 3 }}>of {totalZips}</span>
+                            <span style={{ color: '#A08E7A', marginLeft: 3 }}>of {totalZips}</span>
                           </td>
                           <td
-                            style={{ padding: '7px 10px', textAlign: 'right', color: (z.populationGrowth ?? 0) > 0 ? '#2DD4BF' : '#FF6B6B' }}
+                            style={{ padding: '7px 10px', textAlign: 'right', color: (z.populationGrowth ?? 0) > 0 ? '#D4883A' : '#C45A46' }}
                             title={z.populationGrowth == null && BOUNDARY_CHANGED.has(z.zip) ? 'ZCTA boundary changed 2020→2023 — growth comparison invalid' : undefined}
                           >
                             {z.populationGrowth != null ? `${z.populationGrowth.toFixed(1)}%` : '—'}
                           </td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#8A98AE' }}>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#A89A88' }}>
                             {z.churchesPer10k.toFixed(1)}
                           </td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#A78BFA' }}>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#7A9E8A' }}>
                             {z.sesScore.toFixed(0)}
-                            <span style={{ fontSize: 9, color: '#7A8699', marginLeft: 4 }}>{z.sesLabel.replace(' Income', '').replace(' Middle', 'M').replace('Upper', 'U')}</span>
+                            <span style={{ fontSize: 9, color: '#B4A490', marginLeft: 4 }}>{z.sesLabel.replace(' Income', '').replace(' Middle', 'M').replace('Upper', 'U')}</span>
                           </td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#4EAEFF' }}>{z.yfi}</td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#2DD4BF' }}>{z.wfi}</td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.enrollmentGrowthScore > 0 ? '#2DD4BF' : '#6E7C92' }}>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#7AA3AA' }}>{z.yfi}</td>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#D4883A' }}>{z.wfi}</td>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.enrollmentGrowthScore > 0 ? '#D4883A' : '#A08E7A' }}>
                             {z.enrollmentGrowthScore > 0 ? z.enrollmentGrowthScore : '—'}
                           </td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.distanceToCampusMi != null ? '#FB923C' : '#6E7C92' }}>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: z.distanceToCampusMi != null ? '#FB923C' : '#A08E7A' }}>
                             {z.distanceToCampusMi != null ? z.distanceToCampusMi.toFixed(1) : '—'}
                           </td>
-                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#7A8699' }}>{z.population.toLocaleString()}</td>
+                          <td style={{ padding: '7px 10px', textAlign: 'right', color: '#B4A490' }}>{z.population.toLocaleString()}</td>
                         </tr>
                       )
                     })}
@@ -789,7 +789,7 @@ export default function SiteScorerPage() {
               {sorted.length > 50 && (
                 <button
                   onClick={() => setShowAll(v => !v)}
-                  style={{ marginTop: 14, background: 'transparent', border: '1px solid #232940', borderRadius: 6, color: '#8A98AE', fontFamily: "'IBM Plex Mono',monospace", fontSize: 11, padding: '7px 16px', cursor: 'pointer' }}
+                  style={{ marginTop: 14, background: 'transparent', border: '1px solid #4A4A4A', borderRadius: 6, color: '#A89A88', fontFamily: "'Gotham'", fontSize: 11, padding: '7px 16px', cursor: 'pointer' }}
                 >
                   {showAll ? '▲ Show fewer' : `Show all ${sorted.length} ZIPs ▼`}
                 </button>
@@ -797,19 +797,19 @@ export default function SiteScorerPage() {
             </div>
 
             {/* Footer */}
-            <div style={{ marginTop: 32, padding: '16px 0', borderTop: '1px solid #1e2b3c', display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699' }}>
+            <div style={{ marginTop: 32, padding: '16px 0', borderTop: '1px solid #424242', display: 'flex', gap: 24, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490' }}>
                 Church saturation: IRS BMF Christian orgs (NTEE X20/X21/X22) · Updated monthly
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699' }}>
+              <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490' }}>
                 BMF undercounts congregations — use index for relative comparison only
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#7A8699' }}>
+              <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490' }}>
                 * ZCTA boundaries approximate USPS ZIP codes
               </span>
               <a
                 href="/admin/decisions"
-                style={{ marginLeft: 'auto', fontFamily: "'IBM Plex Mono',monospace", fontSize: 10, color: '#E8B84B', textDecoration: 'none', border: '1px solid rgba(232,184,75,0.3)', borderRadius: 4, padding: '4px 10px', opacity: 0.8 }}
+                style={{ marginLeft: 'auto', fontFamily: "'Gotham'", fontSize: 10, color: '#F04B28', textDecoration: 'none', border: '1px solid rgba(240,75,40,0.3)', borderRadius: 4, padding: '4px 10px', opacity: 0.8 }}
               >📋 Log a site decision →</a>
             </div>
           </>

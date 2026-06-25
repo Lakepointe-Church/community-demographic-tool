@@ -1,39 +1,103 @@
+@font-face {
+  font-family: "Gotham";
+  src: url("/fonts/Gotham-Light.woff2") format("woff2");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gotham";
+  src: url("/fonts/Gotham-Book.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gotham";
+  src: url("/fonts/Gotham-BookItalic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gotham";
+  src: url("/fonts/Gotham-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gotham";
+  src: url("/fonts/Gotham-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gotham";
+  src: url("/fonts/Gotham-BoldItalic.woff2") format("woff2");
+  font-weight: 700;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Gotham";
+  src: url("/fonts/Gotham-Black.woff2") format("woff2");
+  font-weight: 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 @import "tailwindcss";
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --border:    #232940;
-  --border-sub: #1e2b3c;
-  --text-2:    #A8B4C5;
-  --text-3:    #8A98AE;
-  --text-muted: #5a6478;
+  --border:     #4A4A4A;
+  --border-sub: #424242;
+  --text-2:     #C8BCA8;
+  --text-3:     #A89A88;
+  --text-muted: #9A8C7A;
 }
 
 body {
-  background: #0d0f14;
-  color: #F0F2F7;
-  font-family: 'IBM Plex Sans', -apple-system, sans-serif;
+  background: #323232;
+  color: #FFFFFF;
+  font-family: 'Gotham', 'Futura', 'Avenir', 'Century Gothic', 'Helvetica Neue', Helvetica, Calibri, system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.6;
   min-height: 100vh;
 }
 
+/* Subtle diagonal angle motif — brand texture replacing dot-grid */
 body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: radial-gradient(circle, rgba(232,184,75,0.09) 1px, transparent 1px);
-  background-size: 32px 32px;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 60%,
+    rgba(240, 75, 40, 0.035) 60%,
+    rgba(240, 75, 40, 0.035) 75%,
+    transparent 75%
+  );
   pointer-events: none;
   z-index: 0;
 }
 
+/* Orange radial glow at top */
 body::after {
   content: '';
   position: fixed;
   inset: 0;
-  background: radial-gradient(ellipse at 50% 0%, rgba(232,184,75,0.08) 0%, transparent 65%);
+  background: radial-gradient(ellipse at 50% 0%, rgba(240,75,40,0.07) 0%, transparent 65%);
   pointer-events: none;
   z-index: 0;
 }
@@ -54,6 +118,6 @@ body::after {
 .fade-up-4 { animation: fadeUp 0.5s 0.24s ease forwards; opacity: 0; }
 
 .nav-link-item { transition: color 0.15s ease; }
-.nav-link-item:hover { color: #C8D4E4 !important; }
+.nav-link-item:hover { color: #E8DDD0 !important; }
 
-.tbl-row:hover td { background: rgba(78,174,255,0.06) !important; }
+.tbl-row:hover td { background: rgba(122,163,170,0.07) !important; }

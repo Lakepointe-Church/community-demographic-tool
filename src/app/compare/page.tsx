@@ -36,15 +36,15 @@ function indexLabel(score: number): string {
   return 'Low'
 }
 
-const INCOME_COLORS  = ['#8A98AE', '#FF6B6B', '#4EAEFF', '#2DD4BF', '#A78BFA', '#E8B84B']
+const INCOME_COLORS  = ['#A89A88', '#C45A46', '#7AA3AA', '#D4883A', '#7A9E8A', '#F04B28']
 
 // ── Race Donut ───────────────────────────────────────────────────
 const RACE_SEGS = [
-  { key: 'white'    as const, label: 'White',    color: '#4EAEFF' },
-  { key: 'hispanic' as const, label: 'Hispanic', color: '#FF6B6B' },
-  { key: 'black'    as const, label: 'Black',    color: '#A78BFA' },
-  { key: 'asian'    as const, label: 'Asian',    color: '#2DD4BF' },
-  { key: 'other'    as const, label: 'Other',    color: '#E8B84B' },
+  { key: 'white'    as const, label: 'White',    color: '#7AA3AA' },
+  { key: 'hispanic' as const, label: 'Hispanic', color: '#C45A46' },
+  { key: 'black'    as const, label: 'Black',    color: '#7A9E8A' },
+  { key: 'asian'    as const, label: 'Asian',    color: '#D4883A' },
+  { key: 'other'    as const, label: 'Other',    color: '#F04B28' },
 ]
 
 function DonutChart({ race, loading }: {
@@ -61,7 +61,7 @@ function DonutChart({ race, loading }: {
   let cumPct = 0
   return (
     <svg width="200" height="200" viewBox="0 0 200 200" style={{ flexShrink: 0 }}>
-      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#1e2b3c" strokeWidth={sw} />
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="#424242" strokeWidth={sw} />
       {RACE_SEGS.filter(s => (race[s.key] ?? 0) > 0.3).map(seg => {
         const pct = (race[seg.key] ?? 0) / 100
         const rotation = cumPct * 360 - 90
@@ -75,8 +75,8 @@ function DonutChart({ race, loading }: {
         )
       })}
       <circle cx={cx} cy={cy} r={54} fill="#0f1219" />
-      <text x={cx} y={cy + 5} textAnchor="middle" fill="#8A98AE"
-        fontFamily="'IBM Plex Mono', monospace" fontSize="11" letterSpacing="1.5">
+      <text x={cx} y={cy + 5} textAnchor="middle" fill="#A89A88"
+        fontFamily="'Gotham'" fontSize="11" letterSpacing="1.5">
         COMBINED
       </text>
     </svg>
@@ -110,8 +110,8 @@ function IncomeChart({ brackets, loading }: {
         const y = padTop + chartH - (v / maxPct) * chartH
         return (
           <g key={v}>
-            <text x={padL - 6} y={y + 4} textAnchor="end" fill="#8A98AE" fontFamily="IBM Plex Mono" fontSize="10">{v}%</text>
-            <line x1={padL} y1={y} x2={padL + totalW} y2={y} stroke="#1e2b3c" strokeWidth={1} strokeDasharray="3 3" />
+            <text x={padL - 6} y={y + 4} textAnchor="end" fill="#A89A88" fontFamily="Gotham" fontSize="10">{v}%</text>
+            <line x1={padL} y1={y} x2={padL + totalW} y2={y} stroke="#424242" strokeWidth={1} strokeDasharray="3 3" />
           </g>
         )
       })}
@@ -119,7 +119,7 @@ function IncomeChart({ brackets, loading }: {
       {brackets.map((b, i) => {
         const barH = loading ? 0 : (b.pct / maxPct) * chartH
         const x = padL + i * (barW + gap)
-        const barColor = INCOME_COLORS[i] ?? '#4EAEFF'
+        const barColor = INCOME_COLORS[i] ?? '#7AA3AA'
         return (
           <g key={b.label}>
             <rect
@@ -129,18 +129,18 @@ function IncomeChart({ brackets, loading }: {
             />
             <rect x={x} y={padTop + chartH - barH} width={barW} height={3} fill={barColor} />
             {!loading && b.pct > 0 && (
-              <text x={x + barW / 2} y={padTop + chartH - barH - 7} textAnchor="middle" fill="#C8D4E4" fontFamily="IBM Plex Mono" fontSize="10">
+              <text x={x + barW / 2} y={padTop + chartH - barH - 7} textAnchor="middle" fill="#E8DDD0" fontFamily="Gotham" fontSize="10">
                 {b.pct.toFixed(1)}%
               </text>
             )}
-            <text x={x + barW / 2} y={padTop + chartH + 18} textAnchor="middle" fill="#A8B4C5" fontFamily="IBM Plex Mono" fontSize="10">
+            <text x={x + barW / 2} y={padTop + chartH + 18} textAnchor="middle" fill="#C8BCA8" fontFamily="Gotham" fontSize="10">
               {b.label}
             </text>
           </g>
         )
       })}
 
-      <line x1={padL} y1={padTop + chartH} x2={padL + totalW} y2={padTop + chartH} stroke="#232940" strokeWidth={1} />
+      <line x1={padL} y1={padTop + chartH} x2={padL + totalW} y2={padTop + chartH} stroke="#4A4A4A" strokeWidth={1} />
     </svg>
   )
 }
@@ -233,10 +233,10 @@ export default function ComparePage() {
       <style>{`
         .zip-toggle {
           background: transparent;
-          border: 1px solid #232940;
-          color: #A8B4C5;
+          border: 1px solid #4A4A4A;
+          color: #C8BCA8;
           padding: 7px 12px;
-          font-family: 'IBM Plex Mono', monospace;
+          font-family: 'Gotham';
           font-size: 11px;
           cursor: pointer;
           transition: all 0.15s ease;
@@ -246,31 +246,31 @@ export default function ComparePage() {
           gap: 8px;
           text-align: left;
         }
-        .zip-toggle:hover { border-color: #2DD4BF; color: #2DD4BF; background: rgba(45,212,191,0.05); }
-        .zip-toggle.active { background: rgba(45,212,191,0.1); border-color: #2DD4BF; color: #F0F2F7; }
+        .zip-toggle:hover { border-color: #D4883A; color: #D4883A; background: rgba(212,136,58,0.05); }
+        .zip-toggle.active { background: rgba(212,136,58,0.1); border-color: #D4883A; color: #FFFFFF; }
         .zip-toggle .check {
-          width: 14px; height: 14px; border: 1px solid #232940; border-radius: 2px;
+          width: 14px; height: 14px; border: 1px solid #4A4A4A; border-radius: 2px;
           display: flex; align-items: center; justify-content: center; flex-shrink: 0;
           transition: all 0.15s ease;
         }
-        .zip-toggle.active .check { background: #2DD4BF; border-color: #2DD4BF; }
+        .zip-toggle.active .check { background: #D4883A; border-color: #D4883A; }
         .zip-scroll::-webkit-scrollbar { width: 4px; }
-        .zip-scroll::-webkit-scrollbar-track { background: #0d0f14; }
-        .zip-scroll::-webkit-scrollbar-thumb { background: #232940; border-radius: 2px; }
-        .zip-scroll::-webkit-scrollbar-thumb:hover { background: #3a4861; }
+        .zip-scroll::-webkit-scrollbar-track { background: #323232; }
+        .zip-scroll::-webkit-scrollbar-thumb { background: #4A4A4A; border-radius: 2px; }
+        .zip-scroll::-webkit-scrollbar-thumb:hover { background: #4A4A4A; }
         .action-btn {
           background: transparent;
-          border: 1px solid #232940;
-          color: #A8B4C5;
+          border: 1px solid #4A4A4A;
+          color: #C8BCA8;
           padding: 7px 16px;
-          font-family: 'IBM Plex Mono', monospace;
+          font-family: 'Gotham';
           font-size: 11px;
           cursor: pointer;
           transition: all 0.15s ease;
           letter-spacing: 0.08em;
           text-transform: uppercase;
         }
-        .action-btn:hover { border-color: #E8B84B; color: #E8B84B; }
+        .action-btn:hover { border-color: #F04B28; color: #F04B28; }
       `}</style>
 
       <div style={{ position: 'relative', zIndex: 1 }}>
@@ -279,14 +279,14 @@ export default function ComparePage() {
           {/* Header */}
           <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '36px' }}>
             <div>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '12px' }}>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.2em', color: '#F04B28', textTransform: 'uppercase' as const, marginBottom: '12px' }}>
                 Dashboard · Compare ZIPs
               </div>
-              <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px, 4vw, 52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#F0F2F7' }}>
+              <h1 style={{ fontFamily: "'Gotham', sans-serif", fontSize: 'clamp(36px, 4vw, 52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#FFFFFF' }}>
                 Compare ZIP<br />Codes
               </h1>
-              <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #E8B84B, rgba(232,184,75,0))', marginTop: '16px' }} />
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.08em', marginTop: '12px', textTransform: 'uppercase' as const }}>
+              <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #F04B28, rgba(240,75,40,0))', marginTop: '16px' }} />
+              <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', letterSpacing: '0.08em', marginTop: '12px', textTransform: 'uppercase' as const }}>
                 Select Multiple ZIPs to View Combined Data
               </div>
             </div>
@@ -300,23 +300,23 @@ export default function ComparePage() {
           <Surface className="fade-up-2" padding="20px" style={{ marginBottom: '28px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', color: '#A8B4C5', textTransform: 'uppercase' as const }}>
+                <span style={{ fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.1em', color: '#C8BCA8', textTransform: 'uppercase' as const }}>
                   Select ZIP Codes
                 </span>
                 {selected.size > 0 && (
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#2DD4BF', letterSpacing: '0.08em' }}>
+                  <span style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#D4883A', letterSpacing: '0.08em' }}>
                     {selected.size} Selected
                   </span>
                 )}
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#E8B84B', boxShadow: '0 0 5px rgba(232,184,75,0.4)', flexShrink: 0, display: 'inline-block' }} />
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE', letterSpacing: '0.06em' }}>Existing Campus</span>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F04B28', boxShadow: '0 0 5px rgba(240,75,40,0.4)', flexShrink: 0, display: 'inline-block' }} />
+                  <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A89A88', letterSpacing: '0.06em' }}>Existing Campus</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ width: 8, height: 8, borderRadius: '50%', border: '1.5px solid #E8B84B', flexShrink: 0, display: 'inline-block' }} />
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE', letterSpacing: '0.06em' }}>Coming Soon</span>
+                  <span style={{ width: 8, height: 8, borderRadius: '50%', border: '1.5px solid #F04B28', flexShrink: 0, display: 'inline-block' }} />
+                  <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A89A88', letterSpacing: '0.06em' }}>Coming Soon</span>
                 </div>
               </div>
             </div>
@@ -333,13 +333,13 @@ export default function ComparePage() {
                 {ZIP_GROUPS.map(group => (
                   <div key={group.label} style={{ marginBottom: '14px' }}>
                     <div style={{
-                      fontFamily: "'IBM Plex Mono', monospace",
+                      fontFamily: "'Gotham'",
                       fontSize: '10px',
-                      color: '#7A8699',
+                      color: '#B4A490',
                       letterSpacing: '0.15em',
                       textTransform: 'uppercase' as const,
                       padding: '0 0 5px 2px',
-                      borderBottom: '1px solid #1e2b3c',
+                      borderBottom: '1px solid #424242',
                       marginBottom: '6px',
                     }}>
                       {group.label}
@@ -356,7 +356,7 @@ export default function ComparePage() {
                             <span className="check">
                               {selected.has(zip) && (
                                 <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                                  <path d="M1 4l3 3 5-6" stroke="#0d0f14" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                                  <path d="M1 4l3 3 5-6" stroke="#323232" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                               )}
                             </span>
@@ -364,13 +364,13 @@ export default function ComparePage() {
                               {campus && (
                                 <span style={{
                                   width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
-                                  background: campus === 'existing' ? '#E8B84B' : 'transparent',
-                                  border: campus === 'soon' ? '1.5px solid #E8B84B' : 'none',
-                                  boxShadow: campus === 'existing' ? '0 0 4px rgba(232,184,75,0.4)' : 'none',
+                                  background: campus === 'existing' ? '#F04B28' : 'transparent',
+                                  border: campus === 'soon' ? '1.5px solid #F04B28' : 'none',
+                                  boxShadow: campus === 'existing' ? '0 0 4px rgba(240,75,40,0.4)' : 'none',
                                 }} />
                               )}
-                              <span style={{ color: selected.has(zip) ? '#2DD4BF' : '#A8B4C5', marginRight: '4px' }}>{zip}</span>
-                              <span style={{ color: selected.has(zip) ? '#C8D4E4' : '#8A98AE', fontSize: '10px' }}>{label}</span>
+                              <span style={{ color: selected.has(zip) ? '#D4883A' : '#C8BCA8', marginRight: '4px' }}>{zip}</span>
+                              <span style={{ color: selected.has(zip) ? '#E8DDD0' : '#A89A88', fontSize: '10px' }}>{label}</span>
                             </span>
                           </button>
                         )
@@ -383,7 +383,7 @@ export default function ComparePage() {
               {!zipExpanded && (
                 <div style={{
                   position: 'absolute', bottom: 0, left: 0, right: 0, height: '52px',
-                  background: 'linear-gradient(to bottom, transparent, rgba(13,15,20,0.97))',
+                  background: 'linear-gradient(to bottom, transparent, rgba(50,50,50,0.97))',
                   pointerEvents: 'none',
                 }} />
               )}
@@ -395,9 +395,9 @@ export default function ComparePage() {
                 width: '100%',
                 background: 'transparent',
                 border: 'none',
-                borderTop: '1px solid #1e2b3c',
-                color: '#7A8699',
-                fontFamily: "'IBM Plex Mono', monospace",
+                borderTop: '1px solid #424242',
+                color: '#B4A490',
+                fontFamily: "'Gotham'",
                 fontSize: '10px',
                 letterSpacing: '0.12em',
                 textTransform: 'uppercase' as const,
@@ -410,8 +410,8 @@ export default function ComparePage() {
                 gap: '8px',
                 transition: 'color 0.15s ease',
               }}
-              onMouseEnter={e => (e.currentTarget.style.color = '#A8B4C5')}
-              onMouseLeave={e => (e.currentTarget.style.color = '#7A8699')}
+              onMouseEnter={e => (e.currentTarget.style.color = '#C8BCA8')}
+              onMouseLeave={e => (e.currentTarget.style.color = '#B4A490')}
             >
               {zipExpanded
                 ? <>&#9650; Collapse</>
@@ -423,7 +423,7 @@ export default function ComparePage() {
           {/* Combined Stats */}
           {selected.size === 0 ? (
             <Surface padding="48px" style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '13px', color: '#8A98AE', letterSpacing: '0.06em' }}>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '13px', color: '#A89A88', letterSpacing: '0.06em' }}>
                 Select ZIP codes above to view combined data
               </div>
             </Surface>
@@ -463,7 +463,7 @@ export default function ComparePage() {
 
               {/* Stat Cards Row 2 — Lakepointe Indexes */}
               <div className="fade-up-3" style={{ marginBottom: '24px' }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.2em', color: '#7A8699', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
+                <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.2em', color: '#B4A490', textTransform: 'uppercase' as const, marginBottom: '8px', marginTop: '4px' }}>
                   Lakepointe Indexes
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
@@ -497,8 +497,8 @@ export default function ComparePage() {
                       {RACE_SEGS.map(seg => (
                         <div key={seg.key} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                           <div style={{ width: 10, height: 10, borderRadius: '50%', background: seg.color, flexShrink: 0 }} />
-                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#A8B4C5', flex: 1 }}>{seg.label}</span>
-                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '13px', color: '#F0F2F7', fontWeight: 600 }}>
+                          <span style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#C8BCA8', flex: 1 }}>{seg.label}</span>
+                          <span style={{ fontFamily: "'Gotham'", fontSize: '13px', color: '#FFFFFF', fontWeight: 600 }}>
                             {loading || !stats ? '—' : `${stats.combinedRace[seg.key].toFixed(1)}%`}
                           </span>
                         </div>
@@ -524,7 +524,7 @@ export default function ComparePage() {
 
               {/* Selected ZIP summary table */}
               <Surface style={{ marginBottom: '40px' }}>
-                <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#A8B4C5', marginBottom: '16px', paddingBottom: '14px', borderBottom: '1px solid #1e2b3c' }}>
+                <div style={{ fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.1em', textTransform: 'uppercase' as const, color: '#C8BCA8', marginBottom: '16px', paddingBottom: '14px', borderBottom: '1px solid #424242' }}>
                   Selected ZIP Summary
                 </div>
                 {loading ? (
@@ -537,7 +537,7 @@ export default function ComparePage() {
                   <div style={{ overflowX: 'auto' }}>
                     <div style={{ display: 'grid', gridTemplateColumns: '70px 1fr 90px 100px 70px 120px 105px 52px 52px', gap: '0', minWidth: '800px' }}>
                       {['ZIP', 'Name', 'Population', 'Median HHI', 'Growth', 'Race Mix', 'SES Class', 'YFI', 'WFI'].map(h => (
-                        <div key={h} style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '8px 12px 12px 0', borderBottom: '1px solid #232940' }}>{h}</div>
+                        <div key={h} style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', letterSpacing: '0.08em', textTransform: 'uppercase' as const, padding: '8px 12px 12px 0', borderBottom: '1px solid #4A4A4A' }}>{h}</div>
                       ))}
                       {zipData.map(d => [
                         d.zip,
@@ -551,11 +551,11 @@ export default function ComparePage() {
                         String(d.wfi ?? '—'),
                       ].map((cell, j) => (
                         <div key={j} style={{
-                          fontFamily: "'IBM Plex Mono', monospace",
+                          fontFamily: "'Gotham'",
                           fontSize: '12px',
-                          color: j === 0 ? '#2DD4BF' : j >= 7 ? '#A78BFA' : '#F0F2F7',
+                          color: j === 0 ? '#D4883A' : j >= 7 ? '#7A9E8A' : '#FFFFFF',
                           padding: '11px 12px 11px 0',
-                          borderBottom: '1px solid #1e2b3c',
+                          borderBottom: '1px solid #424242',
                           letterSpacing: '0.02em',
                         }}>
                           {cell}
@@ -569,16 +569,16 @@ export default function ComparePage() {
           )}
 
           {/* Footer */}
-          <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>
+          <div style={{ borderTop: '1px solid #424242', paddingTop: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em' }}>
+              <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#B4A490', letterSpacing: '0.08em' }}>
                 Source: U.S. Census Bureau ACS 5-Year Estimates (2023) · api.census.gov
               </span>
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em' }}>
+              <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#B4A490', letterSpacing: '0.08em' }}>
                 Lakepointe Church · Community Intelligence Platform · Internal Use Only
               </span>
             </div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6E7C92', letterSpacing: '0.06em' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A08E7A', letterSpacing: '0.06em' }}>
               Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
             </div>
           </div>

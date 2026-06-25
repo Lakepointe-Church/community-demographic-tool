@@ -31,11 +31,11 @@ interface Summary {
 const TIERS = ['Upper', 'Upper Middle', 'Middle', 'Lower Middle', 'Lower Income'] as const
 
 const TIER_COLOR: Record<string, string> = {
-  'Upper':        '#A78BFA',
-  'Upper Middle': '#4EAEFF',
-  'Middle':       '#2DD4BF',
-  'Lower Middle': '#E8B84B',
-  'Lower Income': '#FF6B6B',
+  'Upper':        '#7A9E8A',
+  'Upper Middle': '#7AA3AA',
+  'Middle':       '#D4883A',
+  'Lower Middle': '#F04B28',
+  'Lower Income': '#C45A46',
 }
 const TIER_RGB: Record<string, string> = {
   'Upper':        '167,139,250',
@@ -56,10 +56,10 @@ function fmtPct(n: number | null) {
 }
 
 function trend(growth: number | null): { label: string; color: string } {
-  if (growth == null) return { label: '—', color: '#7A8699' }
-  if (growth > 2)  return { label: '↑ Growing',   color: '#2DD4BF' }
-  if (growth >= 0) return { label: '→ Stable',    color: '#E8B84B' }
-  return              { label: '↓ Declining',  color: '#FF6B6B' }
+  if (growth == null) return { label: '—', color: '#B4A490' }
+  if (growth > 2)  return { label: '↑ Growing',   color: '#D4883A' }
+  if (growth >= 0) return { label: '→ Stable',    color: '#F04B28' }
+  return              { label: '↓ Declining',  color: '#C45A46' }
 }
 
 // ── Distribution Bar Chart ────────────────────────────────────────
@@ -87,8 +87,8 @@ function DistributionChart({ countByTier, total }: { countByTier: Record<string,
         const count = Math.round(pct / 100 * max)
         return (
           <g key={pct}>
-            <line x1={padLeft} y1={y} x2={width - 10} y2={y} stroke="#1e2b3c" strokeWidth="1" />
-            <text x={padLeft - 6} y={y + 4} textAnchor="end" fill="#7A8699" fontSize="9" fontFamily="IBM Plex Mono">{count}</text>
+            <line x1={padLeft} y1={y} x2={width - 10} y2={y} stroke="#424242" strokeWidth="1" />
+            <text x={padLeft - 6} y={y + 4} textAnchor="end" fill="#B4A490" fontSize="9" fontFamily="Gotham">{count}</text>
           </g>
         )
       })}
@@ -100,8 +100,8 @@ function DistributionChart({ countByTier, total }: { countByTier: Record<string,
         return (
           <g key={tier}>
             <rect x={x} y={y} width={barW} height={barH} fill={`url(#dGrad-${i})`} rx="2" />
-            <text x={x + barW / 2} y={y - 6} textAnchor="middle" fill={TIER_COLOR[tier]} fontSize="11" fontFamily="IBM Plex Mono" fontWeight="600">{count}</text>
-            <text x={x + barW / 2} y={padTop + chartH + 18} textAnchor="middle" fill="#8A98AE" fontSize="9" fontFamily="IBM Plex Mono">
+            <text x={x + barW / 2} y={y - 6} textAnchor="middle" fill={TIER_COLOR[tier]} fontSize="11" fontFamily="Gotham" fontWeight="600">{count}</text>
+            <text x={x + barW / 2} y={padTop + chartH + 18} textAnchor="middle" fill="#A89A88" fontSize="9" fontFamily="Gotham">
               {tier.split(' ').map((word, wi) => (
                 <tspan key={wi} x={x + barW / 2} dy={wi === 0 ? 0 : 12}>{word}</tspan>
               ))}
@@ -134,19 +134,19 @@ function ScatterPlot({ zips }: { zips: ZipSes[] }) {
         {/* Grid */}
         {yTicks.map(v => (
           <g key={v}>
-            <line x1={padL} y1={toY(v)} x2={padL + plotW} y2={toY(v)} stroke="#1e2b3c" strokeWidth="1" />
-            <text x={padL - 6} y={toY(v) + 4} textAnchor="end" fill="#7A8699" fontSize="9" fontFamily="IBM Plex Mono">{v}</text>
+            <line x1={padL} y1={toY(v)} x2={padL + plotW} y2={toY(v)} stroke="#424242" strokeWidth="1" />
+            <text x={padL - 6} y={toY(v) + 4} textAnchor="end" fill="#B4A490" fontSize="9" fontFamily="Gotham">{v}</text>
           </g>
         ))}
         {xTicks.map(v => (
           <g key={v}>
-            <line x1={toX(v * 1000)} y1={padT} x2={toX(v * 1000)} y2={padT + plotH} stroke="#1e2b3c" strokeWidth="1" />
-            <text x={toX(v * 1000)} y={padT + plotH + 14} textAnchor="middle" fill="#7A8699" fontSize="9" fontFamily="IBM Plex Mono">{v}</text>
+            <line x1={toX(v * 1000)} y1={padT} x2={toX(v * 1000)} y2={padT + plotH} stroke="#424242" strokeWidth="1" />
+            <text x={toX(v * 1000)} y={padT + plotH + 14} textAnchor="middle" fill="#B4A490" fontSize="9" fontFamily="Gotham">{v}</text>
           </g>
         ))}
         {/* Axis labels */}
-        <text x={padL + plotW / 2} y={padT + plotH + 30} textAnchor="middle" fill="#8A98AE" fontSize="9" fontFamily="IBM Plex Mono">Median HH Income ($K)</text>
-        <text transform={`translate(12,${padT + plotH / 2}) rotate(-90)`} textAnchor="middle" fill="#8A98AE" fontSize="9" fontFamily="IBM Plex Mono">SES Score</text>
+        <text x={padL + plotW / 2} y={padT + plotH + 30} textAnchor="middle" fill="#A89A88" fontSize="9" fontFamily="Gotham">Median HH Income ($K)</text>
+        <text transform={`translate(12,${padT + plotH / 2}) rotate(-90)`} textAnchor="middle" fill="#A89A88" fontSize="9" fontFamily="Gotham">SES Score</text>
         {/* Points */}
         {points.map(z => (
           <circle
@@ -154,9 +154,9 @@ function ScatterPlot({ zips }: { zips: ZipSes[] }) {
             cx={toX(z.medianHouseholdIncome!)}
             cy={toY(z.sesScore)}
             r="5"
-            fill={TIER_COLOR[z.sesLabel] ?? '#8A98AE'}
+            fill={TIER_COLOR[z.sesLabel] ?? '#A89A88'}
             fillOpacity="0.8"
-            stroke={TIER_COLOR[z.sesLabel] ?? '#8A98AE'}
+            stroke={TIER_COLOR[z.sesLabel] ?? '#A89A88'}
             strokeOpacity="0.4"
             strokeWidth="1"
             style={{ cursor: 'pointer' }}
@@ -171,12 +171,12 @@ function ScatterPlot({ zips }: { zips: ZipSes[] }) {
       {tooltip && (
         <div style={{
           position: 'absolute', left: tooltip.x + 10, top: tooltip.y - 10,
-          background: '#13161f', border: '1px solid #232940', borderRadius: '4px',
+          background: '#3C3C3C', border: '1px solid #4A4A4A', borderRadius: '4px',
           padding: '8px 12px', pointerEvents: 'none', zIndex: 10, minWidth: '140px',
         }}>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', marginBottom: '4px' }}>{tooltip.zip.zip} · {tooltip.zip.name}</div>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: TIER_COLOR[tooltip.zip.sesLabel] }}>{tooltip.zip.sesLabel} · {tooltip.zip.sesScore}/100</div>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE', marginTop: '2px' }}>{fmt$(tooltip.zip.medianHouseholdIncome)}</div>
+          <div style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#FFFFFF', marginBottom: '4px' }}>{tooltip.zip.zip} · {tooltip.zip.name}</div>
+          <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: TIER_COLOR[tooltip.zip.sesLabel] }}>{tooltip.zip.sesLabel} · {tooltip.zip.sesScore}/100</div>
+          <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A89A88', marginTop: '2px' }}>{fmt$(tooltip.zip.medianHouseholdIncome)}</div>
         </div>
       )}
     </div>
@@ -188,9 +188,9 @@ function CampusDot({ status, size = 7 }: { status: 'existing' | 'soon'; size?: n
   return (
     <span style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
-      background: status === 'existing' ? '#E8B84B' : 'transparent',
-      border: status === 'soon' ? '1.5px solid #E8B84B' : 'none',
-      boxShadow: status === 'existing' ? '0 0 5px rgba(232,184,75,0.5)' : 'none',
+      background: status === 'existing' ? '#F04B28' : 'transparent',
+      border: status === 'soon' ? '1.5px solid #F04B28' : 'none',
+      boxShadow: status === 'existing' ? '0 0 5px rgba(240,75,40,0.5)' : 'none',
     }} />
   )
 }
@@ -214,11 +214,11 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
   const selectedCampus = value ? CAMPUS_ZIPS[value] : undefined
 
   return (
-    <div ref={ref} style={{ position: 'relative', display: 'inline-block', background: '#13161f', borderRadius: '4px', zIndex: 10 }}>
+    <div ref={ref} style={{ position: 'relative', display: 'inline-block', background: '#3C3C3C', borderRadius: '4px', zIndex: 10 }}>
       <button onClick={() => setOpen(v => !v)} style={{
-        WebkitAppearance: 'none', appearance: 'none', backgroundColor: '#13161f',
-        border: `1px solid ${open ? '#E8B84B' : '#232940'}`, color: '#F0F2F7',
-        padding: '8px 34px 8px 12px', fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px',
+        WebkitAppearance: 'none', appearance: 'none', backgroundColor: '#3C3C3C',
+        border: `1px solid ${open ? '#F04B28' : '#4A4A4A'}`, color: '#FFFFFF',
+        padding: '8px 34px 8px 12px', fontFamily: "'Gotham'", fontSize: '12px',
         letterSpacing: '0.04em', cursor: 'pointer', outline: 'none', minWidth: '230px',
         position: 'relative', textAlign: 'left', transition: 'border-color 0.15s ease', borderRadius: '4px',
         display: 'flex', alignItems: 'center', gap: '8px',
@@ -229,7 +229,7 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
           position: 'absolute', right: '12px', top: '50%',
           transform: `translateY(-50%) rotate(${open ? 180 : 0}deg)`, transition: 'transform 0.15s ease',
         }}>
-          <path d="M1 1l5 5 5-5" stroke="#E8B84B" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <path d="M1 1l5 5 5-5" stroke="#F04B28" strokeWidth="1.5" fill="none" strokeLinecap="round" />
         </svg>
       </button>
 
@@ -237,22 +237,22 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
         <div style={{
           position: 'absolute', top: 'calc(100% + 4px)', right: 0,
           minWidth: '230px', maxHeight: '360px', overflowY: 'auto',
-          background: '#0d0f14', border: '1px solid #232940', zIndex: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
+          background: '#323232', border: '1px solid #4A4A4A', zIndex: 200, boxShadow: '0 8px 32px rgba(0,0,0,0.7)',
         }}>
           <div onClick={() => { onChange(''); setOpen(false) }}
             onMouseEnter={() => setHovered('__metro')} onMouseLeave={() => setHovered(null)}
             style={{
-              padding: '10px 14px', fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px',
-              color: value === '' ? '#E8B84B' : hovered === '__metro' ? '#F0F2F7' : '#A8B4C5',
-              background: value === '' ? 'rgba(232,184,75,0.08)' : hovered === '__metro' ? 'rgba(255,255,255,0.04)' : 'transparent',
-              cursor: 'pointer', letterSpacing: '0.04em', borderBottom: '1px solid #1e2b3c',
+              padding: '10px 14px', fontFamily: "'Gotham'", fontSize: '12px',
+              color: value === '' ? '#F04B28' : hovered === '__metro' ? '#FFFFFF' : '#C8BCA8',
+              background: value === '' ? 'rgba(240,75,40,0.08)' : hovered === '__metro' ? 'rgba(255,255,255,0.04)' : 'transparent',
+              cursor: 'pointer', letterSpacing: '0.04em', borderBottom: '1px solid #424242',
             }}>DFW Overview</div>
           {ZIP_GROUPS.map(group => (
             <div key={group.label}>
               <div style={{
-                fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699',
+                fontFamily: "'Gotham'", fontSize: '10px', color: '#B4A490',
                 letterSpacing: '0.15em', textTransform: 'uppercase', padding: '10px 14px 4px',
-                position: 'sticky', top: 0, background: '#0d0f14', zIndex: 1,
+                position: 'sticky', top: 0, background: '#323232', zIndex: 1,
               }}>{group.label}</div>
               {group.zips.map(({ zip, label }) => {
                 const isSelected = zip === value, isHov = hovered === zip
@@ -262,12 +262,12 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
                     onClick={() => { onChange(zip); setOpen(false) }}
                     onMouseEnter={() => setHovered(zip)} onMouseLeave={() => setHovered(null)}
                     style={{
-                      padding: '7px 14px', fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px',
-                      color: isSelected ? '#E8B84B' : isHov ? '#F0F2F7' : '#A8B4C5',
-                      background: isSelected ? 'rgba(232,184,75,0.08)' : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
+                      padding: '7px 14px', fontFamily: "'Gotham'", fontSize: '12px',
+                      color: isSelected ? '#F04B28' : isHov ? '#FFFFFF' : '#C8BCA8',
+                      background: isSelected ? 'rgba(240,75,40,0.08)' : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
                       cursor: 'pointer', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: '8px',
                     }}>
-                    <span style={{ color: isSelected ? '#E8B84B' : '#7A8699', flexShrink: 0, width: '38px' }}>{zip}</span>
+                    <span style={{ color: isSelected ? '#F04B28' : '#B4A490', flexShrink: 0, width: '38px' }}>{zip}</span>
                     {campus && <CampusDot status={campus} />}
                     <span>{label}</span>
                   </div>
@@ -286,22 +286,22 @@ function SesDetail({ z, rank, total, coverageAll }: { z: ZipSes | null; rank: nu
   if (!z) {
     return (
       <Surface className="fade-up-2" style={{ marginBottom: '16px' }}>
-        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '12px', color: '#8A98AE', lineHeight: 1.7, padding: '8px 0' }}>
+        <div style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#A89A88', lineHeight: 1.7, padding: '8px 0' }}>
           No SES data for this ZIP{!coverageAll ? ' in the Core MSA set' : ''}.
           {!coverageAll && ' Switch the coverage selector to "All ZIPs" if this is an outer-county ZIP.'}
         </div>
       </Surface>
     )
   }
-  const color = TIER_COLOR[z.sesLabel] ?? '#8A98AE'
+  const color = TIER_COLOR[z.sesLabel] ?? '#A89A88'
   const rgb = TIER_RGB[z.sesLabel] ?? '138,152,174'
   const t = trend(z.populationGrowth)
   const comp = sesComponents(z.medianHouseholdIncome ?? 0, z.bachelorsRate ?? 0, z.medianHomeValue ?? 0)
   // contribution out of each component's max (income 50 / bachelor 30 / home 20)
   const parts = [
-    { label: 'Income', weight: '50%', value: comp.income, max: 50, color: '#4EAEFF', detail: fmt$(z.medianHouseholdIncome) },
-    { label: "Bachelor's+", weight: '30%', value: comp.bachelors, max: 30, color: '#2DD4BF', detail: fmtPct(z.bachelorsRate) },
-    { label: 'Home Value', weight: '20%', value: comp.homeValue, max: 20, color: '#A78BFA', detail: fmt$(z.medianHomeValue) },
+    { label: 'Income', weight: '50%', value: comp.income, max: 50, color: '#7AA3AA', detail: fmt$(z.medianHouseholdIncome) },
+    { label: "Bachelor's+", weight: '30%', value: comp.bachelors, max: 30, color: '#D4883A', detail: fmtPct(z.bachelorsRate) },
+    { label: 'Home Value', weight: '20%', value: comp.homeValue, max: 20, color: '#7A9E8A', detail: fmt$(z.medianHomeValue) },
   ]
 
   return (
@@ -311,22 +311,22 @@ function SesDetail({ z, rank, total, coverageAll }: { z: ZipSes | null; rank: nu
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-              <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '34px', color: '#F0F2F7', lineHeight: 1, letterSpacing: '0.03em' }}>{z.zip}</span>
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '13px', color: '#A8B4C5' }}>{z.name}</span>
-              {z.lowReliability && <span title="Low reliability: small population, zero income, or high Census margin of error (CV > 30%)" style={{ color: '#FF6B6B', cursor: 'help', fontSize: '12px' }}>⚠</span>}
+              <span style={{ fontFamily: "'Gotham',sans-serif", fontSize: '34px', color: '#FFFFFF', lineHeight: 1, letterSpacing: '0.03em' }}>{z.zip}</span>
+              <span style={{ fontFamily: "'Gotham'", fontSize: '13px', color: '#C8BCA8' }}>{z.name}</span>
+              {z.lowReliability && <span title="Low reliability: small population, zero income, or high Census margin of error (CV > 30%)" style={{ color: '#C45A46', cursor: 'help', fontSize: '12px' }}>⚠</span>}
             </div>
             <span style={{
-              fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', letterSpacing: '0.1em',
+              fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.1em',
               textTransform: 'uppercase', padding: '4px 10px', borderRadius: '3px',
               background: `rgba(${rgb},0.15)`, color, border: `1px solid rgba(${rgb},0.3)`,
             }}>{z.sesLabel}</span>
           </div>
           <div style={{ textAlign: 'right' }}>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', justifyContent: 'flex-end' }}>
-              <span style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '44px', color, lineHeight: 1 }}>{z.sesScore}</span>
-              <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '13px', color: '#7A8699' }}>/100</span>
+              <span style={{ fontFamily: "'Gotham',sans-serif", fontSize: '44px', color, lineHeight: 1 }}>{z.sesScore}</span>
+              <span style={{ fontFamily: "'Gotham'", fontSize: '13px', color: '#B4A490' }}>/100</span>
             </div>
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#7A8699', letterSpacing: '0.08em', marginTop: '2px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#B4A490', letterSpacing: '0.08em', marginTop: '2px' }}>
               SES Score{rank != null ? ` · rank #${rank} of ${total}` : ''}
             </div>
           </div>
@@ -341,11 +341,11 @@ function SesDetail({ z, rank, total, coverageAll }: { z: ZipSes | null; rank: nu
             {parts.map(p => (
               <div key={p.label}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '5px' }}>
-                  <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#A8B4C5' }}>
-                    {p.label} <span style={{ color: '#7A8699' }}>· {p.weight}</span>
+                  <span style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#C8BCA8' }}>
+                    {p.label} <span style={{ color: '#B4A490' }}>· {p.weight}</span>
                   </span>
-                  <span style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: p.color }}>
-                    +{p.value.toFixed(1)} <span style={{ color: '#7A8699' }}>/ {p.max} · {p.detail}</span>
+                  <span style={{ fontFamily: "'Gotham'", fontSize: '11px', color: p.color }}>
+                    +{p.value.toFixed(1)} <span style={{ color: '#B4A490' }}>/ {p.max} · {p.detail}</span>
                   </span>
                 </div>
                 <div style={{ height: '10px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
@@ -354,7 +354,7 @@ function SesDetail({ z, rank, total, coverageAll }: { z: ZipSes | null; rank: nu
               </div>
             ))}
           </div>
-          <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#6E7C92', marginTop: '14px', letterSpacing: '0.04em' }}>
+          <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A08E7A', marginTop: '14px', letterSpacing: '0.04em' }}>
             Income capped at $200K · home value at $800K · bachelor&apos;s rate ×2 (50% → cap). See /methodology.
           </div>
         </Surface>
@@ -368,12 +368,12 @@ function SesDetail({ z, rank, total, coverageAll }: { z: ZipSes | null; rank: nu
               { label: 'Median Home Value', value: fmt$(z.medianHomeValue) },
               { label: '% Bachelor’s+', value: fmtPct(z.bachelorsRate) },
               { label: '% Mgmt/Prof', value: fmtPct(z.occMgmtProfPct) },
-              { label: 'Unemployment', value: fmtPct(z.unemploymentRate), color: z.unemploymentRate != null && z.unemploymentRate > 5 ? '#FF6B6B' : '#F0F2F7' },
+              { label: 'Unemployment', value: fmtPct(z.unemploymentRate), color: z.unemploymentRate != null && z.unemploymentRate > 5 ? '#C45A46' : '#FFFFFF' },
               { label: 'Pop. Trend', value: t.label, color: t.color },
             ].map(s => (
-              <div key={s.label} style={{ background: '#0d0f14', border: '1px solid #1e2b3c', borderRadius: '4px', padding: '12px 14px' }}>
-                <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '9px', letterSpacing: '0.12em', color: '#8A98AE', textTransform: 'uppercase', marginBottom: '5px' }}>{s.label}</div>
-                <div style={{ fontFamily: "'Bebas Neue',sans-serif", fontSize: '24px', color: s.color ?? '#F0F2F7', lineHeight: 1 }}>{s.value}</div>
+              <div key={s.label} style={{ background: '#323232', border: '1px solid #424242', borderRadius: '4px', padding: '12px 14px' }}>
+                <div style={{ fontFamily: "'Gotham'", fontSize: '9px', letterSpacing: '0.12em', color: '#A89A88', textTransform: 'uppercase', marginBottom: '5px' }}>{s.label}</div>
+                <div style={{ fontFamily: "'Gotham',sans-serif", fontSize: '24px', color: s.color ?? '#FFFFFF', lineHeight: 1 }}>{s.value}</div>
               </div>
             ))}
           </div>
@@ -452,28 +452,28 @@ export default function SesClassesPage() {
         @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         .ses-row:hover { background: rgba(255,255,255,0.025) !important; }
         .sort-btn { cursor:pointer; user-select:none; }
-        .sort-btn:hover { color: #C8D4E4 !important; }
+        .sort-btn:hover { color: #E8DDD0 !important; }
       `}</style>
       <div style={{ padding: '40px 32px', maxWidth: '1440px', margin: '0 auto' }}>
 
         {/* Header */}
         <div className="fade-up" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '36px', position: 'relative', zIndex: 30 }}>
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', color: '#E8B84B', textTransform: 'uppercase' as const, marginBottom: '12px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.2em', color: '#F04B28', textTransform: 'uppercase' as const, marginBottom: '12px' }}>
               Dashboard · SES Classes
             </div>
-            <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px,4vw,52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#F0F2F7' }}>
+            <h1 style={{ fontFamily: "'Gotham', sans-serif", fontSize: 'clamp(36px,4vw,52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#FFFFFF' }}>
               Socioeconomic<br />Segmentation
             </h1>
-            <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #E8B84B, rgba(232,184,75,0))', marginTop: '16px' }} />
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', letterSpacing: '0.08em', marginTop: '12px', textTransform: 'uppercase' as const }}>
+            <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #F04B28, rgba(240,75,40,0))', marginTop: '16px' }} />
+            <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', letterSpacing: '0.08em', marginTop: '12px', textTransform: 'uppercase' as const }}>
               ACS-Derived Class Classification · {summary?.total ?? '—'} {coverage === 'core' ? 'Core MSA' : 'All DFW'} ZIPs
             </div>
           </div>
           {/* ZIP selector + Coverage / Reliability / Refresh controls */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '8px', flexShrink: 0, marginTop: '4px', position: 'relative', zIndex: 20 }}>
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-            <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '10px', color: '#8A98AE', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Select ZIP Code</div>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A89A88', letterSpacing: '0.1em', textTransform: 'uppercase' as const }}>Select ZIP Code</div>
             <ZipDropdown value={selectedZip} onChange={setSelectedZip} />
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -481,9 +481,9 @@ export default function SesClassesPage() {
               value={coverage}
               onChange={e => handleCoverageChange(e.target.value as 'core' | 'all')}
               style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.06em',
-                background: '#13161f', color: '#C8D4E4',
-                border: '1px solid #232940', borderRadius: '4px',
+                fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.06em',
+                background: '#3C3C3C', color: '#E8DDD0',
+                border: '1px solid #4A4A4A', borderRadius: '4px',
                 padding: '6px 10px', cursor: 'pointer', outline: 'none',
                 appearance: 'none' as const, WebkitAppearance: 'none' as const,
               }}
@@ -495,10 +495,10 @@ export default function SesClassesPage() {
               onClick={() => setShowUnreliable(v => !v)}
               title="Low-reliability ZIPs: population < 2,500, $0 income, or high Census margin of error (CV > 30%)"
               style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.06em',
-                background: showUnreliable ? 'rgba(255,107,107,0.12)' : 'transparent',
-                color: showUnreliable ? '#FF6B6B' : '#8A98AE',
-                border: `1px solid ${showUnreliable ? 'rgba(255,107,107,0.4)' : '#232940'}`,
+                fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.06em',
+                background: showUnreliable ? 'rgba(196,90,70,0.12)' : 'transparent',
+                color: showUnreliable ? '#C45A46' : '#A89A88',
+                border: `1px solid ${showUnreliable ? 'rgba(196,90,70,0.4)' : '#4A4A4A'}`,
                 borderRadius: '4px', padding: '6px 10px', cursor: 'pointer',
               }}
             >
@@ -508,13 +508,13 @@ export default function SesClassesPage() {
               onClick={() => setRefreshKey(k => k + 1)}
               title="Refresh data from database"
               style={{
-                fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.06em',
-                background: 'transparent', color: '#8A98AE',
-                border: '1px solid #232940', borderRadius: '4px',
+                fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.06em',
+                background: 'transparent', color: '#A89A88',
+                border: '1px solid #4A4A4A', borderRadius: '4px',
                 padding: '6px 10px', cursor: 'pointer',
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#C8D4E4'; e.currentTarget.style.borderColor = '#4EAEFF' }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#8A98AE'; e.currentTarget.style.borderColor = '#232940' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#E8DDD0'; e.currentTarget.style.borderColor = '#7AA3AA' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#A89A88'; e.currentTarget.style.borderColor = '#4A4A4A' }}
             >
               ↺ Reload
             </button>
@@ -532,10 +532,10 @@ export default function SesClassesPage() {
         <>
         {/* Stat cards */}
         <div className="fade-up-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '24px' }}>
-          <StatCard label="Avg SES Score" value={loading ? '—' : String(summary?.avgScore ?? '—')} sub={coverage === 'core' ? 'Core MSA avg' : 'All DFW avg'} color="#E8B84B" loading={loading} />
-          <StatCard label="Upper Middle+" value={loading ? '—' : String(upper)} sub={`of ${summary?.total ?? '—'} ZIPs`} color="#4EAEFF" loading={loading} />
-          <StatCard label="Middle Class" value={loading ? '—' : String(middle)} sub="score 40–57" color="#2DD4BF" loading={loading} />
-          <StatCard label="Lower Middle & Below" value={loading ? '—' : String(lower)} sub="score below 40" color="#FF6B6B" loading={loading} />
+          <StatCard label="Avg SES Score" value={loading ? '—' : String(summary?.avgScore ?? '—')} sub={coverage === 'core' ? 'Core MSA avg' : 'All DFW avg'} color="#F04B28" loading={loading} />
+          <StatCard label="Upper Middle+" value={loading ? '—' : String(upper)} sub={`of ${summary?.total ?? '—'} ZIPs`} color="#7AA3AA" loading={loading} />
+          <StatCard label="Middle Class" value={loading ? '—' : String(middle)} sub="score 40–57" color="#D4883A" loading={loading} />
+          <StatCard label="Lower Middle & Below" value={loading ? '—' : String(lower)} sub="score below 40" color="#C45A46" loading={loading} />
         </div>
 
         {/* Charts */}
@@ -558,7 +558,7 @@ export default function SesClassesPage() {
               {TIERS.map(t => (
                 <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: TIER_COLOR[t] }} />
-                  <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#8A98AE' }}>{t}</span>
+                  <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A89A88' }}>{t}</span>
                 </div>
               ))}
             </div>
@@ -568,7 +568,7 @@ export default function SesClassesPage() {
         {/* Table */}
         <Surface className="fade-up-4">
           <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'16px' }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase' as const }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.14em', color: '#A89A88', textTransform: 'uppercase' as const }}>
               Top ZIPs by SES Classification
             </div>
             <button
@@ -577,7 +577,7 @@ export default function SesClassesPage() {
                 ['ZIP', 'Area', 'SES Score', 'SES Class', 'Median HHI', '% Bachelor+', '% Mgmt/Prof', 'Unemployment %', 'Pop Growth %'],
                 filtered.map(z => [z.zip, z.name, z.sesScore, z.sesLabel, z.medianHouseholdIncome, z.bachelorsRate, z.occMgmtProfPct, z.unemploymentRate, z.populationGrowth])
               )}
-              style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'5px 12px', borderRadius:'3px', cursor:'pointer', border:'1px solid #232940', background:'transparent', color:'#8A98AE', flexShrink:0 }}
+              style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'5px 12px', borderRadius:'3px', cursor:'pointer', border:'1px solid #4A4A4A', background:'transparent', color:'#A89A88', flexShrink:0 }}
             >↓ CSV</button>
           </div>
 
@@ -585,17 +585,17 @@ export default function SesClassesPage() {
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' as const, marginBottom: '20px' }}>
             {FILTER_TABS.map(tab => {
               const active = filter === tab
-              const color = tab === 'All' ? '#E8B84B' : TIER_COLOR[tab]
+              const color = tab === 'All' ? '#F04B28' : TIER_COLOR[tab]
               return (
                 <button
                   key={tab}
                   onClick={() => setFilter(tab)}
                   style={{
-                    fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.06em',
+                    fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.06em',
                     padding: '5px 12px', borderRadius: '3px', cursor: 'pointer', border: '1px solid',
-                    borderColor: active ? color : '#232940',
+                    borderColor: active ? color : '#4A4A4A',
                     background: active ? `rgba(${tab === 'All' ? '232,184,75' : TIER_RGB[tab]},0.12)` : 'transparent',
-                    color: active ? color : '#8A98AE',
+                    color: active ? color : '#A89A88',
                     transition: 'all 0.15s',
                   }}
                 >
@@ -626,10 +626,10 @@ export default function SesClassesPage() {
                       onClick={col ? () => toggleSort(col) : undefined}
                       className={col ? 'sort-btn' : undefined}
                       style={{
-                        fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em',
-                        color: col && sortCol === col ? '#E8B84B' : '#8A98AE',
+                        fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.1em',
+                        color: col && sortCol === col ? '#F04B28' : '#A89A88',
                         textTransform: 'uppercase' as const, textAlign: 'left',
-                        padding: '0 16px 12px 0', borderBottom: '1px solid #232940',
+                        padding: '0 16px 12px 0', borderBottom: '1px solid #4A4A4A',
                         whiteSpace: 'nowrap' as const,
                       }}
                     >
@@ -643,35 +643,35 @@ export default function SesClassesPage() {
                   Array.from({ length: 8 }).map((_, i) => (
                     <tr key={i}>
                       {Array.from({ length: 9 }).map((_, j) => (
-                        <td key={j} style={{ padding: '10px 16px 10px 0', borderBottom: '1px solid #1e2b3c' }}>
+                        <td key={j} style={{ padding: '10px 16px 10px 0', borderBottom: '1px solid #424242' }}>
                           <div style={{ height: '14px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite', animationDelay: `${i * 0.06}s` }} />
                         </td>
                       ))}
                     </tr>
                   ))
                 ) : filtered.slice(0, 10).map(z => {
-                  const color = TIER_COLOR[z.sesLabel] ?? '#8A98AE'
+                  const color = TIER_COLOR[z.sesLabel] ?? '#A89A88'
                   const rgb   = TIER_RGB[z.sesLabel] ?? '138,152,174'
                   const t = trend(z.populationGrowth)
                   const dimmed = z.lowReliability
                   return (
-                    <tr key={z.zip} className="ses-row" style={{ borderBottom: '1px solid #1e2b3c', transition: 'background 0.15s', opacity: dimmed ? 0.45 : 1 }}>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>
-                        {dimmed && <span title="Low reliability: small population, zero income, or high Census margin of error (CV > 30%)" style={{ color: '#FF6B6B', marginRight: '5px', cursor: 'help' }}>⚠</span>}
+                    <tr key={z.zip} className="ses-row" style={{ borderBottom: '1px solid #424242', transition: 'background 0.15s', opacity: dimmed ? 0.45 : 1 }}>
+                      <td style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#FFFFFF', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>
+                        {dimmed && <span title="Low reliability: small population, zero income, or high Census margin of error (CV > 30%)" style={{ color: '#C45A46', marginRight: '5px', cursor: 'help' }}>⚠</span>}
                         {z.zip}
                       </td>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#A8B4C5', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{z.name ?? '—'}</td>
+                      <td style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#C8BCA8', padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{z.name ?? '—'}</td>
                       <td style={{ padding: '11px 16px 11px 0' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '60px', height: '4px', background: '#1e2b3c', borderRadius: '2px', flexShrink: 0 }}>
+                          <div style={{ width: '60px', height: '4px', background: '#424242', borderRadius: '2px', flexShrink: 0 }}>
                             <div style={{ width: `${z.sesScore}%`, height: '100%', background: `linear-gradient(90deg, ${color}, ${color}80)`, borderRadius: '2px' }} />
                           </div>
-                          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7' }}>{z.sesScore}</span>
+                          <span style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#FFFFFF' }}>{z.sesScore}</span>
                         </div>
                       </td>
                       <td style={{ padding: '11px 16px 11px 0' }}>
                         <span style={{
-                          fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em',
+                          fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.1em',
                           textTransform: 'uppercase' as const, padding: '3px 8px', borderRadius: '3px',
                           background: `rgba(${rgb},0.15)`, color, border: `1px solid rgba(${rgb},0.3)`,
                           whiteSpace: 'nowrap' as const,
@@ -679,24 +679,24 @@ export default function SesClassesPage() {
                           {z.sesLabel}
                         </span>
                       </td>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', padding: '11px 16px 11px 0' }}>{fmt$(z.medianHouseholdIncome)}</td>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', padding: '11px 16px 11px 0' }}>{fmtPct(z.bachelorsRate)}</td>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#F0F2F7', padding: '11px 16px 11px 0' }}>{fmtPct(z.occMgmtProfPct)}</td>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: z.unemploymentRate != null && z.unemploymentRate > 5 ? '#FF6B6B' : '#F0F2F7', padding: '11px 16px 11px 0' }}>{fmtPct(z.unemploymentRate)}</td>
-                      <td style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: t.color, padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{t.label}</td>
+                      <td style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#FFFFFF', padding: '11px 16px 11px 0' }}>{fmt$(z.medianHouseholdIncome)}</td>
+                      <td style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#FFFFFF', padding: '11px 16px 11px 0' }}>{fmtPct(z.bachelorsRate)}</td>
+                      <td style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#FFFFFF', padding: '11px 16px 11px 0' }}>{fmtPct(z.occMgmtProfPct)}</td>
+                      <td style={{ fontFamily: "'Gotham'", fontSize: '12px', color: z.unemploymentRate != null && z.unemploymentRate > 5 ? '#C45A46' : '#FFFFFF', padding: '11px 16px 11px 0' }}>{fmtPct(z.unemploymentRate)}</td>
+                      <td style={{ fontFamily: "'Gotham'", fontSize: '11px', color: t.color, padding: '11px 16px 11px 0', whiteSpace: 'nowrap' as const }}>{t.label}</td>
                     </tr>
                   )
                 })}
               </tbody>
             </table>
             {!loading && filtered.length === 0 && (
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#8A98AE', padding: '24px 0', textAlign: 'center' as const }}>No ZIPs found for this filter.</div>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#A89A88', padding: '24px 0', textAlign: 'center' as const }}>No ZIPs found for this filter.</div>
             )}
           </div>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699', marginTop: '16px', letterSpacing: '0.06em' }}>
+          <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#B4A490', marginTop: '16px', letterSpacing: '0.06em' }}>
             Showing top {Math.min(10, filtered.length)} of {filtered.length} {filter === 'All' ? '' : `${filter} · `}{coverage === 'core' ? 'Core MSA' : 'all DFW'} ZIPs{!showUnreliable && zips.some(z => z.lowReliability) ? ` · ${zips.filter(z => z.lowReliability).length} low-reliability hidden` : ''} · pick a ZIP above for detail · CSV exports all · Source: ACS 5-Year 2023 · click headers to sort
           </div>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6E7C92', marginTop: '4px', letterSpacing: '0.06em' }}>
+          <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A08E7A', marginTop: '4px', letterSpacing: '0.06em' }}>
             Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
           </div>
         </Surface>

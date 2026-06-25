@@ -4,13 +4,13 @@ import CoverageNav from './CoverageNav'
 export default function TopNav() {
   return (
     <div style={{
-      borderBottom: '1px solid #1e2b3c',
+      borderBottom: '1px solid #424242',
       padding: '0 32px',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       height: '60px',
-      background: 'rgba(13,15,20,0.97)',
+      background: 'rgba(50,50,50,0.97)',
       position: 'sticky',
       top: 0,
       zIndex: 100,
@@ -20,15 +20,15 @@ export default function TopNav() {
       {/* Brand */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
         <div style={{
-          fontFamily: "'Bebas Neue', sans-serif",
-          fontSize: '21px', letterSpacing: '0.1em', color: '#E8B84B',
+          fontFamily: "'Gotham', sans-serif",
+          fontSize: '21px', letterSpacing: '0.1em', color: '#F04B28',
         }}>
           LAKEPOINTE
         </div>
-        <div style={{ width: '1px', height: '18px', background: '#232940' }} />
+        <div style={{ width: '1px', height: '18px', background: '#4A4A4A' }} />
         <div style={{
-          fontFamily: "'IBM Plex Mono', monospace",
-          fontSize: '10px', letterSpacing: '0.16em', color: '#8A98AE',
+          fontFamily: "'Gotham'",
+          fontSize: '10px', letterSpacing: '0.16em', color: '#A89A88',
           textTransform: 'uppercase' as const,
         }}>
           Community Intelligence
@@ -40,8 +40,8 @@ export default function TopNav() {
 
       {/* Right badge */}
       <div style={{
-        fontFamily: "'IBM Plex Mono', monospace",
-        fontSize: '10px', color: '#7A8699', letterSpacing: '0.1em', flexShrink: 0,
+        fontFamily: "'Gotham'",
+        fontSize: '10px', color: '#B4A490', letterSpacing: '0.1em', flexShrink: 0,
       }}>
         DFW · 2026
       </div>

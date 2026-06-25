@@ -171,11 +171,12 @@ Composite 0–100 score: income (50%) + bachelor's rate (30%) + home value (20%)
 All decision-bearing formulas — SES composite + label (+ `sesComponents`, the per-component weighted contributions the SES detail view renders), YFI/WFI, the Site Scorer component transforms (growth/saturation/distance/enrollment-CAGR), `effectivePct` weight normalization, `computeFitScore` (incl. null-growth/null-distance weight redistribution), and `weightedMean` — are pure functions in `src/lib/scoring.ts`. Production imports them (`lib/census.ts` for SES; `api/site-scorer` for YFI/WFI/enrollment; `site-scorer/page.tsx` for the Fit Score family; `api/overview` for weighted aggregates; `ses-classes/page.tsx` for `sesComponents`) so the unit-tested math IS the production math — no forked copies. **Tests:** `src/lib/scoring.test.ts` (Vitest, 25 hand-computed fixtures) — run `npm test`. Tests pin current behavior: SES uses **absolute caps** (not percentiles) and YFI uses the **0–17** band (the open [HUMAN] reconciliation in spec §1.5 — if that decision changes the model, update scoring.ts + these fixtures together).
 
 ## Brand / design system
-- Background: `#0d0f14` · Surface: `#13161f` · Border: `#232940` · Border-sub: `#1e2b3c`
-- Gold (primary): `#E8B84B` · Blue: `#4EAEFF` · Teal: `#2DD4BF` · Coral: `#FF6B6B` · Purple: `#A78BFA`
-- Muted text: `#8A98AE` (~6.5:1, AA) · Label text: `#A8B4C5` · Footer text: `#7A8699` (~5.2:1, AA) · Faint text: `#6E7C92` (~4.5:1, AA floor)
-- **WCAG AA (Spec v2 Phase 3.6):** dark-theme body/label/footer/faint text all pass AA on `#0d0f14`; smallest mono labels floored at 10px. The old footer `#5a6478` (~3.2:1) and faint `#3d4a5c` (~2:1) failed AA and were swept across all dark pages → `#7A8699` / `#6E7C92`. The white-bg print one-pager (`/zip/[zip]/print`) keeps its own darker greys (already high-contrast on white — was deliberately **not** swept).
-- Fonts: Bebas Neue (display/numbers), IBM Plex Mono (labels/data), IBM Plex Sans (body)
+**Lakepointe brand-dark** (applied June 2026). Theme source of truth: `src/lib/theme.ts`.
+- Background: `#323232` · Surface: `#3C3C3C` · Border: `#4A4A4A` · Border-sub: `#424242`
+- Orange (primary): `#F04B28` · Slate: `#7AA3AA` · Amber: `#D4883A` · Terracotta: `#C45A46` · Sage: `#7A9E8A`
+- Text: `#FFFFFF` · Warm text: `#E8DDD0` · Label: `#C8BCA8` · Muted: `#A89A88` (~4.9:1 AA) · Footer: `#B4A490` (~5.5:1 AA) · Faint: `#A08E7A` (~4.6:1 AA floor)
+- **WCAG AA:** all dark-theme text passes AA on `#323232`; smallest labels floored at 10px. Print one-pager (`/zip/[zip]/print`) keeps its own darker greys (high-contrast on white — deliberately not swept in either pass).
+- Fonts: Gotham Bold (display/numbers), Gotham (labels/body) — woff2 files in `public/fonts/`, @font-face in `globals.css`. Fallback stack: Futura → Avenir → Century Gothic → Helvetica Neue → system-ui.
 - No chart library — all charts are custom SVG inline in each page component
 - No UI component library — all inline styles
 
@@ -183,19 +184,19 @@ All decision-bearing formulas — SES composite + label (+ `sesComponents`, the 
 ```tsx
 // Default state
 background: `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.1) 0%, transparent 55%), linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)`
-border: `1px solid #232940`
+border: `1px solid #4A4A4A`
 // Hovered state
 background: `radial-gradient(ellipse at 50% 0%, rgba(${rgb},0.22) 0%, transparent 60%), linear-gradient(145deg, rgba(${rgb},0.08) 0%, rgba(255,255,255,0.01) 100%)`
 border: `1px solid rgba(${rgb},0.4)`
 ```
-`rgb` is a comma-separated RGB string e.g. `'232,184,75'` for gold.
+`rgb` is a comma-separated RGB string e.g. `'240,75,40'` for orange.
 
 ### Bar chart pattern (SVG, multi-color gradient bars)
 - `padTop = 22` — all y-coordinates offset by this amount to prevent label clipping in overflow containers
 - Per-bar `<linearGradient>` defs with unique IDs `bGrad-${i}` (or `ageGrad-${key}`, `incGrad-${i}`)
 - `barColors` prop accepts a `string[]` — one color per bar; gradient fades to `${color}80` at bottom
-- Age colors: `['#4EAEFF','#2DD4BF','#E8B84B','#A78BFA','#FF6B6B']`
-- Income colors: `['#8A98AE','#FF6B6B','#4EAEFF','#2DD4BF','#A78BFA','#E8B84B']`
+- Age colors: `['#7AA3AA','#D4883A','#F04B28','#7A9E8A','#C45A46']`
+- Income colors: `['#A89A88','#C45A46','#7AA3AA','#D4883A','#7A9E8A','#F04B28']`
 
 ### Horizontal bar list pattern (CSS flex, immune to container-width scaling)
 Used in `/employers` for industry mix and sector wage charts. **Do NOT use SVG for horizontal bar lists** — `width="100%"` on SVG scales all dimensions proportionally and makes bars enormous on wide screens.
@@ -206,11 +207,11 @@ Used in `/employers` for industry mix and sector wage charts. **Do NOT use SVG f
     const pct = (r.value / maxVal) * 100
     return (
       <div key={r.label} style={{ display:'flex', alignItems:'center', gap:'8px' }}>
-        <div style={{ width:'130px', flexShrink:0, textAlign:'right', fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#8A98AE' }}>{r.label}</div>
+        <div style={{ width:'130px', flexShrink:0, textAlign:'right', fontFamily:"'Gotham',sans-serif", fontSize:'10px', color:'#A89A88' }}>{r.label}</div>
         <div style={{ flex:1, height:'12px', background:'rgba(255,255,255,0.05)', borderRadius:'2px', position:'relative', overflow:'hidden' }}>
           <div style={{ position:'absolute', left:0, top:0, bottom:0, width:`${pct}%`, background:`linear-gradient(90deg,${color},${color}50)` }} />
         </div>
-        <div style={{ width:'60px', flexShrink:0, textAlign:'right', fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color, fontWeight:'600' }}>{formatValue(r.value)}</div>
+        <div style={{ width:'60px', flexShrink:0, textAlign:'right', fontFamily:"'Gotham',sans-serif", fontSize:'10px', color, fontWeight:'600' }}>{formatValue(r.value)}</div>
       </div>
     )
   })}
@@ -220,15 +221,15 @@ Used in `/employers` for industry mix and sector wage charts. **Do NOT use SVG f
 ### Campus circle color palette
 ```ts
 // src/app/page.tsx — CAMPUS_PALETTE
-// Avoids #4EAEFF (map Growing), #2DD4BF (map Rapid Growth), #FF6B6B (map Declining)
-// Colors assigned alphabetically by campus name for render consistency
-const CAMPUS_PALETTE = ['#E8B84B','#FB923C','#A78BFA','#F472B6','#FACC15','#E879F9','#FCD34D','#4ADE80']
+// Avoids map zone colors: #7AA3AA (Growing), #D4883A (Rapid Growth), #C45A46 (Declining)
+// Warm-earth family, brand-compatible, 8 visually distinct campus hues
+const CAMPUS_PALETTE = ['#F04B28','#E8BA50','#B86438','#5A9070','#E87878','#4878A0','#C8A050','#6E886A']
 ```
 
 ### Nav active pill
 ```tsx
-background: 'rgba(232,184,75,0.12)', padding: '5px 10px', borderRadius: 4,
-border: '1px solid rgba(232,184,75,0.2)'
+background: 'rgba(240,75,40,0.12)', padding: '5px 10px', borderRadius: 4,
+border: '1px solid rgba(240,75,40,0.2)'
 ```
 Inactive links use `#8A98AE` with `.nav-link-item` CSS class (hover → `#C8D4E4`).
 
@@ -250,8 +251,8 @@ function handleCoverageChange(val: 'core' | 'all') {
 Controls render:
 ```tsx
 <select value={coverage} onChange={e => handleCoverageChange(e.target.value as 'core' | 'all')}
-  style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px',
-    background:'#13161f', color:'#C8D4E4', border:'1px solid #232940',
+  style={{ fontFamily:"'Gotham',sans-serif", fontSize:'11px',
+    background:'#3C3C3C', color:'#E8DDD0', border:'1px solid #4A4A4A',
     borderRadius:'4px', padding:'6px 10px', cursor:'pointer', outline:'none',
     appearance:'none' as const, WebkitAppearance:'none' as const }}>
   <option value="core">Core MSA · 11 counties</option>
@@ -263,7 +264,7 @@ Controls render:
 ### ZCTA footnote
 Present in the footer of every page that displays ACS data (Overview, Demographics, Compare, SES Classes, Community Needs):
 ```tsx
-<span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478' }}>
+<span style={{ fontFamily:"'Gotham',sans-serif", fontSize:'10px', color:'#9A8C7A' }}>
   * ZIP-level data uses ZCTA boundaries (Census ZIP Code Tabulation Areas), which approximate but do not exactly match USPS ZIP codes.
 </span>
 ```

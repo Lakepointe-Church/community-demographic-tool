@@ -58,10 +58,10 @@ function fmtN(n: number | null) { return n != null ? n.toLocaleString() : '—' 
 
 // Color thresholds — higher = worse for most health metrics
 function healthColor(val: number | null, warn: number, danger: number): string {
-  if (val == null) return '#8A98AE'
-  if (val >= danger) return '#FF6B6B'
-  if (val >= warn)   return '#E8B84B'
-  return '#2DD4BF'
+  if (val == null) return '#A89A88'
+  if (val >= danger) return '#C45A46'
+  if (val >= warn)   return '#F04B28'
+  return '#D4883A'
 }
 
 // ── Health Metric Row (horizontal fill bar) ────────────────────────
@@ -71,16 +71,16 @@ function MetricRow({ label, value, warn, danger, benchmark, unit = '%' }: {
   const color = healthColor(value, warn, danger)
   const pct = value != null ? Math.min(value / danger * 100, 100) : 0
   return (
-    <div style={{ display:'flex', alignItems:'center', gap:'12px', padding:'9px 0', borderBottom:'1px solid #1e2b3c' }}>
-      <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#A8B4C5', flex:1 }}>{label}</span>
-      <div style={{ width:'120px', height:'4px', background:'#1e2b3c', borderRadius:'2px', flexShrink:0 }}>
+    <div style={{ display:'flex', alignItems:'center', gap:'12px', padding:'9px 0', borderBottom:'1px solid #424242' }}>
+      <span style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#C8BCA8', flex:1 }}>{label}</span>
+      <div style={{ width:'120px', height:'4px', background:'#424242', borderRadius:'2px', flexShrink:0 }}>
         <div style={{ width:`${pct}%`, height:'100%', background:`linear-gradient(90deg,${color},${color}80)`, borderRadius:'2px', transition:'width 0.4s ease' }} />
       </div>
-      <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color, width:'44px', textAlign:'right', flexShrink:0 }}>
+      <span style={{ fontFamily:"'Gotham'", fontSize:'12px', color, width:'44px', textAlign:'right', flexShrink:0 }}>
         {value != null ? value.toFixed(1) + unit : '—'}
       </span>
       {benchmark != null && (
-        <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', width:'52px', textAlign:'right', flexShrink:0 }}>
+        <span style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', width:'52px', textAlign:'right', flexShrink:0 }}>
           DFW: {benchmark.toFixed(1)}{unit}
         </span>
       )}
@@ -145,22 +145,22 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
             ['ZIP', 'Area', 'Diabetes %', 'Obesity %', 'Uninsured %', 'Depression %', 'Mental Distress %', 'CFPB Complaints', 'Population'],
             sorted.map(z => [z.zip, z.name, z.diabetes, z.obesity, z.uninsured, z.depression, z.mentalDistress, z.cfpbComplaints, z.population])
           )}
-          style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'5px 12px', borderRadius:'3px', cursor:'pointer', border:'1px solid #232940', background:'transparent', color:'#8A98AE' }}
+          style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'5px 12px', borderRadius:'3px', cursor:'pointer', border:'1px solid #4A4A4A', background:'transparent', color:'#A89A88' }}
         >↓ CSV</button>
       </div>
     <div style={{ maxHeight:'320px', overflowY:'auto', overflowX:'auto', scrollbarGutter:'stable' }}>
       <table style={{ width:'100%', borderCollapse:'collapse' }}>
-        <thead style={{ position:'sticky', top:0, background:'#13161f', zIndex:1 }}>
+        <thead style={{ position:'sticky', top:0, background:'#3C3C3C', zIndex:1 }}>
           <tr>
-            <th style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #232940', whiteSpace:'nowrap' }}>ZIP</th>
-            <th style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #232940', whiteSpace:'nowrap' }}>Area</th>
+            <th style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.1em', color:'#A89A88', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #4A4A4A', whiteSpace:'nowrap' }}>ZIP</th>
+            <th style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.1em', color:'#A89A88', textTransform:'uppercase', textAlign:'left', padding:'0 16px 12px 0', borderBottom:'1px solid #4A4A4A', whiteSpace:'nowrap' }}>Area</th>
             {cols.map((c, ci) => (
               <th key={c.key} onClick={() => toggleSort(c.key)} style={{
-                fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em',
-                color: sortKey === c.key ? '#E8B84B' : '#8A98AE',
+                fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.1em',
+                color: sortKey === c.key ? '#F04B28' : '#A89A88',
                 textTransform:'uppercase', textAlign:'right',
                 padding: ci === cols.length - 1 ? '0 20px 12px 16px' : '0 0 12px 16px',
-                borderBottom:'1px solid #232940', whiteSpace:'nowrap', cursor:'pointer',
+                borderBottom:'1px solid #4A4A4A', whiteSpace:'nowrap', cursor:'pointer',
               }}>
                 {c.label}{sortKey === c.key ? (sortDir === 'desc' ? ' ↓' : ' ↑') : ''}
               </th>
@@ -169,14 +169,14 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
         </thead>
         <tbody>
           {sorted.map(z => (
-            <tr key={z.zip} style={{ borderBottom:'1px solid #1e2b3c' }}>
-              <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#F0F2F7', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.zip}</td>
-              <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#A8B4C5', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.name}</td>
+            <tr key={z.zip} style={{ borderBottom:'1px solid #424242' }}>
+              <td style={{ fontFamily:"'Gotham'", fontSize:'12px', color:'#FFFFFF', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.zip}</td>
+              <td style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#C8BCA8', padding:'10px 16px 10px 0', whiteSpace:'nowrap' }}>{z.name}</td>
               {cols.map((c, ci) => {
                 const val = z[c.key] as number | null
                 const color = healthColor(val, c.warn, c.danger)
                 return (
-                  <td key={c.key} style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color, padding: ci === cols.length - 1 ? '10px 20px 10px 16px' : '10px 0 10px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
+                  <td key={c.key} style={{ fontFamily:"'Gotham'", fontSize:'12px', color, padding: ci === cols.length - 1 ? '10px 20px 10px 16px' : '10px 0 10px 16px', textAlign:'right', whiteSpace:'nowrap' }}>
                     {c.key === 'cfpbComplaints' ? fmtN(val) : fmtPct(val)}
                   </td>
                 )
@@ -185,7 +185,7 @@ function ZipTable({ zips }: { zips: ZipHealth[] }) {
           ))}
         </tbody>
       </table>
-      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'12px' }}>
+      <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginTop:'12px' }}>
         {zips.length} ZIPs · Color: teal = below avg, gold = elevated, red = high · Click headers to sort
       </div>
     </div>
@@ -237,7 +237,7 @@ export default function CommunityNeedsPage() {
     <>
       <style>{`
         @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
-        .zip-select option{background:#13161f;color:#F0F2F7}
+        .zip-select option{background:#3C3C3C;color:#FFFFFF}
         .cn-row:hover{background:rgba(255,255,255,0.02)}
       `}</style>
       <div style={{ padding:'40px 32px', maxWidth:'1440px', margin:'0 auto' }}>
@@ -245,10 +245,10 @@ export default function CommunityNeedsPage() {
         {/* Header */}
         <div className="fade-up" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'36px' }}>
           <div>
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.2em', color:'#E8B84B', textTransform:'uppercase', marginBottom:'12px' }}>Dashboard · Community Needs</div>
-            <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#F0F2F7' }}>Community<br />Health & Needs</h1>
-            <div style={{ width:'48px', height:'2px', background:'linear-gradient(90deg,#E8B84B,rgba(232,184,75,0))', marginTop:'16px' }} />
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#8A98AE', letterSpacing:'0.08em', marginTop:'12px', textTransform:'uppercase' }}>
+            <div style={{ fontFamily:"'Gotham'", fontSize:'11px', letterSpacing:'0.2em', color:'#F04B28', textTransform:'uppercase', marginBottom:'12px' }}>Dashboard · Community Needs</div>
+            <h1 style={{ fontFamily:"'Gotham',sans-serif", fontSize:'clamp(36px,4vw,52px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#FFFFFF' }}>Community<br />Health & Needs</h1>
+            <div style={{ width:'48px', height:'2px', background:'linear-gradient(90deg,#F04B28,rgba(240,75,40,0))', marginTop:'16px' }} />
+            <div style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#A89A88', letterSpacing:'0.08em', marginTop:'12px', textTransform:'uppercase' }}>
               CDC PLACES 2023 · CFPB Consumer Complaints · {overview?.zipCount ?? DFW_ZIPS.length} DFW ZIPs
             </div>
           </div>
@@ -258,9 +258,9 @@ export default function CommunityNeedsPage() {
               value={coverage}
               onChange={e => handleCoverageChange(e.target.value as 'core' | 'all')}
               style={{
-                fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.06em',
-                background:'#13161f', color:'#C8D4E4',
-                border:'1px solid #232940', borderRadius:'4px',
+                fontFamily:"'Gotham'", fontSize:'11px', letterSpacing:'0.06em',
+                background:'#3C3C3C', color:'#E8DDD0',
+                border:'1px solid #4A4A4A', borderRadius:'4px',
                 padding:'6px 10px', cursor:'pointer', outline:'none',
                 appearance:'none' as const, WebkitAppearance:'none' as const,
               }}
@@ -272,13 +272,13 @@ export default function CommunityNeedsPage() {
               onClick={() => setRefreshKey(k => k + 1)}
               title="Refresh data from database"
               style={{
-                fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.06em',
-                background:'transparent', color:'#8A98AE',
-                border:'1px solid #232940', borderRadius:'4px',
+                fontFamily:"'Gotham'", fontSize:'11px', letterSpacing:'0.06em',
+                background:'transparent', color:'#A89A88',
+                border:'1px solid #4A4A4A', borderRadius:'4px',
                 padding:'6px 10px', cursor:'pointer',
               }}
-              onMouseEnter={e => { e.currentTarget.style.color = '#C8D4E4'; e.currentTarget.style.borderColor = '#4EAEFF' }}
-              onMouseLeave={e => { e.currentTarget.style.color = '#8A98AE'; e.currentTarget.style.borderColor = '#232940' }}
+              onMouseEnter={e => { e.currentTarget.style.color = '#E8DDD0'; e.currentTarget.style.borderColor = '#7AA3AA' }}
+              onMouseLeave={e => { e.currentTarget.style.color = '#A89A88'; e.currentTarget.style.borderColor = '#4A4A4A' }}
             >
               ↺ Reload
             </button>
@@ -286,23 +286,23 @@ export default function CommunityNeedsPage() {
         </div>
 
         {/* DFW Overview Cards */}
-        <div className="fade-up-2" style={{ marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid #232940' }}>
-          <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'28px', letterSpacing:'0.08em', color:'#F0F2F7', lineHeight:1, marginBottom:'6px' }}>{coverage === 'core' ? 'DFW Core MSA' : 'DFW Metro (All)'} Averages</div>
-          <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#8A98AE', letterSpacing:'0.08em' }}>Across {overview?.zipCount ?? (coverage === 'core' ? CORE_MSA_ZIPS.length : DFW_ZIPS.length)} ZIP codes{coverage === 'core' ? ' · Core MSA (11 counties)' : ' · Full coverage area'} · CDC PLACES 2023</div>
+        <div className="fade-up-2" style={{ marginBottom:'16px', paddingBottom:'16px', borderBottom:'1px solid #4A4A4A' }}>
+          <div style={{ fontFamily:"'Gotham',sans-serif", fontSize:'28px', letterSpacing:'0.08em', color:'#FFFFFF', lineHeight:1, marginBottom:'6px' }}>{coverage === 'core' ? 'DFW Core MSA' : 'DFW Metro (All)'} Averages</div>
+          <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#A89A88', letterSpacing:'0.08em' }}>Across {overview?.zipCount ?? (coverage === 'core' ? CORE_MSA_ZIPS.length : DFW_ZIPS.length)} ZIP codes{coverage === 'core' ? ' · Core MSA (11 counties)' : ' · Full coverage area'} · CDC PLACES 2023</div>
         </div>
         <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
-          <StatCard label="Avg Diabetes Rate" value={loading ? '—' : fmtPct(overview?.avgDiabetes ?? null)} sub="% adults diagnosed" color="#FF6B6B" loading={loading} />
-          <StatCard label="Avg Obesity Rate"  value={loading ? '—' : fmtPct(overview?.avgObesity ?? null)}  sub="% adults" color="#E8B84B" loading={loading} />
-          <StatCard label="Avg Uninsured"     value={loading ? '—' : fmtPct(overview?.avgUninsured ?? null)} sub="% without coverage" color="#4EAEFF" loading={loading} />
-          <StatCard label="Avg Depression"    value={loading ? '—' : fmtPct(overview?.avgDepression ?? null)} sub="% adults" color="#A78BFA" loading={loading} />
+          <StatCard label="Avg Diabetes Rate" value={loading ? '—' : fmtPct(overview?.avgDiabetes ?? null)} sub="% adults diagnosed" color="#C45A46" loading={loading} />
+          <StatCard label="Avg Obesity Rate"  value={loading ? '—' : fmtPct(overview?.avgObesity ?? null)}  sub="% adults" color="#F04B28" loading={loading} />
+          <StatCard label="Avg Uninsured"     value={loading ? '—' : fmtPct(overview?.avgUninsured ?? null)} sub="% without coverage" color="#7AA3AA" loading={loading} />
+          <StatCard label="Avg Depression"    value={loading ? '—' : fmtPct(overview?.avgDepression ?? null)} sub="% adults" color="#7A9E8A" loading={loading} />
         </div>
 
         {/* Second row of cards */}
         <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
-          <StatCard label="Avg Smoking"        value={loading ? '—' : fmtPct(overview?.avgSmoking ?? null)}       sub="current cigarette use" color="#FF6B6B" loading={loading} />
-          <StatCard label="Avg Mental Distress" value={loading ? '—' : fmtPct(overview?.avgMentalDistress ?? null)} sub="frequent bad mental health days" color="#A78BFA" loading={loading} />
-          <StatCard label="Avg High Blood Pressure" value={loading ? '—' : fmtPct(overview?.avgHighBP ?? null)}   sub="% adults" color="#E8B84B" loading={loading} />
-          <StatCard label="CFPB Complaints"    value={loading ? '—' : fmtN(overview?.totalComplaints ?? null)}    sub={overview?.complaintsPer1k != null ? `${overview.complaintsPer1k}/1K residents` : undefined} color="#4EAEFF" loading={loading} />
+          <StatCard label="Avg Smoking"        value={loading ? '—' : fmtPct(overview?.avgSmoking ?? null)}       sub="current cigarette use" color="#C45A46" loading={loading} />
+          <StatCard label="Avg Mental Distress" value={loading ? '—' : fmtPct(overview?.avgMentalDistress ?? null)} sub="frequent bad mental health days" color="#7A9E8A" loading={loading} />
+          <StatCard label="Avg High Blood Pressure" value={loading ? '—' : fmtPct(overview?.avgHighBP ?? null)}   sub="% adults" color="#F04B28" loading={loading} />
+          <StatCard label="CFPB Complaints"    value={loading ? '—' : fmtN(overview?.totalComplaints ?? null)}    sub={overview?.complaintsPer1k != null ? `${overview.complaintsPer1k}/1K residents` : undefined} color="#7AA3AA" loading={loading} />
         </div>
 
         {/* ZIP Rankings Table */}
@@ -312,7 +312,7 @@ export default function CommunityNeedsPage() {
             ? <div style={{ height:'300px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
             : overview?.zips?.length
               ? <ZipTable zips={overview.zips} />
-              : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#7A8699', padding:'24px 0' }}>No data yet — run the PLACES import script to populate.</div>
+              : <div style={{ fontFamily:"'Gotham'", fontSize:'12px', color:'#B4A490', padding:'24px 0' }}>No data yet — run the PLACES import script to populate.</div>
           }
         </Surface>
 
@@ -322,9 +322,9 @@ export default function CommunityNeedsPage() {
 
           <div style={{ marginBottom:'24px', position:'relative', display:'inline-block' }}>
             <select className="zip-select" value={selectedZip} onChange={e => handleZipChange(e.target.value)} style={{
-              fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', letterSpacing:'0.06em',
-              background:'#13161f', color: selectedZip ? '#F0F2F7' : '#8A98AE',
-              border:'1px solid #232940', borderRadius:'4px',
+              fontFamily:"'Gotham'", fontSize:'12px', letterSpacing:'0.06em',
+              background:'#3C3C3C', color: selectedZip ? '#FFFFFF' : '#A89A88',
+              border:'1px solid #4A4A4A', borderRadius:'4px',
               padding:'10px 40px 10px 14px', cursor:'pointer', outline:'none',
               appearance:'none', WebkitAppearance:'none', minWidth:'280px',
             }}>
@@ -337,11 +337,11 @@ export default function CommunityNeedsPage() {
                 </optgroup>
               ))}
             </select>
-            <div style={{ position:'absolute', right:'12px', top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'#8A98AE', fontSize:'10px' }}>▼</div>
+            <div style={{ position:'absolute', right:'12px', top:'50%', transform:'translateY(-50%)', pointerEvents:'none', color:'#A89A88', fontSize:'10px' }}>▼</div>
           </div>
 
           {!selectedZip && (
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px', color:'#7A8699', padding:'24px 0' }}>
+            <div style={{ fontFamily:"'Gotham'", fontSize:'12px', color:'#B4A490', padding:'24px 0' }}>
               Select a ZIP to see its full health profile compared to the DFW average.
             </div>
           )}
@@ -362,27 +362,27 @@ export default function CommunityNeedsPage() {
 
               {/* Metric comparison vs DFW avg */}
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'16px' }}>
-                <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'20px' }}>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>Health Metrics vs DFW Avg</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name} · % of adults</div>
+                <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #424242', borderRadius:'4px', padding:'20px' }}>
+                  <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.14em', color:'#A89A88', textTransform:'uppercase', marginBottom:'4px' }}>Health Metrics vs DFW Avg</div>
+                  <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name} · % of adults</div>
                   <ComparisonChart zipData={zipData} overview={overview} />
                 </div>
 
-                <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'20px' }}>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'4px' }}>Financial Stress Indicators</div>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name}</div>
+                <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #424242', borderRadius:'4px', padding:'20px' }}>
+                  <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.14em', color:'#A89A88', textTransform:'uppercase', marginBottom:'4px' }}>Financial Stress Indicators</div>
+                  <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', letterSpacing:'0.08em', marginBottom:'16px' }}>{zipData.name}</div>
 
                   <div style={{ display:'flex', flexDirection:'column', gap:'16px' }}>
-                    <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>CFPB Consumer Complaints</div>
-                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color: healthColor(zipData.cfpbComplaints, 500, 1500), lineHeight:1 }}>{fmtN(zipData.cfpbComplaints)}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'4px' }}>trailing 36 mo · {zipData.cfpbPer1k != null ? zipData.cfpbPer1k + '/1K residents' : ''}</div>
+                    <div style={{ background:'#323232', border:'1px solid #424242', borderRadius:'4px', padding:'16px' }}>
+                      <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.1em', color:'#A89A88', textTransform:'uppercase', marginBottom:'6px' }}>CFPB Consumer Complaints</div>
+                      <div style={{ fontFamily:"'Gotham',sans-serif", fontSize:'32px', color: healthColor(zipData.cfpbComplaints, 500, 1500), lineHeight:1 }}>{fmtN(zipData.cfpbComplaints)}</div>
+                      <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginTop:'4px' }}>trailing 36 mo · {zipData.cfpbPer1k != null ? zipData.cfpbPer1k + '/1K residents' : ''}</div>
                     </div>
 
-                    <div style={{ background:'#0d0f14', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'16px' }}>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.1em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'6px' }}>SES Class</div>
-                      <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'32px', color:'#E8B84B', lineHeight:1 }}>{zipData.sesLabel ?? '—'}</div>
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'4px' }}>socioeconomic tier</div>
+                    <div style={{ background:'#323232', border:'1px solid #424242', borderRadius:'4px', padding:'16px' }}>
+                      <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.1em', color:'#A89A88', textTransform:'uppercase', marginBottom:'6px' }}>SES Class</div>
+                      <div style={{ fontFamily:"'Gotham',sans-serif", fontSize:'32px', color:'#F04B28', lineHeight:1 }}>{zipData.sesLabel ?? '—'}</div>
+                      <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginTop:'4px' }}>socioeconomic tier</div>
                     </div>
                   </div>
                 </div>
@@ -391,10 +391,10 @@ export default function CommunityNeedsPage() {
           )}
         </Surface>
 
-        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'16px', letterSpacing:'0.06em' }}>
+        <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginTop:'16px', letterSpacing:'0.06em' }}>
           Health data: CDC PLACES 2023 (age-adjusted prevalence estimates) · Complaints: CFPB Consumer Complaint Database (trailing 36 months) · HMDA mortgage denial rates — Phase 2
         </div>
-        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#6E7C92', marginTop:'6px', letterSpacing:'0.06em' }}>
+        <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#A08E7A', marginTop:'6px', letterSpacing:'0.06em' }}>
           Census data is reported by ZCTA (ZIP Code Tabulation Area), which approximates but does not exactly match USPS ZIP boundaries.
           {coverage === 'core' && ' · Averages use Core MSA (11 counties). Toggle to "All ZIPs" to include extended coverage area.'}
         </div>

@@ -3,10 +3,10 @@
 import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 
-const MONO: React.CSSProperties = { fontFamily: "'IBM Plex Mono', monospace" }
+const MONO: React.CSSProperties = { fontFamily: "'Gotham'" }
 const SURFACE: React.CSSProperties = {
   background: 'linear-gradient(145deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.01) 100%)',
-  border: '1px solid #232940',
+  border: '1px solid #4A4A4A',
   padding: '24px',
 }
 
@@ -97,16 +97,16 @@ export default function AttendeeUploadPage() {
 
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.2em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '12px' }}>
+        <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.2em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '12px' }}>
           Admin · Attendee Data
         </div>
-        <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '42px', letterSpacing: '0.04em', lineHeight: 0.95, color: '#F0F2F7', marginBottom: '8px' }}>
+        <h1 style={{ fontFamily: "'Gotham', sans-serif", fontSize: '42px', letterSpacing: '0.04em', lineHeight: 0.95, color: '#FFFFFF', marginBottom: '8px' }}>
           Upload Attendee Density
         </h1>
-        <div style={{ ...MONO, fontSize: '12px', color: '#8A98AE', marginTop: '12px' }}>
+        <div style={{ ...MONO, fontSize: '12px', color: '#A89A88', marginTop: '12px' }}>
           Aggregate Rock RMS household counts by ZIP · Internal use only
         </div>
-        <Link href="/" style={{ ...MONO, fontSize: '10px', color: '#4EAEFF', textDecoration: 'none', display: 'inline-block', marginTop: '8px' }}>
+        <Link href="/" style={{ ...MONO, fontSize: '10px', color: '#7AA3AA', textDecoration: 'none', display: 'inline-block', marginTop: '8px' }}>
           ← Back to Overview
         </Link>
       </div>
@@ -114,7 +114,7 @@ export default function AttendeeUploadPage() {
       {/* Last upload status */}
       <div style={{
         ...SURFACE,
-        borderColor: lastUpload ? 'rgba(78,174,255,0.3)' : '#232940',
+        borderColor: lastUpload ? 'rgba(122,163,170,0.3)' : '#4A4A4A',
         marginBottom: '24px',
         display: 'flex',
         alignItems: 'center',
@@ -123,20 +123,20 @@ export default function AttendeeUploadPage() {
         gap: '12px',
       }}>
         <div>
-          <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.1em', color: '#A8B4C5', textTransform: 'uppercase', marginBottom: '6px' }}>
+          <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.1em', color: '#C8BCA8', textTransform: 'uppercase', marginBottom: '6px' }}>
             Current Data
           </div>
           {lastUpload === (undefined as unknown as UploadStatus) ? (
-            <div style={{ ...MONO, fontSize: '12px', color: '#7A8699' }}>Loading…</div>
+            <div style={{ ...MONO, fontSize: '12px', color: '#B4A490' }}>Loading…</div>
           ) : lastUpload ? (
-            <div style={{ ...MONO, fontSize: '12px', color: '#C8D4E4' }}>
-              Last upload: <span style={{ color: '#4EAEFF' }}>{formatDate(lastUpload.uploadedAt)}</span>
-              {' · '}<span style={{ color: '#E8B84B' }}>{lastUpload.zipCount.toLocaleString()} ZIPs</span>
-              {' · '}<span style={{ color: '#2DD4BF' }}>{lastUpload.totalHouseholds.toLocaleString()} households</span>
-              {lastUpload.filename && <span style={{ color: '#7A8699' }}> · {lastUpload.filename}</span>}
+            <div style={{ ...MONO, fontSize: '12px', color: '#E8DDD0' }}>
+              Last upload: <span style={{ color: '#7AA3AA' }}>{formatDate(lastUpload.uploadedAt)}</span>
+              {' · '}<span style={{ color: '#F04B28' }}>{lastUpload.zipCount.toLocaleString()} ZIPs</span>
+              {' · '}<span style={{ color: '#D4883A' }}>{lastUpload.totalHouseholds.toLocaleString()} households</span>
+              {lastUpload.filename && <span style={{ color: '#B4A490' }}> · {lastUpload.filename}</span>}
             </div>
           ) : (
-            <div style={{ ...MONO, fontSize: '12px', color: '#FF6B6B' }}>No data loaded</div>
+            <div style={{ ...MONO, fontSize: '12px', color: '#C45A46' }}>No data loaded</div>
           )}
         </div>
         {lastUpload && (
@@ -145,8 +145,8 @@ export default function AttendeeUploadPage() {
             disabled={truncating}
             style={{
               ...MONO, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase',
-              background: 'transparent', color: truncating ? '#3a4154' : '#FF6B6B',
-              border: `1px solid ${truncating ? '#232940' : 'rgba(255,107,107,0.4)'}`,
+              background: 'transparent', color: truncating ? '#3a4154' : '#C45A46',
+              border: `1px solid ${truncating ? '#4A4A4A' : 'rgba(196,90,70,0.4)'}`,
               padding: '7px 14px', cursor: truncating ? 'not-allowed' : 'pointer',
             }}
           >
@@ -156,11 +156,11 @@ export default function AttendeeUploadPage() {
       </div>
 
       {/* Privacy notice */}
-      <div style={{ ...SURFACE, borderColor: 'rgba(255,107,107,0.3)', marginBottom: '24px' }}>
-        <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#FF6B6B', textTransform: 'uppercase', marginBottom: '10px' }}>
+      <div style={{ ...SURFACE, borderColor: 'rgba(196,90,70,0.3)', marginBottom: '24px' }}>
+        <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#C45A46', textTransform: 'uppercase', marginBottom: '10px' }}>
           Privacy Requirements (Mandatory)
         </div>
-        <ul style={{ ...MONO, fontSize: '11px', color: '#C8D4E4', lineHeight: 1.8, paddingLeft: '16px', margin: 0 }}>
+        <ul style={{ ...MONO, fontSize: '11px', color: '#E8DDD0', lineHeight: 1.8, paddingLeft: '16px', margin: 0 }}>
           <li>Export only <strong>aggregated counts per ZIP</strong> from Rock RMS — no names, addresses, or individual records.</li>
           <li>ZIPs with fewer than 5 households will be automatically suppressed on all maps and displays.</li>
           <li>This file is stored in the database and accessible only within this internal tool.</li>
@@ -169,22 +169,22 @@ export default function AttendeeUploadPage() {
 
       {/* CSV format reference */}
       <div style={{ ...SURFACE, marginBottom: '24px' }}>
-        <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#A8B4C5', textTransform: 'uppercase', marginBottom: '16px' }}>
+        <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#C8BCA8', textTransform: 'uppercase', marginBottom: '16px' }}>
           Expected CSV Format
         </div>
-        <p style={{ ...MONO, fontSize: '11px', color: '#8A98AE', marginBottom: '12px' }}>
+        <p style={{ ...MONO, fontSize: '11px', color: '#A89A88', marginBottom: '12px' }}>
           Header row required. Rock RMS export format is accepted directly — no reformatting needed.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
           <div>
-            <div style={{ ...MONO, fontSize: '10px', color: '#E8B84B', marginBottom: '6px', letterSpacing: '0.08em' }}>
+            <div style={{ ...MONO, fontSize: '10px', color: '#F04B28', marginBottom: '6px', letterSpacing: '0.08em' }}>
               ROCK RMS EXPORT (Jeff&apos;s query)
             </div>
             <div style={{
-              background: '#0d0f14', border: '1px solid #1e2b3c',
+              background: '#323232', border: '1px solid #424242',
               padding: '12px 14px', fontSize: '11px',
-              ...MONO, color: '#4EAEFF', lineHeight: 1.8,
+              ...MONO, color: '#7AA3AA', lineHeight: 1.8,
               whiteSpace: 'pre',
             }}>
 {`Campus,PostalCodeLeft5,FamilyCount
@@ -192,26 +192,26 @@ Rockwall,75087,42
 Rockwall,75032,18
 Mesquite,75150,31`}
             </div>
-            <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', marginTop: '6px' }}>
+            <div style={{ ...MONO, fontSize: '10px', color: '#B4A490', marginTop: '6px' }}>
               Direct output from Rock RMS. No renaming needed.
             </div>
           </div>
 
           <div>
-            <div style={{ ...MONO, fontSize: '10px', color: '#E8B84B', marginBottom: '6px', letterSpacing: '0.08em' }}>
+            <div style={{ ...MONO, fontSize: '10px', color: '#F04B28', marginBottom: '6px', letterSpacing: '0.08em' }}>
               GENERIC FORMAT (also accepted)
             </div>
             <div style={{
-              background: '#0d0f14', border: '1px solid #1e2b3c',
+              background: '#323232', border: '1px solid #424242',
               padding: '12px 14px', fontSize: '11px',
-              ...MONO, color: '#4EAEFF', lineHeight: 1.8,
+              ...MONO, color: '#7AA3AA', lineHeight: 1.8,
               whiteSpace: 'pre',
             }}>
 {`zip,campus,households
 75087,Rockwall,42
 75150,Mesquite,18`}
             </div>
-            <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', marginTop: '6px' }}>
+            <div style={{ ...MONO, fontSize: '10px', color: '#B4A490', marginTop: '6px' }}>
               Campus column optional. Rows for the same ZIP are aggregated.
             </div>
           </div>
@@ -220,13 +220,13 @@ Mesquite,75150,31`}
 
       {/* Upload form */}
       <div style={{ ...SURFACE, marginBottom: '24px' }}>
-        <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#A8B4C5', textTransform: 'uppercase', marginBottom: '20px' }}>
+        <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.1em', color: '#C8BCA8', textTransform: 'uppercase', marginBottom: '20px' }}>
           Upload File
         </div>
 
         <form onSubmit={handleSubmit}>
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ ...MONO, fontSize: '10px', color: '#8A98AE', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+            <label style={{ ...MONO, fontSize: '10px', color: '#A89A88', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
               Source Date (export date from Rock RMS)
             </label>
             <input
@@ -235,15 +235,15 @@ Mesquite,75150,31`}
               onChange={e => setSourceDate(e.target.value)}
               style={{
                 ...MONO, fontSize: '12px',
-                background: '#0d0f14', color: '#C8D4E4',
-                border: '1px solid #232940', padding: '8px 12px',
+                background: '#323232', color: '#E8DDD0',
+                border: '1px solid #4A4A4A', padding: '8px 12px',
                 outline: 'none', width: '180px',
               }}
             />
           </div>
 
           <div style={{ marginBottom: '20px' }}>
-            <label style={{ ...MONO, fontSize: '10px', color: '#8A98AE', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
+            <label style={{ ...MONO, fontSize: '10px', color: '#A89A88', letterSpacing: '0.1em', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
               CSV File
             </label>
             <input
@@ -251,13 +251,13 @@ Mesquite,75150,31`}
               type="file"
               accept=".csv,text/csv"
               onChange={e => setFile(e.target.files?.[0] ?? null)}
-              style={{ ...MONO, fontSize: '12px', color: '#C8D4E4', cursor: 'pointer' }}
+              style={{ ...MONO, fontSize: '12px', color: '#E8DDD0', cursor: 'pointer' }}
             />
           </div>
 
           {file && (
-            <div style={{ ...MONO, fontSize: '10px', color: '#8A98AE', marginBottom: '16px' }}>
-              Selected: <span style={{ color: '#4EAEFF' }}>{file.name}</span> · {(file.size / 1024).toFixed(1)} KB
+            <div style={{ ...MONO, fontSize: '10px', color: '#A89A88', marginBottom: '16px' }}>
+              Selected: <span style={{ color: '#7AA3AA' }}>{file.name}</span> · {(file.size / 1024).toFixed(1)} KB
             </div>
           )}
 
@@ -266,9 +266,9 @@ Mesquite,75150,31`}
             disabled={!file || status === 'uploading'}
             style={{
               ...MONO, fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase',
-              background: !file || status === 'uploading' ? 'transparent' : 'rgba(232,184,75,0.12)',
-              color: !file || status === 'uploading' ? '#3a4154' : '#E8B84B',
-              border: `1px solid ${!file || status === 'uploading' ? '#232940' : 'rgba(232,184,75,0.4)'}`,
+              background: !file || status === 'uploading' ? 'transparent' : 'rgba(240,75,40,0.12)',
+              color: !file || status === 'uploading' ? '#3a4154' : '#F04B28',
+              border: `1px solid ${!file || status === 'uploading' ? '#4A4A4A' : 'rgba(240,75,40,0.4)'}`,
               padding: '10px 24px', cursor: !file || status === 'uploading' ? 'not-allowed' : 'pointer',
             }}
           >
@@ -281,41 +281,41 @@ Mesquite,75150,31`}
       {result && (
         <div style={{
           ...SURFACE,
-          borderColor: result.error ? 'rgba(255,107,107,0.4)' : 'rgba(45,212,191,0.4)',
+          borderColor: result.error ? 'rgba(196,90,70,0.4)' : 'rgba(212,136,58,0.4)',
         }}>
           {result.error ? (
             <>
-              <div style={{ ...MONO, fontSize: '11px', color: '#FF6B6B', marginBottom: '6px' }}>Upload Failed</div>
-              <div style={{ ...MONO, fontSize: '12px', color: '#C8D4E4' }}>{result.error}</div>
+              <div style={{ ...MONO, fontSize: '11px', color: '#C45A46', marginBottom: '6px' }}>Upload Failed</div>
+              <div style={{ ...MONO, fontSize: '12px', color: '#E8DDD0' }}>{result.error}</div>
             </>
           ) : (
             <>
-              <div style={{ ...MONO, fontSize: '11px', color: '#2DD4BF', marginBottom: '10px' }}>Upload Complete</div>
-              <div style={{ ...MONO, fontSize: '12px', color: '#C8D4E4', marginBottom: '12px' }}>
-                <span style={{ color: '#E8B84B' }}>{result.upserted} DFW ZIP{result.upserted !== 1 ? 's' : ''}</span>
+              <div style={{ ...MONO, fontSize: '11px', color: '#D4883A', marginBottom: '10px' }}>Upload Complete</div>
+              <div style={{ ...MONO, fontSize: '12px', color: '#E8DDD0', marginBottom: '12px' }}>
+                <span style={{ color: '#F04B28' }}>{result.upserted} DFW ZIP{result.upserted !== 1 ? 's' : ''}</span>
                 {' · '}
-                <span style={{ color: '#2DD4BF' }}>{result.totalHouseholds?.toLocaleString()} households</span>
+                <span style={{ color: '#D4883A' }}>{result.totalHouseholds?.toLocaleString()} households</span>
                 {' upserted. The Overview map attendee overlay will reflect the new data.'}
               </div>
               {result.skipped && (
-                <div style={{ borderTop: '1px solid #1e2b3c', paddingTop: '10px' }}>
-                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.1em', color: '#7A8699', textTransform: 'uppercase', marginBottom: '8px' }}>
+                <div style={{ borderTop: '1px solid #424242', paddingTop: '10px' }}>
+                  <div style={{ ...MONO, fontSize: '10px', letterSpacing: '0.1em', color: '#B4A490', textTransform: 'uppercase', marginBottom: '8px' }}>
                     Rows Skipped
                   </div>
                   <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
                     {[
-                      { label: 'Online campus', count: result.skipped.online,        color: '#8A98AE' },
-                      { label: 'Out of DFW',   count: result.skipped.outOfCoverage, color: '#8A98AE' },
-                      { label: 'Invalid ZIP',   count: result.skipped.invalidZip,    color: '#FF6B6B' },
-                      { label: 'Invalid count', count: result.skipped.invalidCount,  color: '#FF6B6B' },
+                      { label: 'Online campus', count: result.skipped.online,        color: '#A89A88' },
+                      { label: 'Out of DFW',   count: result.skipped.outOfCoverage, color: '#A89A88' },
+                      { label: 'Invalid ZIP',   count: result.skipped.invalidZip,    color: '#C45A46' },
+                      { label: 'Invalid count', count: result.skipped.invalidCount,  color: '#C45A46' },
                     ].map(({ label, count, color }) => count > 0 && (
                       <div key={label} style={{ ...MONO, fontSize: '10px' }}>
                         <span style={{ color }}>{count.toLocaleString()}</span>
-                        <span style={{ color: '#7A8699' }}> {label}</span>
+                        <span style={{ color: '#B4A490' }}> {label}</span>
                       </div>
                     ))}
                     {Object.values(result.skipped).every(v => v === 0) && (
-                      <div style={{ ...MONO, fontSize: '10px', color: '#7A8699' }}>None — all rows processed</div>
+                      <div style={{ ...MONO, fontSize: '10px', color: '#B4A490' }}>None — all rows processed</div>
                     )}
                   </div>
                 </div>
@@ -326,8 +326,8 @@ Mesquite,75150,31`}
       )}
 
       {/* Footer note */}
-      <div style={{ marginTop: '32px', borderTop: '1px solid #1e2b3c', paddingTop: '16px' }}>
-        <div style={{ ...MONO, fontSize: '10px', color: '#7A8699', lineHeight: 1.7 }}>
+      <div style={{ marginTop: '32px', borderTop: '1px solid #424242', paddingTop: '16px' }}>
+        <div style={{ ...MONO, fontSize: '10px', color: '#B4A490', lineHeight: 1.7 }}>
           Data is stored in the Neon PostgreSQL database under the <code>attendee_density</code> table.
           Uploading a new file overwrites existing rows for matching ZIPs.
           ZIPs not present in the upload are not deleted — re-upload the full export each time.

@@ -35,7 +35,7 @@ interface ZipData {
   medianHouseholdIncome: number | null
 }
 
-const PALETTE = ['#4EAEFF','#2DD4BF','#E8B84B','#A78BFA','#FF6B6B']
+const PALETTE = ['#7AA3AA','#D4883A','#F04B28','#7A9E8A','#C45A46']
 
 function fmt$(n: number) { return '$' + n.toLocaleString() }
 function fmtK(n: number) {
@@ -53,7 +53,7 @@ function BarList({ rows, formatValue, singleColor }: {
 }) {
   const maxVal = Math.max(...rows.map(r => r.value), 1)
   if (!rows.length) return (
-    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#7A8699', padding:'8px 0' }}>
+    <div style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#B4A490', padding:'8px 0' }}>
       No data available
     </div>
   )
@@ -66,7 +66,7 @@ function BarList({ rows, formatValue, singleColor }: {
           <div key={r.label} style={{ display:'flex', alignItems:'center', gap:'8px' }}>
             <div style={{
               width:'130px', flexShrink:0, textAlign:'right',
-              fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#8A98AE',
+              fontFamily:"'Gotham'", fontSize:'10px', color:'#A89A88',
               overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap',
             }}>{r.label}</div>
             <div style={{ flex:1, height:'12px', background:'rgba(255,255,255,0.05)', borderRadius:'2px', position:'relative', overflow:'hidden' }}>
@@ -79,7 +79,7 @@ function BarList({ rows, formatValue, singleColor }: {
             </div>
             <div style={{
               width:'60px', flexShrink:0, textAlign:'right',
-              fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color, fontWeight:'600',
+              fontFamily:"'Gotham'", fontSize:'10px', color, fontWeight:'600',
             }}>{formatValue(r.value)}</div>
           </div>
         )
@@ -95,11 +95,11 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
   const otherEstab = sectors.slice(8).reduce((s, x) => s + x.estab, 0)
   const slices = otherEstab > 0 ? [...top, { label: 'Other', estab: otherEstab }] : top
   const total = slices.reduce((s, x) => s + x.estab, 0)
-  if (total === 0) return <div style={{ color:'#7A8699', fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px' }}>No data</div>
+  if (total === 0) return <div style={{ color:'#B4A490', fontFamily:"'Gotham'", fontSize:'11px' }}>No data</div>
 
   const cx = 110, cy = 110, r = 84, inner = 54
   let angle = -Math.PI / 2
-  const donutPalette = ['#4EAEFF','#2DD4BF','#E8B84B','#A78BFA','#FF6B6B','#4EAEFF88','#2DD4BF88','#E8B84B88','#A78BFA88']
+  const donutPalette = ['#7AA3AA','#D4883A','#F04B28','#7A9E8A','#C45A46','#7AA3AA88','#D4883A88','#F04B2888','#7A9E8A88']
   const paths = slices.map((s, i) => {
     const sweep = (s.estab / total) * Math.PI * 2
     const x1 = cx + r * Math.cos(angle), y1 = cy + r * Math.sin(angle)
@@ -123,10 +123,10 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
             onMouseEnter={() => setHovered(p.i)} onMouseLeave={() => setHovered(null)}
           />
         ))}
-        <text x={cx} y={cy - 6} textAnchor="middle" fill="#F0F2F7" fontSize="20" fontFamily="Bebas Neue" letterSpacing="0.05em">
+        <text x={cx} y={cy - 6} textAnchor="middle" fill="#FFFFFF" fontSize="20" fontFamily="Gotham" letterSpacing="0.05em">
           {hov ? hov.pct + '%' : total.toLocaleString()}
         </text>
-        <text x={cx} y={cy + 12} textAnchor="middle" fill="#8A98AE" fontSize="9" fontFamily="IBM Plex Mono">
+        <text x={cx} y={cy + 12} textAnchor="middle" fill="#A89A88" fontSize="9" fontFamily="Gotham">
           {hov ? hov.label.slice(0,14) : 'establishments'}
         </text>
       </svg>
@@ -135,8 +135,8 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
           <div key={i} style={{ display:'flex', alignItems:'center', gap:'7px', opacity:hovered===null||hovered===i?1:0.35, transition:'opacity 0.15s', cursor:'default' }}
             onMouseEnter={() => setHovered(i)} onMouseLeave={() => setHovered(null)}>
             <div style={{ width:'7px', height:'7px', borderRadius:'2px', background:p.color, flexShrink:0 }} />
-            <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#A8B4C5', flex:1 }}>{p.label}</span>
-            <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699' }}>{p.pct}%</span>
+            <span style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#C8BCA8', flex:1 }}>{p.label}</span>
+            <span style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490' }}>{p.pct}%</span>
           </div>
         ))}
       </div>
@@ -146,7 +146,7 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
 
 // ── Employer Size Chart (per-ZIP) ─────────────────────────────────
 function SizeChart({ sizeDist }: { sizeDist: { label: string; estab: number }[] }) {
-  if (!sizeDist.length) return <div style={{ color:'#7A8699', fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px' }}>No size data</div>
+  if (!sizeDist.length) return <div style={{ color:'#B4A490', fontFamily:"'Gotham'", fontSize:'11px' }}>No size data</div>
   const maxVal = Math.max(...sizeDist.map(s => s.estab), 1)
   const barW = 44, gap = 10, padLeft = 4, padTop = 22, chartH = 140
   const svgW = padLeft + sizeDist.length * (barW + gap)
@@ -168,9 +168,9 @@ function SizeChart({ sizeDist }: { sizeDist: { label: string; estab: number }[] 
         return (
           <g key={s.label}>
             <rect x={x} y={y} width={barW} height={bh} fill={`url(#szG-${i})`} rx="2" />
-            <text x={x+barW/2} y={y-4} textAnchor="middle" fill={color} fontSize="9" fontFamily="IBM Plex Mono" fontWeight="600">{s.estab}</text>
-            <text x={x+barW/2} y={padTop+chartH+14} textAnchor="middle" fill="#8A98AE" fontSize="8" fontFamily="IBM Plex Mono">{s.label}</text>
-            <text x={x+barW/2} y={padTop+chartH+25} textAnchor="middle" fill="#7A8699" fontSize="7" fontFamily="IBM Plex Mono">emp</text>
+            <text x={x+barW/2} y={y-4} textAnchor="middle" fill={color} fontSize="9" fontFamily="Gotham" fontWeight="600">{s.estab}</text>
+            <text x={x+barW/2} y={padTop+chartH+14} textAnchor="middle" fill="#A89A88" fontSize="8" fontFamily="Gotham">{s.label}</text>
+            <text x={x+barW/2} y={padTop+chartH+25} textAnchor="middle" fill="#B4A490" fontSize="7" fontFamily="Gotham">emp</text>
           </g>
         )
       })}
@@ -191,10 +191,10 @@ function TopEmployersPlaceholder({ scope }: { scope: string }) {
         padding: '16px', background: 'rgba(255,255,255,0.02)',
         border: '1px dashed #2a3350', borderRadius: '4px',
       }}>
-        <div style={{ fontFamily: "'IBM Plex Mono',monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 1.7 }}>
+        <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 1.7 }}>
           Company-level employer names aren&apos;t available from anonymized Census CBP (it reports establishment
           counts by sector &amp; size band only). Reinstating the named top-employer list needs a licensed business
-          directory (Data Axle) or an on-demand Google Places lookup — <span style={{ color: '#7A8699' }}>pending Phase 3</span>.
+          directory (Data Axle) or an on-demand Google Places lookup — <span style={{ color: '#B4A490' }}>pending Phase 3</span>.
         </div>
       </div>
     </Surface>
@@ -206,9 +206,9 @@ function CampusDot({ status, size = 8 }: { status: 'existing' | 'soon'; size?: n
   return (
     <span style={{
       width: size, height: size, borderRadius: '50%', flexShrink: 0, display: 'inline-block',
-      background: status === 'existing' ? '#E8B84B' : 'transparent',
-      border: status === 'soon' ? '1.5px solid #E8B84B' : 'none',
-      boxShadow: status === 'existing' ? '0 0 5px rgba(232,184,75,0.5)' : 'none',
+      background: status === 'existing' ? '#F04B28' : 'transparent',
+      border: status === 'soon' ? '1.5px solid #F04B28' : 'none',
+      boxShadow: status === 'existing' ? '0 0 5px rgba(240,75,40,0.5)' : 'none',
     }} />
   )
 }
@@ -232,11 +232,11 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
   const selectedCampus = value ? CAMPUS_ZIPS[value] : undefined
 
   return (
-    <div ref={ref} style={{ position:'relative', display:'inline-block', background:'#13161f', borderRadius:'4px', zIndex:10 }}>
+    <div ref={ref} style={{ position:'relative', display:'inline-block', background:'#3C3C3C', borderRadius:'4px', zIndex:10 }}>
       <button onClick={() => setOpen(v => !v)} style={{
-        WebkitAppearance:'none', appearance:'none', backgroundColor:'#13161f',
-        border:`1px solid ${open ? '#E8B84B' : '#232940'}`, color:'#F0F2F7',
-        padding:'9px 36px 9px 14px', fontFamily:"'IBM Plex Mono',monospace", fontSize:'13px',
+        WebkitAppearance:'none', appearance:'none', backgroundColor:'#3C3C3C',
+        border:`1px solid ${open ? '#F04B28' : '#4A4A4A'}`, color:'#FFFFFF',
+        padding:'9px 36px 9px 14px', fontFamily:"'Gotham'", fontSize:'13px',
         letterSpacing:'0.04em', cursor:'pointer', outline:'none', minWidth:'240px',
         position:'relative', textAlign:'left', transition:'border-color 0.15s ease', borderRadius:'4px',
         display:'flex', alignItems:'center', gap:'8px',
@@ -248,7 +248,7 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
           transform:`translateY(-50%) rotate(${open ? 180 : 0}deg)`,
           transition:'transform 0.15s ease',
         }}>
-          <path d="M1 1l5 5 5-5" stroke="#E8B84B" strokeWidth="1.5" fill="none" strokeLinecap="round" />
+          <path d="M1 1l5 5 5-5" stroke="#F04B28" strokeWidth="1.5" fill="none" strokeLinecap="round" />
         </svg>
       </button>
 
@@ -256,23 +256,23 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
         <div style={{
           position:'absolute', top:'calc(100% + 4px)', right:0,
           minWidth:'240px', maxHeight:'360px', overflowY:'auto',
-          background:'#0d0f14', border:'1px solid #232940',
+          background:'#323232', border:'1px solid #4A4A4A',
           zIndex:200, boxShadow:'0 8px 32px rgba(0,0,0,0.7)',
         }}>
           <div onClick={() => { onChange(''); setOpen(false) }}
             onMouseEnter={() => setHovered('__metro')} onMouseLeave={() => setHovered(null)}
             style={{
-              padding:'10px 14px', fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px',
-              color: value==='' ? '#E8B84B' : hovered==='__metro' ? '#F0F2F7' : '#A8B4C5',
-              background: value==='' ? 'rgba(232,184,75,0.08)' : hovered==='__metro' ? 'rgba(255,255,255,0.04)' : 'transparent',
-              cursor:'pointer', letterSpacing:'0.04em', borderBottom:'1px solid #1e2b3c',
+              padding:'10px 14px', fontFamily:"'Gotham'", fontSize:'12px',
+              color: value==='' ? '#F04B28' : hovered==='__metro' ? '#FFFFFF' : '#C8BCA8',
+              background: value==='' ? 'rgba(240,75,40,0.08)' : hovered==='__metro' ? 'rgba(255,255,255,0.04)' : 'transparent',
+              cursor:'pointer', letterSpacing:'0.04em', borderBottom:'1px solid #424242',
             }}>DFW Metro Overview</div>
           {ZIP_GROUPS.map(group => (
             <div key={group.label}>
               <div style={{
-                fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699',
+                fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490',
                 letterSpacing:'0.15em', textTransform:'uppercase', padding:'10px 14px 4px',
-                position:'sticky', top:0, background:'#0d0f14', zIndex:1,
+                position:'sticky', top:0, background:'#323232', zIndex:1,
               }}>{group.label}</div>
               {group.zips.map(({ zip, label }) => {
                 const isSelected = zip === value, isHov = hovered === zip
@@ -282,12 +282,12 @@ function ZipDropdown({ value, onChange }: { value: string; onChange: (zip: strin
                     onClick={() => { onChange(zip); setOpen(false) }}
                     onMouseEnter={() => setHovered(zip)} onMouseLeave={() => setHovered(null)}
                     style={{
-                      padding:'7px 14px', fontFamily:"'IBM Plex Mono',monospace", fontSize:'12px',
-                      color: isSelected ? '#E8B84B' : isHov ? '#F0F2F7' : '#A8B4C5',
-                      background: isSelected ? 'rgba(232,184,75,0.08)' : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
+                      padding:'7px 14px', fontFamily:"'Gotham'", fontSize:'12px',
+                      color: isSelected ? '#F04B28' : isHov ? '#FFFFFF' : '#C8BCA8',
+                      background: isSelected ? 'rgba(240,75,40,0.08)' : isHov ? 'rgba(255,255,255,0.04)' : 'transparent',
                       cursor:'pointer', letterSpacing:'0.04em', display:'flex', alignItems:'center', gap:'8px',
                     }}>
-                    <span style={{ color: isSelected ? '#E8B84B' : '#7A8699', flexShrink:0, width:'38px' }}>{zip}</span>
+                    <span style={{ color: isSelected ? '#F04B28' : '#B4A490', flexShrink:0, width:'38px' }}>{zip}</span>
                     {campus && <CampusDot status={campus} size={7} />}
                     <span>{label}</span>
                   </div>
@@ -336,15 +336,15 @@ export default function EmployersPage() {
         {/* Header */}
         <div className="fade-up" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'28px', gap:'24px', position:'relative', zIndex:20 }}>
           <div>
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.2em', color:'#E8B84B', textTransform:'uppercase', marginBottom:'10px' }}>Dashboard · Employers</div>
-            <h1 style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'clamp(32px,3.5vw,48px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#F0F2F7' }}>Business &<br />Employment</h1>
-            <div style={{ width:'40px', height:'2px', background:'linear-gradient(90deg,#E8B84B,rgba(232,184,75,0))', marginTop:'12px' }} />
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#8A98AE', letterSpacing:'0.08em', marginTop:'10px', textTransform:'uppercase' }}>
+            <div style={{ fontFamily:"'Gotham'", fontSize:'11px', letterSpacing:'0.2em', color:'#F04B28', textTransform:'uppercase', marginBottom:'10px' }}>Dashboard · Employers</div>
+            <h1 style={{ fontFamily:"'Gotham',sans-serif", fontSize:'clamp(32px,3.5vw,48px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#FFFFFF' }}>Business &<br />Employment</h1>
+            <div style={{ width:'40px', height:'2px', background:'linear-gradient(90deg,#F04B28,rgba(240,75,40,0))', marginTop:'12px' }} />
+            <div style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#A89A88', letterSpacing:'0.08em', marginTop:'10px', textTransform:'uppercase' }}>
               Census CBP 2022 · {loading ? '—' : dfw?.zipCount ?? '—'} DFW ZIPs
             </div>
           </div>
           <div style={{ textAlign:'right', flexShrink:0 }}>
-            <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#8A98AE', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:'8px' }}>
+            <div style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#A89A88', letterSpacing:'0.1em', textTransform:'uppercase', marginBottom:'8px' }}>
               Select ZIP Code
             </div>
             <ZipDropdown value={selectedZip} onChange={setSelectedZip} />
@@ -356,10 +356,10 @@ export default function EmployersPage() {
           <>
             {/* Stat cards */}
             <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginBottom:'16px' }}>
-              <StatCard compact label="Total Establishments" value={loading ? '—' : fmtK(dfw?.totalEstab ?? 0)} sub="DFW Metro"          color="#E8B84B" loading={loading} />
-              <StatCard compact label="Total Employment"     value={loading ? '—' : fmtK(dfw?.totalEmp ?? 0)}   sub="CBP 2022"           color="#4EAEFF" loading={loading} />
-              <StatCard compact label="Annual Payroll"       value={loading ? '—' : `$${payrollB}B`}             sub="in $1,000s"          color="#2DD4BF" loading={loading} />
-              <StatCard compact label="Avg Annual Wage"      value={loading || !dfw?.avgWage ? '—' : fmt$(dfw.avgWage)} sub="payroll ÷ employment" color="#A78BFA" loading={loading} />
+              <StatCard compact label="Total Establishments" value={loading ? '—' : fmtK(dfw?.totalEstab ?? 0)} sub="DFW Metro"          color="#F04B28" loading={loading} />
+              <StatCard compact label="Total Employment"     value={loading ? '—' : fmtK(dfw?.totalEmp ?? 0)}   sub="CBP 2022"           color="#7AA3AA" loading={loading} />
+              <StatCard compact label="Annual Payroll"       value={loading ? '—' : `$${payrollB}B`}             sub="in $1,000s"          color="#D4883A" loading={loading} />
+              <StatCard compact label="Avg Annual Wage"      value={loading || !dfw?.avgWage ? '—' : fmt$(dfw.avgWage)} sub="payroll ÷ employment" color="#7A9E8A" loading={loading} />
             </div>
 
             {/* Industry Mix (donut) + Size Distribution — mirrors the per-ZIP view */}
@@ -392,8 +392,8 @@ export default function EmployersPage() {
                 : (() => {
                     const wageRows = (dfw?.sectors ?? []).filter(s => s.avgWage != null).map(s => ({ label: s.label, value: s.avgWage! })).sort((a,b) => b.value - a.value)
                     return wageRows.length
-                      ? <BarList rows={wageRows} formatValue={v => `$${(v/1000).toFixed(0)}K`} singleColor="#4EAEFF" />
-                      : <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#7A8699', padding:'8px 0' }}>Available after next /api/refresh run</div>
+                      ? <BarList rows={wageRows} formatValue={v => `$${(v/1000).toFixed(0)}K`} singleColor="#7AA3AA" />
+                      : <div style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#B4A490', padding:'8px 0' }}>Available after next /api/refresh run</div>
                   })()
               }
             </Surface>
@@ -406,11 +406,11 @@ export default function EmployersPage() {
                 : (
                   <div style={{ display:'grid', gridTemplateColumns:'repeat(5,1fr)', gap:'6px' }}>
                     {(dfw?.topZips ?? []).slice(0,10).map((z, i) => (
-                      <div key={z.zip} style={{ display:'flex', alignItems:'center', gap:'8px', padding:'6px 8px', background:'rgba(255,255,255,0.02)', border:'1px solid #1e2b3c', borderRadius:'3px' }}>
-                        <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', flexShrink:0, width:'12px' }}>{i+1}</span>
-                        <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#E8B84B', flexShrink:0 }}>{z.zip}</span>
-                        <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#A8B4C5', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{z.name}</span>
-                        <span style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#F0F2F7', flexShrink:0 }}>{z.totalEstab.toLocaleString()}</span>
+                      <div key={z.zip} style={{ display:'flex', alignItems:'center', gap:'8px', padding:'6px 8px', background:'rgba(255,255,255,0.02)', border:'1px solid #424242', borderRadius:'3px' }}>
+                        <span style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', flexShrink:0, width:'12px' }}>{i+1}</span>
+                        <span style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#F04B28', flexShrink:0 }}>{z.zip}</span>
+                        <span style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#C8BCA8', flex:1, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{z.name}</span>
+                        <span style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#FFFFFF', flexShrink:0 }}>{z.totalEstab.toLocaleString()}</span>
                       </div>
                     ))}
                   </div>
@@ -429,7 +429,7 @@ export default function EmployersPage() {
             {zipLoading && (
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginBottom:'16px' }}>
                 {Array.from({length:4}).map((_,i) => (
-                  <div key={i} style={{ height:'88px', background:'rgba(255,255,255,0.03)', borderRadius:'4px', border:'1px solid #232940', animation:'pulse 1.5s ease-in-out infinite' }} />
+                  <div key={i} style={{ height:'88px', background:'rgba(255,255,255,0.03)', borderRadius:'4px', border:'1px solid #4A4A4A', animation:'pulse 1.5s ease-in-out infinite' }} />
                 ))}
               </div>
             )}
@@ -437,37 +437,37 @@ export default function EmployersPage() {
             {zipData && !zipLoading && (
               <>
                 <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginBottom:'16px' }}>
-                  <StatCard compact label="Total Establishments" value={zipData.totalEstab.toLocaleString()} sub={zipData.name}               color="#E8B84B" />
-                  <StatCard compact label="Large Employers (100+)" value={String(zipData.largeEstab || '—')} sub="100+ employee firms"         color="#4EAEFF" />
-                  <StatCard compact label="Avg Annual Wage"        value={zipData.avgWage ? fmt$(zipData.avgWage) : '—'} sub="payroll ÷ employment" color="#2DD4BF" />
-                  <StatCard compact label="Top Sector"             value={zipData.topSector?.split(' ')[0] ?? '—'} sub={zipData.topSector ?? 'by estab count'} color="#A78BFA" />
+                  <StatCard compact label="Total Establishments" value={zipData.totalEstab.toLocaleString()} sub={zipData.name}               color="#F04B28" />
+                  <StatCard compact label="Large Employers (100+)" value={String(zipData.largeEstab || '—')} sub="100+ employee firms"         color="#7AA3AA" />
+                  <StatCard compact label="Avg Annual Wage"        value={zipData.avgWage ? fmt$(zipData.avgWage) : '—'} sub="payroll ÷ employment" color="#D4883A" />
+                  <StatCard compact label="Top Sector"             value={zipData.topSector?.split(' ')[0] ?? '—'} sub={zipData.topSector ?? 'by estab count'} color="#7A9E8A" />
                 </div>
 
                 <div className="fade-up-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'12px' }}>
-                  <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'18px' }}>
-                    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'3px' }}>Industry Mix</div>
-                    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginBottom:'14px' }}>Establishments by sector · {zipData.name}</div>
+                  <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #424242', borderRadius:'4px', padding:'18px' }}>
+                    <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.14em', color:'#A89A88', textTransform:'uppercase', marginBottom:'3px' }}>Industry Mix</div>
+                    <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginBottom:'14px' }}>Establishments by sector · {zipData.name}</div>
                     <DonutChart sectors={zipData.sectors} />
                   </div>
-                  <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'18px' }}>
-                    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'3px' }}>Employer Size Distribution</div>
-                    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginBottom:'14px' }}>Establishments by employee count band</div>
+                  <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #424242', borderRadius:'4px', padding:'18px' }}>
+                    <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.14em', color:'#A89A88', textTransform:'uppercase', marginBottom:'3px' }}>Employer Size Distribution</div>
+                    <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginBottom:'14px' }}>Establishments by employee count band</div>
                     <SizeChart sizeDist={zipData.sizeDist} />
                   </div>
                 </div>
 
                 {zipData.sectorWages?.length > 0 && (
-                  <div className="fade-up-4" style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #1e2b3c', borderRadius:'4px', padding:'18px', marginBottom:'12px' }}>
-                    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.14em', color:'#8A98AE', textTransform:'uppercase', marginBottom:'3px' }}>Sector Wages</div>
-                    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginBottom:'14px' }}>Avg annual wage by sector · {zipData.name} · CBP 2022 (where not suppressed)</div>
-                    <BarList rows={zipData.sectorWages.map(w => ({ label: w.label, value: w.avgWage }))} formatValue={v => `$${(v/1000).toFixed(0)}K`} singleColor="#4EAEFF" />
+                  <div className="fade-up-4" style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #424242', borderRadius:'4px', padding:'18px', marginBottom:'12px' }}>
+                    <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.14em', color:'#A89A88', textTransform:'uppercase', marginBottom:'3px' }}>Sector Wages</div>
+                    <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginBottom:'14px' }}>Avg annual wage by sector · {zipData.name} · CBP 2022 (where not suppressed)</div>
+                    <BarList rows={zipData.sectorWages.map(w => ({ label: w.label, value: w.avgWage }))} formatValue={v => `$${(v/1000).toFixed(0)}K`} singleColor="#7AA3AA" />
                   </div>
                 )}
 
                 {/* Top Employers — named (labeled placeholder) */}
                 <TopEmployersPlaceholder scope={zipData.name} />
 
-                <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', letterSpacing:'0.06em' }}>
+                <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', letterSpacing:'0.06em' }}>
                   {zipData.name} · {zipData.sectors.length} active sectors · CBP 2022 · per-sector employment suppressed for privacy in most ZIPs
                 </div>
               </>
@@ -475,7 +475,7 @@ export default function EmployersPage() {
           </>
         )}
 
-        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#7A8699', marginTop:'16px', letterSpacing:'0.06em' }}>
+        <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginTop:'16px', letterSpacing:'0.06em' }}>
           Source: U.S. Census Bureau County Business Patterns 2022 · establishment, employment &amp; payroll aggregates (anonymized; no company-level names)
         </div>
 

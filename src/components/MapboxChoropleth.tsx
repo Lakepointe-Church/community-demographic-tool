@@ -67,10 +67,10 @@ interface Props {
 
 function growthColor(g: number | null): string {
   if (g == null) return '#2a3044'
-  if (g >= 20)   return '#2DD4BF'
-  if (g >= 8)    return '#4EAEFF'
+  if (g >= 20)   return '#D4883A'
+  if (g >= 8)    return '#7AA3AA'
   if (g >= 0)    return '#3a4561'
-  return '#FF6B6B'
+  return '#C45A46'
 }
 
 // ── Compute simple centroid from a GeoJSON Polygon/MultiPolygon ───────────────
@@ -181,10 +181,10 @@ export default function MapboxChoropleth({
             'fill-color': [
               'case',
               ['==', ['get', 'growth'], null], '#2a3044',
-              ['>=', ['get', 'growth'], 20],   '#2DD4BF',
-              ['>=', ['get', 'growth'], 8],     '#4EAEFF',
+              ['>=', ['get', 'growth'], 20],   '#D4883A',
+              ['>=', ['get', 'growth'], 8],     '#7AA3AA',
               ['>=', ['get', 'growth'], 0],     '#3a4561',
-              '#FF6B6B',
+              '#C45A46',
             ],
             'fill-opacity': 0.72,
           },
@@ -204,7 +204,7 @@ export default function MapboxChoropleth({
           id:     'zcta-border',
           type:   'line',
           source: 'zctas',
-          paint:  { 'line-color': '#0d0f14', 'line-width': 1.5 },
+          paint:  { 'line-color': '#323232', 'line-width': 1.5 },
         })
 
         map.addLayer({
@@ -262,9 +262,9 @@ export default function MapboxChoropleth({
           source: 'attendees',
           paint:  {
             // campusColor is pre-computed per feature from the campusColorMap prop
-            'circle-color':        ['coalesce', ['get', 'campusColor'], '#E8B84B'],
+            'circle-color':        ['coalesce', ['get', 'campusColor'], '#F04B28'],
             'circle-opacity':      0.82,
-            'circle-stroke-color': ['coalesce', ['get', 'campusColor'], '#E8B84B'],
+            'circle-stroke-color': ['coalesce', ['get', 'campusColor'], '#F04B28'],
             'circle-stroke-width': 1.5,
             'circle-stroke-opacity': 1,
             'circle-radius': [
@@ -304,8 +304,8 @@ export default function MapboxChoropleth({
           const growthStr = g != null ? `${g > 0 ? '↑' : '↓'} ${Math.abs(g)}% since 2020` : '—'
 
           popup.setLngLat(e.lngLat).setHTML(`
-            <div style="font-family:'IBM Plex Mono',monospace;min-width:180px">
-              <div style="font-size:13px;color:#F0F2F7;font-weight:600;margin-bottom:6px">
+            <div style="font-family:'Gotham';min-width:180px">
+              <div style="font-size:13px;color:#FFFFFF;font-weight:600;margin-bottom:6px">
                 ${f.properties?.ZCTA5} · ${f.properties?.label}
               </div>
               <div style="font-size:10px;color:${color};margin-bottom:4px">${growthStr}</div>
@@ -340,14 +340,14 @@ export default function MapboxChoropleth({
           map.getCanvas().style.cursor = 'pointer'
           const p      = e.features[0].properties as Record<string, unknown>
           const campus = p.primaryCampus ? String(p.primaryCampus) : null
-          const color  = p.campusColor   ? String(p.campusColor)   : '#E8B84B'
+          const color  = p.campusColor   ? String(p.campusColor)   : '#F04B28'
           attendeePopup.setLngLat(e.lngLat).setHTML(`
-            <div style="font-family:'IBM Plex Mono',monospace;min-width:160px">
-              <div style="font-size:12px;color:#F0F2F7;font-weight:600;margin-bottom:4px">${p.label ?? p.zip}</div>
-              <div style="font-size:10px;color:#8A98AE;margin-bottom:6px">${p.zip}</div>
-              <div style="font-size:10px;color:#C8D4E4;margin-bottom:3px">${Number(p.households).toLocaleString()} attendee households</div>
+            <div style="font-family:'Gotham';min-width:160px">
+              <div style="font-size:12px;color:#FFFFFF;font-weight:600;margin-bottom:4px">${p.label ?? p.zip}</div>
+              <div style="font-size:10px;color:#A89A88;margin-bottom:6px">${p.zip}</div>
+              <div style="font-size:10px;color:#E8DDD0;margin-bottom:3px">${Number(p.households).toLocaleString()} attendee households</div>
               ${campus ? `<div style="font-size:10px;color:${color};margin-top:4px">Primary: ${campus}</div>` : ''}
-              <div style="font-size:10px;color:#7A8699;margin-top:6px">Click for campus breakdown</div>
+              <div style="font-size:10px;color:#B4A490;margin-top:6px">Click for campus breakdown</div>
             </div>
           `).addTo(map)
         })
@@ -374,7 +374,7 @@ export default function MapboxChoropleth({
 
           const p = e.features[0].properties as Record<string, unknown>
           const pct   = p.penetration != null ? `${Number(p.penetration).toFixed(2)}%` : null
-          const color = p.campusColor ? String(p.campusColor) : '#E8B84B'
+          const color = p.campusColor ? String(p.campusColor) : '#F04B28'
 
           // Parse campus breakdown (was JSON-stringified for GeoJSON storage)
           let breakdownRows = ''
@@ -383,19 +383,19 @@ export default function MapboxChoropleth({
             const sorted = Object.entries(bd).sort(([, a], [, b]) => b - a)
             breakdownRows = sorted.map(([campus, hh]) => `
               <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.06)">
-                <span style="font-size:10px;color:#C8D4E4">${campus}</span>
+                <span style="font-size:10px;color:#E8DDD0">${campus}</span>
                 <span style="font-size:10px;color:${color};font-weight:600">${hh.toLocaleString()} HH</span>
               </div>
             `).join('')
           } catch { /* no breakdown */ }
 
           clickPopup.setLngLat(e.lngLat).setHTML(`
-            <div style="font-family:'IBM Plex Mono',monospace;min-width:220px">
-              <div style="font-size:13px;color:#F0F2F7;font-weight:600;margin-bottom:2px">${p.label ?? p.zip}</div>
-              <div style="font-size:10px;color:#8A98AE;margin-bottom:12px">${p.zip}${pct ? ` · ${pct} of census HH` : ''}</div>
-              <div style="font-size:10px;letter-spacing:0.1em;color:#7A8699;text-transform:uppercase;margin-bottom:6px">Campus Attendance</div>
-              ${breakdownRows || `<div style="font-size:10px;color:#7A8699">No breakdown available</div>`}
-              <div style="margin-top:8px;font-size:11px;color:#E8B84B;font-weight:600">${Number(p.households).toLocaleString()} total households</div>
+            <div style="font-family:'Gotham';min-width:220px">
+              <div style="font-size:13px;color:#FFFFFF;font-weight:600;margin-bottom:2px">${p.label ?? p.zip}</div>
+              <div style="font-size:10px;color:#A89A88;margin-bottom:12px">${p.zip}${pct ? ` · ${pct} of census HH` : ''}</div>
+              <div style="font-size:10px;letter-spacing:0.1em;color:#B4A490;text-transform:uppercase;margin-bottom:6px">Campus Attendance</div>
+              ${breakdownRows || `<div style="font-size:10px;color:#B4A490">No breakdown available</div>`}
+              <div style="margin-top:8px;font-size:11px;color:#F04B28;font-weight:600">${Number(p.households).toLocaleString()} total households</div>
             </div>
           `).addTo(map)
         })
@@ -436,18 +436,18 @@ export default function MapboxChoropleth({
         width: ${isExisting ? 14 : 12}px;
         height: ${isExisting ? 14 : 12}px;
         border-radius: 50%;
-        background: ${isExisting ? '#E8B84B' : '#8A98AE'};
+        background: ${isExisting ? '#F04B28' : '#A89A88'};
         border: 2px solid ${isExisting ? '#fff' : 'rgba(255,255,255,0.4)'};
         cursor: pointer;
-        box-shadow: 0 0 ${isExisting ? '8px' : '4px'} ${isExisting ? 'rgba(232,184,75,0.6)' : 'rgba(0,0,0,0.5)'};
+        box-shadow: 0 0 ${isExisting ? '8px' : '4px'} ${isExisting ? 'rgba(240,75,40,0.6)' : 'rgba(0,0,0,0.5)'};
       `
 
       const popup = new mapboxgl.Popup({ closeButton: false, offset: 14 }).setHTML(`
-        <div style="font-family:'IBM Plex Mono',monospace">
-          <div style="font-size:11px;color:${isExisting ? '#E8B84B' : '#8A98AE'};font-weight:600;margin-bottom:4px">
+        <div style="font-family:'Gotham'">
+          <div style="font-size:11px;color:${isExisting ? '#F04B28' : '#A89A88'};font-weight:600;margin-bottom:4px">
             ${isExisting ? '● EXISTING CAMPUS' : '◌ COMING SOON'}
           </div>
-          <div style="font-size:13px;color:#F0F2F7">Lakepointe · ${campus.label}</div>
+          <div style="font-size:13px;color:#FFFFFF">Lakepointe · ${campus.label}</div>
           <div style="font-size:10px;color:#9BA5B7;margin-top:2px">ZIP ${campus.zip}</div>
         </div>
       `)
@@ -474,7 +474,7 @@ export default function MapboxChoropleth({
     }
 
     // Assign colors based on drive-time order (outermost = lightest)
-    const colors = ['#4EAEFF', '#2DD4BF', '#E8B84B']
+    const colors = ['#7AA3AA', '#D4883A', '#F04B28']
     const features = isochroneGeoJson.features.map((f, i) => ({
       ...f,
       properties: { ...f.properties, color: colors[i % colors.length] },
@@ -521,8 +521,8 @@ export default function MapboxChoropleth({
         const coords = zctaCentroidsRef.current[a.zip]
         if (!coords) return null
         const campusColor = a.primaryCampus
-          ? (campusColorMap[a.primaryCampus] ?? '#E8B84B')
-          : '#E8B84B'
+          ? (campusColorMap[a.primaryCampus] ?? '#F04B28')
+          : '#F04B28'
         return {
           type: 'Feature',
           geometry: { type: 'Point', coordinates: coords },
@@ -585,14 +585,14 @@ export default function MapboxChoropleth({
       const el = document.createElement('div')
       el.style.cssText = `
         width: 16px; height: 16px; border-radius: 50%;
-        background: #A78BFA; border: 2px solid #fff;
-        box-shadow: 0 0 10px rgba(167,139,250,0.7);
+        background: #7A9E8A; border: 2px solid #fff;
+        box-shadow: 0 0 10px rgba(122,158,138,0.7);
         cursor: pointer;
       `
 
       const popup = new mapboxgl.Popup({ closeButton: false, offset: 14 }).setHTML(`
-        <div style="font-family:'IBM Plex Mono',monospace">
-          <div style="font-size:11px;color:#A78BFA;font-weight:600;margin-bottom:4px">◎ CANDIDATE SITE</div>
+        <div style="font-family:'Gotham'">
+          <div style="font-size:11px;color:#7A9E8A;font-weight:600;margin-bottom:4px">◎ CANDIDATE SITE</div>
           <div style="font-size:10px;color:#9BA5B7">${candidatePin.lat.toFixed(4)}°N, ${Math.abs(candidatePin.lng).toFixed(4)}°W</div>
         </div>
       `)
@@ -615,8 +615,8 @@ export default function MapboxChoropleth({
           box-shadow: 0 8px 24px rgba(0,0,0,0.5) !important;
         }
         .mapboxgl-popup-tip { display: none !important; }
-        .mapboxgl-ctrl-group { background: #13161f !important; border: 1px solid #1e2433 !important; }
-        .mapboxgl-ctrl-group button { background: #13161f !important; }
+        .mapboxgl-ctrl-group { background: #3C3C3C !important; border: 1px solid #1e2433 !important; }
+        .mapboxgl-ctrl-group button { background: #3C3C3C !important; }
         .mapboxgl-ctrl-group button:hover { background: #1e2433 !important; }
         .mapboxgl-ctrl-icon { filter: invert(1) opacity(0.6); }
         .mapboxgl-ctrl-attrib { background: transparent !important; }
@@ -626,10 +626,10 @@ export default function MapboxChoropleth({
         {loading && (
           <div style={{
             position: 'absolute', inset: 0, zIndex: 10,
-            background: '#13161f',
+            background: '#3C3C3C',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#6B7689', letterSpacing: '0.12em' }}>
+            <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#6B7689', letterSpacing: '0.12em' }}>
               LOADING MAP DATA...
             </span>
           </div>
@@ -639,7 +639,7 @@ export default function MapboxChoropleth({
         {/* Legend */}
         <div style={{
           position: 'absolute', bottom: 24, left: 16,
-          background: 'rgba(13,15,20,0.88)',
+          background: 'rgba(50,50,50,0.88)',
           border: '1px solid #1e2433',
           padding: '10px 14px',
           display: 'flex', gap: '16px', alignItems: 'center',
@@ -647,35 +647,35 @@ export default function MapboxChoropleth({
           flexWrap: 'wrap',
         }}>
           {[
-            { label: 'Declining',    color: '#FF6B6B' },
+            { label: 'Declining',    color: '#C45A46' },
             { label: 'Stable',       color: '#3a4561' },
-            { label: 'Growing',      color: '#4EAEFF' },
-            { label: 'Rapid Growth', color: '#2DD4BF' },
+            { label: 'Growing',      color: '#7AA3AA' },
+            { label: 'Rapid Growth', color: '#D4883A' },
           ].map(({ label, color }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 10, height: 10, background: color }} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{label}</span>
+              <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{label}</span>
             </div>
           ))}
           {campuses.some(c => c.status === 'existing') && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#E8B84B', border: '2px solid #fff' }} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Campus</span>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#F04B28', border: '2px solid #fff' }} />
+              <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Campus</span>
             </div>
           )}
           {showAttendees && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(232,184,75,0.75)', border: '1px solid #E8B84B' }} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Attendees</span>
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: 'rgba(240,75,40,0.75)', border: '1px solid #F04B28' }} />
+              <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Attendees</span>
             </div>
           )}
           {isochroneGeoJson && isochroneMinutes && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: 16, height: 3, background: '#4EAEFF' }} />
-              <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{isochroneMinutes}-min drive</span>
+              <div style={{ width: 16, height: 3, background: '#7AA3AA' }} />
+              <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{isochroneMinutes}-min drive</span>
             </div>
           )}
-          <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '8px', color: '#3a4154', marginLeft: '8px' }}>
+          <span style={{ fontFamily: "'Gotham'", fontSize: '8px', color: '#3a4154', marginLeft: '8px' }}>
             Zoom in to see ZIP labels
           </span>
         </div>
@@ -684,10 +684,10 @@ export default function MapboxChoropleth({
         {onMapClick && (
           <div style={{
             position: 'absolute', top: 12, left: 12,
-            background: 'rgba(13,15,20,0.88)', border: '1px solid rgba(167,139,250,0.4)',
+            background: 'rgba(50,50,50,0.88)', border: '1px solid rgba(122,158,138,0.4)',
             padding: '6px 12px',
-            fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px',
-            color: '#A78BFA', letterSpacing: '0.08em',
+            fontFamily: "'Gotham'", fontSize: '10px',
+            color: '#7A9E8A', letterSpacing: '0.08em',
             backdropFilter: 'blur(8px)',
           }}>
             CLICK MAP TO PLACE CANDIDATE SITE

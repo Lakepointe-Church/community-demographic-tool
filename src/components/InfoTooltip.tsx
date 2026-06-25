@@ -18,16 +18,16 @@ export function InfoTooltip({ text, placement = 'above-center' }: {
       onMouseLeave={() => setShow(false)}
     >
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ flexShrink: 0, display: 'block' }}>
-        <circle cx="7" cy="7" r="6" stroke="#3a4861" strokeWidth="1" fill="none" />
-        <circle cx="7" cy="4.5" r="1" fill="#8A98AE" />
-        <rect x="6.2" y="6.5" width="1.6" height="4" rx="0.6" fill="#8A98AE" />
+        <circle cx="7" cy="7" r="6" stroke="#4A4A4A" strokeWidth="1" fill="none" />
+        <circle cx="7" cy="4.5" r="1" fill="#A89A88" />
+        <rect x="6.2" y="6.5" width="1.6" height="4" rx="0.6" fill="#A89A88" />
       </svg>
       {show && (
         <div style={{
           ...popoverStyle,
           width: '230px',
-          background: '#13161f',
-          border: '1px solid #2a3450',
+          background: '#3C3C3C',
+          border: '1px solid #484848',
           borderRadius: '6px',
           padding: '10px 12px',
           zIndex: 1000,
@@ -35,9 +35,9 @@ export function InfoTooltip({ text, placement = 'above-center' }: {
           pointerEvents: 'none',
         }}>
           <p style={{
-            fontFamily: "'IBM Plex Mono', monospace",
+            fontFamily: "'Gotham'",
             fontSize: '10px',
-            color: '#A8B4C5',
+            color: '#C8BCA8',
             lineHeight: 1.7,
             letterSpacing: '0.02em',
             margin: 0,

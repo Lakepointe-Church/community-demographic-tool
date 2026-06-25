@@ -115,7 +115,7 @@ export default function PrintPage() {
           .print-doc { box-shadow: none !important; margin: 0 !important; max-width: 100% !important; border: none !important; }
           @page { margin: 0.5in; size: letter portrait; }
         }
-        .print-doc { font-family: 'IBM Plex Sans', sans-serif; }
+        .print-doc { font-family: 'Gotham', sans-serif; }
       `}</style>
 
       {/* Screen wrapper — dark bg with centered white document */}
@@ -123,12 +123,12 @@ export default function PrintPage() {
 
         {/* Print / Back controls (hidden on print) */}
         <div className="print-hide" style={{ width: '100%', maxWidth: '780px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <a href={`/demographics`} style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#8A98AE', textDecoration:'none', letterSpacing:'0.1em' }}>
+          <a href={`/demographics`} style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#8A98AE', textDecoration:'none', letterSpacing:'0.1em' }}>
             ← Back to Demographics
           </a>
           <button
             onClick={() => window.print()}
-            style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'7px 18px', borderRadius:'3px', cursor:'pointer', border:'1px solid rgba(232,184,75,0.4)', background:'rgba(232,184,75,0.1)', color:'#E8B84B' }}
+            style={{ fontFamily:"'Gotham'", fontSize:'11px', letterSpacing:'0.12em', textTransform:'uppercase', padding:'7px 18px', borderRadius:'3px', cursor:'pointer', border:'1px solid rgba(240,75,40,0.4)', background:'rgba(240,75,40,0.1)', color:'#F04B28' }}
           >
             Print / Save as PDF
           </button>
@@ -138,13 +138,13 @@ export default function PrintPage() {
         <div className="print-doc" style={{ width: '100%', maxWidth: '780px', background: '#ffffff', borderRadius: '4px', boxShadow: '0 4px 32px rgba(0,0,0,0.5)', overflow: 'hidden' }}>
 
           {loading && (
-            <div style={{ padding: '80px', textAlign: 'center', fontFamily:"'IBM Plex Mono',monospace", fontSize:'13px', color:'#8A98AE' }}>
+            <div style={{ padding: '80px', textAlign: 'center', fontFamily:"'Gotham'", fontSize:'13px', color:'#8A98AE' }}>
               Loading ZIP {zip}…
             </div>
           )}
 
           {error && (
-            <div style={{ padding: '80px', textAlign: 'center', fontFamily:"'IBM Plex Mono',monospace", fontSize:'13px', color:'#B91C1C' }}>
+            <div style={{ padding: '80px', textAlign: 'center', fontFamily:"'Gotham'", fontSize:'13px', color:'#B91C1C' }}>
               No data found for ZIP {zip}. Check that this ZIP has been refreshed.
             </div>
           )}
@@ -154,21 +154,21 @@ export default function PrintPage() {
               {/* ── Doc Header ──────────────────────────────────── */}
               <div style={{ background: '#0d0f14', padding: '20px 28px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
                 <div>
-                  <div style={{ fontFamily:"'Bebas Neue',sans-serif", fontSize:'42px', letterSpacing:'0.06em', color:'#E8B84B', lineHeight:1 }}>
+                  <div style={{ fontFamily:"'Gotham',sans-serif", fontSize:'42px', letterSpacing:'0.06em', color:'#F04B28', lineHeight:1 }}>
                     ZIP {zip}
                   </div>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'13px', color:'#C8D4E4', marginTop:'4px' }}>
+                  <div style={{ fontFamily:"'Gotham'", fontSize:'13px', color:'#C8D4E4', marginTop:'4px' }}>
                     {areaName}
                   </div>
                 </div>
                 <div style={{ textAlign:'right' }}>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', letterSpacing:'0.18em', color:'#E8B84B', textTransform:'uppercase' }}>
+                  <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.18em', color:'#F04B28', textTransform:'uppercase' }}>
                     LAKEPOINTE CHURCH
                   </div>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#5a6478', marginTop:'3px' }}>
+                  <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#5a6478', marginTop:'3px' }}>
                     Community Intelligence · {today}
                   </div>
-                  <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#3d4a5c', marginTop:'2px', textTransform:'uppercase', letterSpacing:'0.1em' }}>
+                  <div style={{ fontFamily:"'Gotham'", fontSize:'9px', color:'#3d4a5c', marginTop:'2px', textTransform:'uppercase', letterSpacing:'0.1em' }}>
                     Internal Use Only
                   </div>
                 </div>
@@ -242,7 +242,7 @@ export default function PrintPage() {
                         ['Smoking',          fmtPct(health.smoking)],
                       ]} />
                       {health.cfpbComplaints != null && (
-                        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'10px', color:'#6b7280', marginTop:'6px' }}>
+                        <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#6b7280', marginTop:'6px' }}>
                           CFPB complaints: {health.cfpbComplaints.toLocaleString()}
                           {health.cfpbPer1k != null && ` · ${health.cfpbPer1k}/1K residents`}
                         </div>
@@ -260,7 +260,7 @@ export default function PrintPage() {
                         ['Top Sector',     employers.topSector ?? '—'],
                       ]} />
                       {employers.sectors.slice(1, 4).length > 0 && (
-                        <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#9ca3af', marginTop:'4px' }}>
+                        <div style={{ fontFamily:"'Gotham'", fontSize:'9px', color:'#9ca3af', marginTop:'4px' }}>
                           Also: {employers.sectors.slice(1, 4).map(s => s.label).join(' · ')}
                         </div>
                       )}
@@ -274,7 +274,7 @@ export default function PrintPage() {
                         ['Total registered', String(totalReligious)],
                         ...religious.counts.map(c => [c.ntee_category, String(c.count)] as [string, string]),
                       ]} />
-                      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#9ca3af', marginTop:'4px' }}>
+                      <div style={{ fontFamily:"'Gotham'", fontSize:'9px', color:'#9ca3af', marginTop:'4px' }}>
                         BMF undercounts congregations that never file — use as relative index.
                       </div>
                     </>
@@ -291,11 +291,11 @@ export default function PrintPage() {
 
               {/* ── Footer ──────────────────────────────────────── */}
               <div style={{ padding:'10px 28px', background:'#f9fafb', display:'flex', justifyContent:'space-between', alignItems:'center' }}>
-                <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#9ca3af', lineHeight:1.6 }}>
+                <div style={{ fontFamily:"'Gotham'", fontSize:'9px', color:'#9ca3af', lineHeight:1.6 }}>
                   Sources: U.S. Census ACS 5-Year 2023 · CDC PLACES 2023 · Census CBP 2022 · IRS EO BMF<br />
                   * ZIP data uses ZCTA boundaries, which approximate but do not exactly match USPS ZIP codes.
                 </div>
-                <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#9ca3af', textAlign:'right' }}>
+                <div style={{ fontFamily:"'Gotham'", fontSize:'9px', color:'#9ca3af', textAlign:'right' }}>
                   Lakepointe Church<br />Internal Use Only
                 </div>
               </div>
@@ -309,19 +309,19 @@ export default function PrintPage() {
 
 // ── Sub-components ────────────────────────────────────────────────
 
-function StatPill({ label, value, sub, accent = '#E8B84B' }: { label: string; value: string; sub?: string; accent?: string }) {
+function StatPill({ label, value, sub, accent = '#F04B28' }: { label: string; value: string; sub?: string; accent?: string }) {
   return (
     <div style={{ borderLeft: `3px solid ${accent}`, paddingLeft: '10px', paddingTop: '4px', paddingBottom: '4px' }}>
-      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.12em', color:'#9ca3af', textTransform:'uppercase', marginBottom:'2px' }}>{label}</div>
-      <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'18px', fontWeight:600, color:'#111827', lineHeight:1.1 }}>{value}</div>
-      {sub && <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', color:'#9ca3af', marginTop:'2px' }}>{sub}</div>}
+      <div style={{ fontFamily:"'Gotham'", fontSize:'9px', letterSpacing:'0.12em', color:'#9ca3af', textTransform:'uppercase', marginBottom:'2px' }}>{label}</div>
+      <div style={{ fontFamily:"'Gotham'", fontSize:'18px', fontWeight:600, color:'#111827', lineHeight:1.1 }}>{value}</div>
+      {sub && <div style={{ fontFamily:"'Gotham'", fontSize:'9px', color:'#9ca3af', marginTop:'2px' }}>{sub}</div>}
     </div>
   )
 }
 
 function SectionLabel({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'9px', letterSpacing:'0.16em', textTransform:'uppercase', color:'#E8B84B', marginBottom:'8px', borderBottom:'1px solid #f3f4f6', paddingBottom:'4px', ...style }}>
+    <div style={{ fontFamily:"'Gotham'", fontSize:'9px', letterSpacing:'0.16em', textTransform:'uppercase', color:'#F04B28', marginBottom:'8px', borderBottom:'1px solid #f3f4f6', paddingBottom:'4px', ...style }}>
       {children}
     </div>
   )
@@ -333,8 +333,8 @@ function MiniTable({ rows }: { rows: [string, string][] }) {
       <tbody>
         {rows.map(([label, value]) => (
           <tr key={label}>
-            <td style={{ fontFamily:"'IBM Plex Sans',sans-serif", fontSize:'11px', color:'#374151', padding:'2px 0', width:'60%' }}>{label}</td>
-            <td style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#111827', fontWeight:600, padding:'2px 0', textAlign:'right' }}>{value}</td>
+            <td style={{ fontFamily:"'Gotham',sans-serif", fontSize:'11px', color:'#374151', padding:'2px 0', width:'60%' }}>{label}</td>
+            <td style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#111827', fontWeight:600, padding:'2px 0', textAlign:'right' }}>{value}</td>
           </tr>
         ))}
       </tbody>
@@ -343,5 +343,5 @@ function MiniTable({ rows }: { rows: [string, string][] }) {
 }
 
 function Dash() {
-  return <div style={{ fontFamily:"'IBM Plex Mono',monospace", fontSize:'11px', color:'#9ca3af' }}>—</div>
+  return <div style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#9ca3af' }}>—</div>
 }

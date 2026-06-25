@@ -4,14 +4,14 @@ export default function MethodologyPage() {
 
       {/* Header */}
       <div style={{ marginBottom: '40px' }}>
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', letterSpacing: '0.2em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '12px' }}>
+        <div style={{ fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.2em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '12px' }}>
           Dashboard · Methodology
         </div>
-        <h1 style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: 'clamp(36px,4vw,52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#F0F2F7', margin: 0 }}>
+        <h1 style={{ fontFamily: "'Gotham', sans-serif", fontSize: 'clamp(36px,4vw,52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#FFFFFF', margin: 0 }}>
           Data &amp; Methodology
         </h1>
-        <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg,#E8B84B,rgba(232,184,75,0))', marginTop: '16px', marginBottom: '20px' }} />
-        <p style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '14px', color: '#8A98AE', lineHeight: 1.7, maxWidth: '700px', margin: 0 }}>
+        <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg,#F04B28,rgba(240,75,40,0))', marginTop: '16px', marginBottom: '20px' }} />
+        <p style={{ fontFamily: "'Gotham', sans-serif", fontSize: '14px', color: '#A89A88', lineHeight: 1.7, maxWidth: '700px', margin: 0 }}>
           This page documents every metric shown in the Community Intelligence Platform — its source, exact definition, vintage, and known limitations. All figures are derived from public datasets. No proprietary scoring or black-box models are used.
         </p>
       </div>
@@ -19,17 +19,17 @@ export default function MethodologyPage() {
       {/* ── COVERAGE AREA ────────────────────────────── */}
       <Section title="Coverage Area">
         <p style={bodyStyle}>
-          The platform covers <strong style={{ color: '#C8D4E4' }}>370 ZIP codes</strong> across the full DFW metro (a 75-mile radius from Dallas center). Every page that shows aggregates or rankings defaults to the <strong style={{ color: '#E8B84B' }}>Core MSA</strong> — switch the coverage dropdown to &ldquo;All ZIPs&rdquo; to include the outer/extended counties.
+          The platform covers <strong style={{ color: '#E8DDD0' }}>370 ZIP codes</strong> across the full DFW metro (a 75-mile radius from Dallas center). Every page that shows aggregates or rankings defaults to the <strong style={{ color: '#F04B28' }}>Core MSA</strong> — switch the coverage dropdown to &ldquo;All ZIPs&rdquo; to include the outer/extended counties.
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '20px' }}>
           {/* Core MSA card */}
           <div style={cardStyle}>
-            <div style={{ ...cardLabelStyle, color: '#E8B84B' }}>Core MSA · default scope</div>
+            <div style={{ ...cardLabelStyle, color: '#F04B28' }}>Core MSA · default scope</div>
             <p style={{ ...bodyStyle, fontSize: '12px', marginBottom: '12px' }}>
-              The standard 11-county Dallas&ndash;Fort Worth&ndash;Plano&ndash;Arlington Metropolitan Statistical Area &mdash; <strong style={{ color: '#C8D4E4' }}>273 ZIPs</strong> across 21 ZIP groups. All weighted averages and rankings use this set unless coverage is changed.
+              The standard 11-county Dallas&ndash;Fort Worth&ndash;Plano&ndash;Arlington Metropolitan Statistical Area &mdash; <strong style={{ color: '#E8DDD0' }}>273 ZIPs</strong> across 21 ZIP groups. All weighted averages and rankings use this set unless coverage is changed.
             </p>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 2 }}>
               <div>Dallas · Tarrant · Collin · Denton</div>
               <div>Rockwall · Ellis · Johnson · Kaufman</div>
               <div>Parker · Wise · Hunt</div>
@@ -38,11 +38,11 @@ export default function MethodologyPage() {
 
           {/* Extended card */}
           <div style={cardStyle}>
-            <div style={{ ...cardLabelStyle, color: '#8A98AE' }}>Extended · all ZIPs only</div>
+            <div style={{ ...cardLabelStyle, color: '#A89A88' }}>Extended · all ZIPs only</div>
             <p style={{ ...bodyStyle, fontSize: '12px', marginBottom: '12px' }}>
-              Outer counties beyond the MSA &mdash; <strong style={{ color: '#C8D4E4' }}>97 ZIPs</strong> across 9 ZIP groups. Included only when coverage is set to &ldquo;All ZIPs &middot; Full coverage.&rdquo;
+              Outer counties beyond the MSA &mdash; <strong style={{ color: '#E8DDD0' }}>97 ZIPs</strong> across 9 ZIP groups. Included only when coverage is set to &ldquo;All ZIPs &middot; Full coverage.&rdquo;
             </p>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 2 }}>
               <div>Hood · Cooke/Montague · Grayson</div>
               <div>Fanin · Van Zandt/Rains · Henderson</div>
               <div>Navarro · Hill · Hopkins/Wood</div>
@@ -58,22 +58,22 @@ export default function MethodologyPage() {
           Data is not fetched live on page load — it is refreshed on the cadences below and served from the database.
         </p>
         <div style={{ overflowX: 'auto', marginTop: '20px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'Gotham'", fontSize: '11px' }}>
             <thead>
               <tr>
                 {['Source', 'Geography', 'Vintage', 'Refresh cadence', 'Used for'].map(h => (
-                  <th key={h} style={{ textAlign: 'left', padding: '8px 14px', borderBottom: '1px solid #232940', color: '#E8B84B', letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
+                  <th key={h} style={{ textAlign: 'left', padding: '8px 14px', borderBottom: '1px solid #4A4A4A', color: '#F04B28', letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {DATA_SOURCES.map((row, i) => (
-                <tr key={i} style={{ borderBottom: '1px solid #1e2b3c' }}>
-                  <td style={{ padding: '10px 14px', color: '#C8D4E4', fontWeight: 600 }}>{row.source}</td>
-                  <td style={{ padding: '10px 14px', color: '#8A98AE' }}>{row.geo}</td>
-                  <td style={{ padding: '10px 14px', color: '#8A98AE', whiteSpace: 'nowrap' }}>{row.vintage}</td>
-                  <td style={{ padding: '10px 14px', color: '#8A98AE', whiteSpace: 'nowrap' }}>{row.refresh}</td>
-                  <td style={{ padding: '10px 14px', color: '#8A98AE' }}>{row.usedFor}</td>
+                <tr key={i} style={{ borderBottom: '1px solid #424242' }}>
+                  <td style={{ padding: '10px 14px', color: '#E8DDD0', fontWeight: 600 }}>{row.source}</td>
+                  <td style={{ padding: '10px 14px', color: '#A89A88' }}>{row.geo}</td>
+                  <td style={{ padding: '10px 14px', color: '#A89A88', whiteSpace: 'nowrap' }}>{row.vintage}</td>
+                  <td style={{ padding: '10px 14px', color: '#A89A88', whiteSpace: 'nowrap' }}>{row.refresh}</td>
+                  <td style={{ padding: '10px 14px', color: '#A89A88' }}>{row.usedFor}</td>
                 </tr>
               ))}
             </tbody>
@@ -94,25 +94,25 @@ export default function MethodologyPage() {
           {/* Formula card */}
           <div style={cardStyle}>
             <div style={cardLabelStyle}>Composite formula</div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '12px', color: '#C8D4E4', lineHeight: 2 }}>
-              <div><span style={{ color: '#E8B84B' }}>50%</span> — Median household income</div>
-              <div style={{ fontSize: '10px', color: '#7A8699', marginTop: '-6px', marginBottom: '4px', paddingLeft: '32px' }}>capped at $200,000 → 0–100 scale</div>
-              <div><span style={{ color: '#4EAEFF' }}>30%</span> — Bachelor's degree rate</div>
-              <div style={{ fontSize: '10px', color: '#7A8699', marginTop: '-6px', marginBottom: '4px', paddingLeft: '32px' }}>% of adults 25+; ×2 → 0–100 scale, cap 100</div>
-              <div><span style={{ color: '#2DD4BF' }}>20%</span> — Median home value</div>
-              <div style={{ fontSize: '10px', color: '#7A8699', marginTop: '-6px', paddingLeft: '32px' }}>capped at $800,000 → 0–100 scale</div>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '12px', color: '#E8DDD0', lineHeight: 2 }}>
+              <div><span style={{ color: '#F04B28' }}>50%</span> — Median household income</div>
+              <div style={{ fontSize: '10px', color: '#B4A490', marginTop: '-6px', marginBottom: '4px', paddingLeft: '32px' }}>capped at $200,000 → 0–100 scale</div>
+              <div><span style={{ color: '#7AA3AA' }}>30%</span> — Bachelor's degree rate</div>
+              <div style={{ fontSize: '10px', color: '#B4A490', marginTop: '-6px', marginBottom: '4px', paddingLeft: '32px' }}>% of adults 25+; ×2 → 0–100 scale, cap 100</div>
+              <div><span style={{ color: '#D4883A' }}>20%</span> — Median home value</div>
+              <div style={{ fontSize: '10px', color: '#B4A490', marginTop: '-6px', paddingLeft: '32px' }}>capped at $800,000 → 0–100 scale</div>
             </div>
           </div>
 
           {/* Tier card */}
           <div style={cardStyle}>
             <div style={cardLabelStyle}>Tier thresholds</div>
-            <table style={{ width: '100%', fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', borderCollapse: 'collapse' }}>
+            <table style={{ width: '100%', fontFamily: "'Gotham'", fontSize: '11px', borderCollapse: 'collapse' }}>
               <tbody>
                 {SES_TIERS.map(t => (
-                  <tr key={t.label} style={{ borderBottom: '1px solid #1e2b3c' }}>
+                  <tr key={t.label} style={{ borderBottom: '1px solid #424242' }}>
                     <td style={{ padding: '7px 0', color: t.color, fontWeight: 600 }}>{t.label}</td>
-                    <td style={{ padding: '7px 0', color: '#8A98AE', textAlign: 'right' }}>score {t.range}</td>
+                    <td style={{ padding: '7px 0', color: '#A89A88', textAlign: 'right' }}>score {t.range}</td>
                   </tr>
                 ))}
               </tbody>
@@ -120,9 +120,9 @@ export default function MethodologyPage() {
           </div>
         </div>
 
-        <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(232,184,75,0.05)', border: '1px solid rgba(232,184,75,0.15)', borderRadius: '4px' }}>
+        <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(240,75,40,0.05)', border: '1px solid rgba(240,75,40,0.15)', borderRadius: '4px' }}>
           <p style={{ ...bodyStyle, margin: 0, fontSize: '12px' }}>
-            <span style={{ color: '#E8B84B', fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em' }}>NOTE · </span>
+            <span style={{ color: '#F04B28', fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.1em' }}>NOTE · </span>
             SES score is a relative ranking tool, not an absolute measure of wealth. Two ZIPs with the same score may have different profiles (e.g., high income / low education vs. moderate income / high education). Always read the individual components alongside the class label.
           </p>
         </div>
@@ -136,53 +136,53 @@ export default function MethodologyPage() {
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginTop: '20px' }}>
           <div style={cardStyle}>
-            <div style={{ ...cardLabelStyle, color: '#4EAEFF' }}>Young Family Index (YFI)</div>
+            <div style={{ ...cardLabelStyle, color: '#7AA3AA' }}>Young Family Index (YFI)</div>
             <p style={{ ...bodyStyle, fontSize: '12px', marginBottom: '12px' }}>
               Measures the concentration of young families with children — Lakepointe's primary ministry target demographic.
             </p>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-              <div>· Young children share <span style={{ color: '#7A8699' }}>(B09001)</span></div>
-              <div>· Family HH rate <span style={{ color: '#7A8699' }}>(B11003)</span></div>
-              <div>· Fertility signal <span style={{ color: '#7A8699' }}>(B13016 — births/women 15–50)</span></div>
-              <div>· Average HH size <span style={{ color: '#7A8699' }}>(B25010)</span></div>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 2 }}>
+              <div>· Young children share <span style={{ color: '#B4A490' }}>(B09001)</span></div>
+              <div>· Family HH rate <span style={{ color: '#B4A490' }}>(B11003)</span></div>
+              <div>· Fertility signal <span style={{ color: '#B4A490' }}>(B13016 — births/women 15–50)</span></div>
+              <div>· Average HH size <span style={{ color: '#B4A490' }}>(B25010)</span></div>
             </div>
           </div>
 
           <div style={cardStyle}>
-            <div style={{ ...cardLabelStyle, color: '#2DD4BF' }}>Working Family Index (WFI)</div>
+            <div style={{ ...cardLabelStyle, color: '#D4883A' }}>Working Family Index (WFI)</div>
             <p style={{ ...bodyStyle, fontSize: '12px', marginBottom: '12px' }}>
               Measures economic engagement and life-stage stability — families that are working, commuting, and embedded in the local economy.
             </p>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-              <div>· Dual-earner rate <span style={{ color: '#7A8699' }}>(B23007)</span></div>
-              <div>· Working parent rate <span style={{ color: '#7A8699' }}>(B11003)</span></div>
-              <div>· Commute burden <span style={{ color: '#7A8699' }}>(B08303 — workers 30+ min)</span></div>
-              <div>· Occupational diversity <span style={{ color: '#7A8699' }}>(C24010 — mgmt/prof share)</span></div>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 2 }}>
+              <div>· Dual-earner rate <span style={{ color: '#B4A490' }}>(B23007)</span></div>
+              <div>· Working parent rate <span style={{ color: '#B4A490' }}>(B11003)</span></div>
+              <div>· Commute burden <span style={{ color: '#B4A490' }}>(B08303 — workers 30+ min)</span></div>
+              <div>· Occupational diversity <span style={{ color: '#B4A490' }}>(C24010 — mgmt/prof share)</span></div>
             </div>
           </div>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginTop: '20px' }}>
           <div style={cardStyle}>
-            <div style={{ ...cardLabelStyle, color: '#4EAEFF' }}>YFI weights</div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-              <div><span style={{ color: '#4EAEFF' }}>40%</span> — Young children share (age_0_17 / 30%)</div>
-              <div><span style={{ color: '#4EAEFF' }}>25%</span> — Family HH rate (mwKids + single parent / 40%)</div>
-              <div><span style={{ color: '#4EAEFF' }}>20%</span> — Fertility signal (rate × 100 / 8%)</div>
-              <div><span style={{ color: '#4EAEFF' }}>15%</span> — HH size ((size − 1.5) / 2.0)</div>
+            <div style={{ ...cardLabelStyle, color: '#7AA3AA' }}>YFI weights</div>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 2 }}>
+              <div><span style={{ color: '#7AA3AA' }}>40%</span> — Young children share (age_0_17 / 30%)</div>
+              <div><span style={{ color: '#7AA3AA' }}>25%</span> — Family HH rate (mwKids + single parent / 40%)</div>
+              <div><span style={{ color: '#7AA3AA' }}>20%</span> — Fertility signal (rate × 100 / 8%)</div>
+              <div><span style={{ color: '#7AA3AA' }}>15%</span> — HH size ((size − 1.5) / 2.0)</div>
             </div>
           </div>
           <div style={cardStyle}>
-            <div style={{ ...cardLabelStyle, color: '#2DD4BF' }}>WFI weights</div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-              <div><span style={{ color: '#2DD4BF' }}>40%</span> — Dual-earner rate (/ 40%)</div>
-              <div><span style={{ color: '#2DD4BF' }}>25%</span> — HH with children rate (/ 50%)</div>
-              <div><span style={{ color: '#2DD4BF' }}>20%</span> — Commute burden inverse (100 − commute30+%)</div>
-              <div><span style={{ color: '#2DD4BF' }}>15%</span> — Bachelor&apos;s rate proxy (/ 50%)</div>
+            <div style={{ ...cardLabelStyle, color: '#D4883A' }}>WFI weights</div>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 2 }}>
+              <div><span style={{ color: '#D4883A' }}>40%</span> — Dual-earner rate (/ 40%)</div>
+              <div><span style={{ color: '#D4883A' }}>25%</span> — HH with children rate (/ 50%)</div>
+              <div><span style={{ color: '#D4883A' }}>20%</span> — Commute burden inverse (100 − commute30+%)</div>
+              <div><span style={{ color: '#D4883A' }}>15%</span> — Bachelor&apos;s rate proxy (/ 50%)</div>
             </div>
           </div>
         </div>
-        <p style={{ ...bodyStyle, marginTop: '12px', fontSize: '12px', color: '#7A8699' }}>
+        <p style={{ ...bodyStyle, marginTop: '12px', fontSize: '12px', color: '#B4A490' }}>
           Each component is normalized to 0–100 before weighting. All components are capped at 100.
         </p>
       </Section>
@@ -191,37 +191,37 @@ export default function MethodologyPage() {
       <div id="site-scorer">
         <Section title="Site Scorer">
           <p style={bodyStyle}>
-            The Site Scorer combines a chosen set of signals into a single 0–100 Fit Score per ZIP, with user-adjustable weights visible and editable on the <a href="/site-scorer" style={{ color: '#E8B84B' }}>Site Scorer page</a>. Leadership can toggle each signal in or out of the score; only the enabled signals are normalized to sum to 100% before scoring. Six demand/supply signals are on by default; <span style={{ color: '#FB923C' }}>Distance from campus</span> is available but off by default.
+            The Site Scorer combines a chosen set of signals into a single 0–100 Fit Score per ZIP, with user-adjustable weights visible and editable on the <a href="/site-scorer" style={{ color: '#F04B28' }}>Site Scorer page</a>. Leadership can toggle each signal in or out of the score; only the enabled signals are normalized to sum to 100% before scoring. Six demand/supply signals are on by default; <span style={{ color: '#FB923C' }}>Distance from campus</span> is available but off by default.
           </p>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginTop: '20px' }}>
             <div style={cardStyle}>
               <div style={cardLabelStyle}>Default weights</div>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-                <div><span style={{ color: '#4EAEFF' }}>23%</span> — Young Family Index (YFI)</div>
-                <div><span style={{ color: '#2DD4BF' }}>23%</span> — Working Family Index (WFI)</div>
-                <div><span style={{ color: '#A78BFA' }}>18%</span> — SES Score</div>
-                <div><span style={{ color: '#FF6B6B' }}>14%</span> — Population Growth</div>
-                <div><span style={{ color: '#E8B84B' }}>12%</span> — Church Saturation Opportunity</div>
-                <div><span style={{ color: '#2DD4BF' }}>10%</span> — School Enrollment Growth</div>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 2 }}>
+                <div><span style={{ color: '#7AA3AA' }}>23%</span> — Young Family Index (YFI)</div>
+                <div><span style={{ color: '#D4883A' }}>23%</span> — Working Family Index (WFI)</div>
+                <div><span style={{ color: '#7A9E8A' }}>18%</span> — SES Score</div>
+                <div><span style={{ color: '#C45A46' }}>14%</span> — Population Growth</div>
+                <div><span style={{ color: '#F04B28' }}>12%</span> — Church Saturation Opportunity</div>
+                <div><span style={{ color: '#D4883A' }}>10%</span> — School Enrollment Growth</div>
                 <div><span style={{ color: '#FB923C' }}>off</span> — Distance from Campus (opt-in; 10% when enabled)</div>
               </div>
             </div>
 
             <div style={cardStyle}>
               <div style={cardLabelStyle}>Component normalization</div>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#8A98AE', lineHeight: 2 }}>
-                <div>Growth score: <span style={{ color: '#7A8699' }}>(growth + 10) / 50 × 100, capped 0–100</span></div>
-                <div>Saturation opp.: <span style={{ color: '#7A8699' }}>100 − min(100, churches/10K / 30 × 100)</span></div>
-                <div>Enrollment growth: <span style={{ color: '#7A8699' }}>county ISD CAGR × 12, capped 0–100</span></div>
-                <div>Distance from campus: <span style={{ color: '#7A8699' }}>straight-line mi to nearest existing campus / 30 × 100, capped 0–100 (farther = higher)</span></div>
-                <div>YFI / WFI / SES: <span style={{ color: '#7A8699' }}>already 0–100 (see above)</span></div>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#A89A88', lineHeight: 2 }}>
+                <div>Growth score: <span style={{ color: '#B4A490' }}>(growth + 10) / 50 × 100, capped 0–100</span></div>
+                <div>Saturation opp.: <span style={{ color: '#B4A490' }}>100 − min(100, churches/10K / 30 × 100)</span></div>
+                <div>Enrollment growth: <span style={{ color: '#B4A490' }}>county ISD CAGR × 12, capped 0–100</span></div>
+                <div>Distance from campus: <span style={{ color: '#B4A490' }}>straight-line mi to nearest existing campus / 30 × 100, capped 0–100 (farther = higher)</span></div>
+                <div>YFI / WFI / SES: <span style={{ color: '#B4A490' }}>already 0–100 (see above)</span></div>
               </div>
             </div>
           </div>
 
           <div style={{ marginTop: '20px' }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '10px' }}>
               Church Saturation Index
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -231,17 +231,17 @@ export default function MethodologyPage() {
                 { label: 'Interpretation', definition: 'Lower churches/10K = less saturated market = higher campus opportunity. The index is relative — useful for comparing ZIPs to each other, not for stating absolute church counts. Treat as a directional signal, not a census.' },
                 { label: 'Known gap', definition: 'The BMF systematically undercounts congregations, especially newer or smaller churches that operate under a group exemption or have never filed. This bias is consistent across ZIPs, preserving the relative ranking value of the index.' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
           </div>
 
-          <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(232,184,75,0.05)', border: '1px solid rgba(232,184,75,0.15)', borderRadius: '4px' }}>
+          <div style={{ marginTop: '16px', padding: '12px 16px', background: 'rgba(240,75,40,0.05)', border: '1px solid rgba(240,75,40,0.15)', borderRadius: '4px' }}>
             <p style={{ ...bodyStyle, margin: 0, fontSize: '12px' }}>
-              <span style={{ color: '#E8B84B', fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.1em' }}>TRANSPARENCY · </span>
+              <span style={{ color: '#F04B28', fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.1em' }}>TRANSPARENCY · </span>
               All Site Scorer weights are shown on the scoring page and can be adjusted in real time. Changing a weight updates all scores and the opportunity quadrant immediately. No hidden weighting is applied.
             </p>
           </div>
@@ -260,19 +260,19 @@ export default function MethodologyPage() {
         {/* Confidence chips */}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', margin: '20px 0' }}>
           {[
-            { chip: 'MEASURED', color: '#4EAEFF', desc: 'IRS BMF — federal registration records. Directly counted from filing data. Undercounts congregations that operate under a church exemption and never file.' },
-            { chip: 'ESTIMATE', color: '#E8B84B', desc: '2020 U.S. Religion Census (ASARB) — congregation-reported adherent counts, aggregated to county level. Not a Census Bureau product.' },
-            { chip: 'PROXY',    color: '#A78BFA', desc: 'ACS birthplace + language — adjacent demographic signals at ZIP level. Directional only. Overcounts non-Muslims from flagged countries; undercounts U.S.-born Muslims.' },
+            { chip: 'MEASURED', color: '#7AA3AA', desc: 'IRS BMF — federal registration records. Directly counted from filing data. Undercounts congregations that operate under a church exemption and never file.' },
+            { chip: 'ESTIMATE', color: '#F04B28', desc: '2020 U.S. Religion Census (ASARB) — congregation-reported adherent counts, aggregated to county level. Not a Census Bureau product.' },
+            { chip: 'PROXY',    color: '#7A9E8A', desc: 'ACS birthplace + language — adjacent demographic signals at ZIP level. Directional only. Overcounts non-Muslims from flagged countries; undercounts U.S.-born Muslims.' },
           ].map(({ chip, color, desc }) => (
             <div key={chip} style={{ flex: '1 1 260px', padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: `1px solid ${color}30`, borderRadius: '4px', borderLeft: `3px solid ${color}` }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color, letterSpacing: '0.12em', marginBottom: '6px' }}>{chip}</div>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color, letterSpacing: '0.12em', marginBottom: '6px' }}>{chip}</div>
               <p style={{ ...bodyStyle, margin: 0, fontSize: '12px' }}>{desc}</p>
             </div>
           ))}
         </div>
 
         {/* ASARB */}
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', margin: '28px 0 12px' }}>
+        <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#F04B28', textTransform: 'uppercase', margin: '28px 0 12px' }}>
           2020 U.S. Religion Census (ASARB)
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
@@ -284,15 +284,15 @@ export default function MethodologyPage() {
             { label: 'Geography', definition: 'County level only. The platform covers 23 DFW counties: 11 core MSA counties (Dallas, Tarrant, Collin, Denton, Rockwall, Ellis, Johnson, Kaufman, Parker, Wise, Hunt) and 12 extended counties. Do not interpret county figures as ZIP-level data.' },
             { label: 'Attribution', definition: 'All displays of this data carry the required attribution: "2020 U.S. Religion Census (ASARB) · County level · Adherent estimates." Per ASARB terms, this data is not for marketing or commercial purposes. Internal church ministry planning is the intended use.' },
           ].map(m => (
-            <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid rgba(232,184,75,0.3)' }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-              <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+            <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid rgba(240,75,40,0.3)' }}>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+              <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
             </div>
           ))}
         </div>
 
         {/* ACS Proxy */}
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#A78BFA', textTransform: 'uppercase', margin: '28px 0 12px' }}>
+        <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#7A9E8A', textTransform: 'uppercase', margin: '28px 0 12px' }}>
           ACS Muslim Community Presence Proxy
         </div>
         <p style={bodyStyle}>
@@ -304,53 +304,53 @@ export default function MethodologyPage() {
             { label: 'proxy_born', definition: 'Sum of ACS B05006 (Place of Birth for the Foreign-Born Population) cells for 20 predominantly Muslim-majority countries. Stored in zip_demographics.proxy_born. Per-1,000-residents figure normalizes for ZIP population.' },
             { label: 'proxy_language', definition: 'ACS C16001_033E — count of persons age 5+ in households where Arabic is spoken at home (all English proficiency levels). C16001 is the only language table available at the ZCTA level; B16001 (which includes Urdu, Bengali, and Somali separately) is only available at census tract and county geography. Language speakers are not summed with birthplace counts.' },
           ].map(m => (
-            <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid rgba(167,139,250,0.3)' }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-              <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+            <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid rgba(122,158,138,0.3)' }}>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+              <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
             </div>
           ))}
         </div>
 
         {/* Country list */}
-        <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#8A98AE', textTransform: 'uppercase', marginBottom: '10px' }}>
+        <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.14em', color: '#A89A88', textTransform: 'uppercase', marginBottom: '10px' }}>
           Approved country list — proxy_born (B05006)
         </div>
         <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: "'Gotham'", fontSize: '11px' }}>
             <thead>
               <tr>
                 {['Country / Group', 'ACS Variable', 'Notes'].map(h => (
-                  <th key={h} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '1px solid #232940', color: '#7A8699', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '10px' }}>{h}</th>
+                  <th key={h} style={{ textAlign: 'left', padding: '6px 12px', borderBottom: '1px solid #4A4A4A', color: '#B4A490', letterSpacing: '0.08em', textTransform: 'uppercase', fontSize: '10px' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {PROXY_COUNTRIES.map((r, i) => (
                 <tr key={i} style={{ borderBottom: '1px solid #1a1f2e' }}>
-                  <td style={{ padding: '7px 12px', color: r.flagged ? '#FF6B6B' : '#A8B4C5' }}>
+                  <td style={{ padding: '7px 12px', color: r.flagged ? '#C45A46' : '#C8BCA8' }}>
                     {r.country}
-                    {r.flagged && <span style={{ fontSize: '10px', color: '#FF6B6B', marginLeft: '6px' }}>★ FLAGGED</span>}
+                    {r.flagged && <span style={{ fontSize: '10px', color: '#C45A46', marginLeft: '6px' }}>★ FLAGGED</span>}
                   </td>
-                  <td style={{ padding: '7px 12px', color: '#7A8699' }}>{r.variable}</td>
-                  <td style={{ padding: '7px 12px', color: '#8A98AE', fontSize: '11px' }}>{r.note}</td>
+                  <td style={{ padding: '7px 12px', color: '#B4A490' }}>{r.variable}</td>
+                  <td style={{ padding: '7px 12px', color: '#A89A88', fontSize: '11px' }}>{r.note}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        <p style={{ ...bodyStyle, fontSize: '11px', color: '#7A8699' }}>
+        <p style={{ ...bodyStyle, fontSize: '11px', color: '#B4A490' }}>
           ★ Flagged countries include significant non-Muslim minority populations in their diaspora communities.
           Excluded countries: Iran (large secular/non-Muslim DFW diaspora), Lebanon (large Maronite Christian community),
           India (mixed Hindu/Muslim/Sikh diaspora), Israel (Jewish state).
         </p>
 
         {/* Required caveat */}
-        <div style={{ padding: '14px 16px', background: 'rgba(167,139,250,0.05)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: '4px', marginTop: '8px' }}>
-          <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#A78BFA', letterSpacing: '0.1em', marginBottom: '6px', textTransform: 'uppercase' }}>Required caveat — always shown on the dashboard</div>
+        <div style={{ padding: '14px 16px', background: 'rgba(122,158,138,0.05)', border: '1px solid rgba(122,158,138,0.2)', borderRadius: '4px', marginTop: '8px' }}>
+          <div style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#7A9E8A', letterSpacing: '0.1em', marginBottom: '6px', textTransform: 'uppercase' }}>Required caveat — always shown on the dashboard</div>
           <p style={{ ...bodyStyle, margin: 0, fontSize: '13px' }}>
-            This proxy both <strong style={{ color: '#C8D4E4' }}>overcounts</strong> (many people from these countries are Christian or other faiths —
+            This proxy both <strong style={{ color: '#E8DDD0' }}>overcounts</strong> (many people from these countries are Christian or other faiths —
             Iraq: Chaldean Catholic &amp; Assyrian Christian; Egypt: Coptic Orthodox; Syria: Syrian Christian) and{' '}
-            <strong style={{ color: '#C8D4E4' }}>undercounts</strong> (large shares of American Muslims are U.S.-born, including
+            <strong style={{ color: '#E8DDD0' }}>undercounts</strong> (large shares of American Muslims are U.S.-born, including
             African American and convert communities, and will not appear in birthplace tables at all).
             It indicates <em>where communities with cultural ties to the Muslim world live</em>, not a Muslim population count.
           </p>
@@ -367,7 +367,7 @@ export default function MethodologyPage() {
 
           {/* BPS */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.1 · Building Permits (Census BPS)
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -377,9 +377,9 @@ export default function MethodologyPage() {
                 { label: 'Metric', definition: 'Total units authorized by permit in the most recent year available (2025 annual, released May 2026), split by single-family (1-unit structures) and multifamily (2+ unit structures). Momentum badge shows year-over-year % change from the prior year.' },
                 { label: 'Site Scorer use', definition: 'Not directly scored. Shown as a context indicator on the Demographics page only.' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -387,7 +387,7 @@ export default function MethodologyPage() {
 
           {/* TEA */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#4EAEFF', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#7AA3AA', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.2 · School Enrollment Trends (TEA PEIMS)
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -398,9 +398,9 @@ export default function MethodologyPage() {
                 { label: 'Enrollment Growth Score (Site Scorer)', definition: 'Enrollment CAGR is converted to a 0–100 score via: min(100, max(0, cagr × 12)). A CAGR of ~8.3% yields a score of 100. This feeds the 6th Site Scorer slider (default weight: 10%). As of Phase 4.3 the scorer prefers the finer ZIP-level CAGR (NCES CCD, §5.8) where a ZIP has school data; this county TEA CAGR is the fallback. Scores show as "—"/0 until at least one source is loaded.' },
                 { label: 'Rationale', definition: 'School enrollment is one of the best public leading indicators of young-family settlement — families move to areas with good schools, and enrollment growth precedes ACS population growth by 1–2 years in fast-growth suburbs.' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -408,7 +408,7 @@ export default function MethodologyPage() {
 
           {/* TDC */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#A78BFA', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#7A9E8A', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.3 · County Population Projections (Texas Demographic Center)
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -418,9 +418,9 @@ export default function MethodologyPage() {
                 { label: 'Years displayed', definition: 'Base year 2020, plus projections at 2030 and 2040 on the Demographics page. The underlying table also stores 2025, 2035, and 2050.' },
                 { label: 'Site Scorer use', definition: 'County projections are shown as context only on the Demographics page. They are not incorporated into the Site Scorer scoring formula — projections carry significant uncertainty, especially past 2035.' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -428,7 +428,7 @@ export default function MethodologyPage() {
 
           {/* LODES Commute Corridors */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#2DD4BF', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#D4883A', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.4 · Commute Corridors (LEHD LODES)
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -440,9 +440,9 @@ export default function MethodologyPage() {
                 { label: 'High-earner share', definition: 'Each corridor reports the % of those jobs paying more than $3,333/month (~$40k/yr), from the LODES SE03 earnings segment. A relative affluence signal for the commute, not a household income measure.' },
                 { label: 'Scoring use', definition: 'Context tier only — commute corridors are shown on the Demographics page and are NOT a Site Scorer input. Per the scoring-governance rules, access/commute would be a single candidate signal if ever scored, but it is displayed-with-caveat for now.' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -450,7 +450,7 @@ export default function MethodologyPage() {
 
           {/* IRS SOI Giving Capacity */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.5 · Giving Capacity (IRS SOI)
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -461,9 +461,9 @@ export default function MethodologyPage() {
                 { label: 'TCJA caveat (important)', definition: 'The 2017 Tax Cuts and Jobs Act roughly doubled the standard deduction, so post-2017 only ~10% of filers itemize — and charitable contributions are only visible on the return when a filer itemizes. This means SOI charitable data captures a minority of giving and skews heavily toward higher-income households who still itemize. It is a RELATIVE generosity signal between ZIPs, never a measure of total giving, and the itemizer rate is shown alongside it so the skew is visible.' },
                 { label: 'Scoring use', definition: 'Currently context/display only on the Demographics page. Adding it to the Site Scorer as a "generosity/capacity" weight is a deliberate scoring-model change reserved for a [HUMAN] decision (per the scoring-governance rules — max ~8 signals, each must name the decision it informs).' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -471,7 +471,7 @@ export default function MethodologyPage() {
 
           {/* HUD USPS Address Momentum */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.6 · Address Momentum (HUD USPS) · pending data load
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -482,9 +482,9 @@ export default function MethodologyPage() {
                 { label: 'Address momentum', definition: 'Trailing 4-quarter percentage change in active residential addresses for the ZIP, shown on the Demographics page alongside ACS growth. Until 5 quarters are loaded, a quarter-over-quarter change is shown as a fallback.' },
                 { label: 'Status & scoring', definition: 'Scaffold built; awaiting the first [HUMAN] data download. Context tier — not a Site Scorer input. Per the scoring-governance rules, it would only be considered for scoring after validation against known-growth ZIPs (Celina, Princeton, Forney should light up first).' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -492,7 +492,7 @@ export default function MethodologyPage() {
 
           {/* Zillow ZHVI Home Values */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.7 · Home Value Trend (Zillow ZHVI)
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -503,9 +503,9 @@ export default function MethodologyPage() {
                 { label: 'Why alongside ACS', definition: 'ACS median home value (B25077) is self-reported by owners and lags roughly two years; ZHVI is a market-derived measure refreshed monthly. ZHVI captures recent cooling or appreciation that ACS has not yet recorded. The two answer different questions — ACS = what owners think their homes are worth (lagged), ZHVI = current typical market value.' },
                 { label: 'Scoring use', definition: 'Context/display only — never a Site Scorer input. Home value already enters scoring indirectly through the SES composite (20% home value, from ACS); adding ZHVI to scoring would re-count the same construct (see scoring-governance rules).' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -513,7 +513,7 @@ export default function MethodologyPage() {
 
           {/* NCES CCD ZIP-level School Enrollment */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.8 · ZIP-Level School Enrollment (NCES CCD)
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -523,9 +523,9 @@ export default function MethodologyPage() {
                 { label: 'Metric', definition: 'For each DFW ZIP, campus enrollments are summed per year; the Site Scorer computes the earliest→latest annualized growth rate (CAGR), ×12, clamped 0–100 — the same transform as the county version. The Site Scorer prefers the ZIP-level score where a ZIP has school data and falls back to the county TEA CAGR otherwise (then 0). The response reports which source was used.' },
                 { label: 'Why NCES, not TEA campus files', definition: 'TEA\'s TAPR campus files carry enrollment but no address, so they would need a separate campus directory plus geocoding. NCES CCD ships enrollment, ZIP, and coordinates together — one source, no manual portal download. Trade-off: it is a federal source with a ~1–2 year lag and a "membership" definition that differs slightly from TEA\'s; it counts public schools only (no private/charter-home-school nuance beyond CCD coverage).' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -533,7 +533,7 @@ export default function MethodologyPage() {
 
           {/* IRS SOI County Migration Flows */}
           <div>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '10px' }}>
               5.9 · Migration Flows (IRS SOI)
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -544,9 +544,9 @@ export default function MethodologyPage() {
                 { label: 'Limitations', definition: 'Only filers who moved between two consecutive tax years and filed in both are captured — non-filers, late filers, and within-county moves are excluded. The IRS suppresses very small flows (rolled into "Other flows" aggregates that are dropped here), so a county\'s top-origin list omits the long tail of tiny flows. Data lags ~2–3 years. Because it is county level, it cannot distinguish a fast-growing ZIP from a stable one within the same county.' },
                 { label: 'Scoring use', definition: 'Context/narrative tier only — displayed on the Demographics page, never a Site Scorer input. It answers "who is moving into this county, from where, at what income," not a per-ZIP score.' },
               ].map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -559,14 +559,14 @@ export default function MethodologyPage() {
       <Section title="Metric Definitions">
         {METRIC_GROUPS.map(group => (
           <div key={group.group} style={{ marginBottom: '28px' }}>
-            <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.18em', color: '#4EAEFF', textTransform: 'uppercase', marginBottom: '10px' }}>
+            <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.18em', color: '#7AA3AA', textTransform: 'uppercase', marginBottom: '10px' }}>
               {group.group}
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {group.metrics.map(m => (
-                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #232940' }}>
-                  <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '11px', color: '#C8D4E4', fontWeight: 600 }}>{m.label}</div>
-                  <div style={{ fontFamily: "'IBM Plex Sans', sans-serif", fontSize: '13px', color: '#8A98AE', lineHeight: 1.6 }}>{m.definition}</div>
+                <div key={m.label} style={{ display: 'grid', gridTemplateColumns: '220px 1fr', gap: '16px', padding: '10px 14px', background: 'rgba(255,255,255,0.02)', borderRadius: '3px', borderLeft: '2px solid #4A4A4A' }}>
+                  <div style={{ fontFamily: "'Gotham'", fontSize: '11px', color: '#E8DDD0', fontWeight: 600 }}>{m.label}</div>
+                  <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '13px', color: '#A89A88', lineHeight: 1.6 }}>{m.definition}</div>
                 </div>
               ))}
             </div>
@@ -578,8 +578,8 @@ export default function MethodologyPage() {
       <Section title="Known Limitations">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
           {LIMITATIONS.map((lim, i) => (
-            <div key={i} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid #1e2b3c', borderRadius: '4px' }}>
-              <div style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', letterSpacing: '0.14em', color: '#E8B84B', textTransform: 'uppercase', marginBottom: '6px' }}>
+            <div key={i} style={{ padding: '14px 16px', background: 'rgba(255,255,255,0.02)', border: '1px solid #424242', borderRadius: '4px' }}>
+              <div style={{ fontFamily: "'Gotham'", fontSize: '10px', letterSpacing: '0.14em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '6px' }}>
                 {lim.source}
               </div>
               <p style={{ ...bodyStyle, margin: 0, fontSize: '13px' }}>{lim.limitation}</p>
@@ -589,7 +589,7 @@ export default function MethodologyPage() {
       </Section>
 
       {/* Footer ZCTA note */}
-      <div style={{ marginTop: '48px', paddingTop: '20px', borderTop: '1px solid #1e2b3c' }}>
+      <div style={{ marginTop: '48px', paddingTop: '20px', borderTop: '1px solid #424242' }}>
         <ZctaNote />
       </div>
 
@@ -602,10 +602,10 @@ export default function MethodologyPage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: '48px' }}>
-      <div style={{ fontFamily: "'Bebas Neue', sans-serif", fontSize: '22px', letterSpacing: '0.1em', color: '#E8B84B', marginBottom: '4px' }}>
+      <div style={{ fontFamily: "'Gotham', sans-serif", fontSize: '22px', letterSpacing: '0.1em', color: '#F04B28', marginBottom: '4px' }}>
         {title}
       </div>
-      <div style={{ width: '100%', height: '1px', background: '#1e2b3c', marginBottom: '20px' }} />
+      <div style={{ width: '100%', height: '1px', background: '#424242', marginBottom: '20px' }} />
       {children}
     </div>
   )
@@ -613,7 +613,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 function ZctaNote() {
   return (
-    <span style={{ fontFamily: "'IBM Plex Mono', monospace", fontSize: '10px', color: '#7A8699' }}>
+    <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#B4A490' }}>
       * ZIP-level data uses ZCTA boundaries (Census ZIP Code Tabulation Areas), which approximate but do not exactly match USPS ZIP codes.
     </span>
   )
@@ -622,25 +622,25 @@ function ZctaNote() {
 // ── Styles ───────────────────────────────────────────
 
 const bodyStyle: React.CSSProperties = {
-  fontFamily: "'IBM Plex Sans', sans-serif",
+  fontFamily: "'Gotham', sans-serif",
   fontSize: '14px',
-  color: '#8A98AE',
+  color: '#A89A88',
   lineHeight: 1.7,
   margin: '0 0 12px 0',
 }
 
 const cardStyle: React.CSSProperties = {
   background: 'linear-gradient(145deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.015) 100%)',
-  border: '1px solid #232940',
+  border: '1px solid #4A4A4A',
   borderRadius: '4px',
   padding: '20px 20px',
 }
 
 const cardLabelStyle: React.CSSProperties = {
-  fontFamily: "'IBM Plex Mono', monospace",
+  fontFamily: "'Gotham'",
   fontSize: '10px',
   letterSpacing: '0.16em',
-  color: '#E8B84B',
+  color: '#F04B28',
   textTransform: 'uppercase',
   marginBottom: '12px',
 }
@@ -742,11 +742,11 @@ const DATA_SOURCES = [
 ]
 
 const SES_TIERS = [
-  { label: 'Upper',        range: '78 – 100', color: '#E8B84B' },
-  { label: 'Upper Middle', range: '58 – 77',  color: '#4EAEFF' },
-  { label: 'Middle',       range: '40 – 57',  color: '#2DD4BF' },
-  { label: 'Lower Middle', range: '25 – 39',  color: '#A78BFA' },
-  { label: 'Lower Income', range: '0 – 24',   color: '#FF6B6B' },
+  { label: 'Upper',        range: '78 – 100', color: '#F04B28' },
+  { label: 'Upper Middle', range: '58 – 77',  color: '#7AA3AA' },
+  { label: 'Middle',       range: '40 – 57',  color: '#D4883A' },
+  { label: 'Lower Middle', range: '25 – 39',  color: '#7A9E8A' },
+  { label: 'Lower Income', range: '0 – 24',   color: '#C45A46' },
 ]
 
 const METRIC_GROUPS = [
