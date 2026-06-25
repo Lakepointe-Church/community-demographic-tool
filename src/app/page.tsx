@@ -500,59 +500,59 @@ export default function OverviewPage() {
 
         {/* Top Opportunities Insights Panel — Phase 3.3 */}
         {insights.length > 0 && (
-          <div style={{ marginBottom: '24px', background: '#3C3C3C', border: '1px solid #4A4A4A', borderRadius: 10, padding: '20px 24px' }}>
+          <div style={{ marginBottom: '24px', background: '#DED7CC', border: '1px solid rgba(50,50,50,0.12)', borderRadius: 10, padding: '20px 24px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <div>
                 <div style={{ fontFamily: "'Gotham'", fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase' as const, color: '#F04B28', marginBottom: 4 }}>
                   Top Opportunities · Default Weights · Core MSA
                 </div>
-                <div style={{ fontFamily: "'Gotham',sans-serif", fontSize: 22, letterSpacing: '0.04em', color: '#FFFFFF', lineHeight: 1 }}>
+                <div style={{ fontFamily: "'Gotham',sans-serif", fontWeight: 900, fontSize: 22, letterSpacing: '0.04em', color: '#323232', lineHeight: 1 }}>
                   Site Scorer Highlights
                 </div>
               </div>
               <a
                 href="/site-scorer"
-                style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490', textDecoration: 'none', border: '1px solid #4A4A4A', borderRadius: 4, padding: '5px 10px', letterSpacing: '0.06em' }}
+                style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#5A4A40', textDecoration: 'none', border: '1px solid rgba(50,50,50,0.25)', borderRadius: 4, padding: '5px 10px', letterSpacing: '0.06em' }}
               >Full Rankings →</a>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
               {insights.map((z, i) => {
-                const color = z.fitScore >= 75 ? '#F04B28' : z.fitScore >= 60 ? '#7AA3AA' : '#D4883A'
+                const color = z.fitScore >= 75 ? '#C43818' : z.fitScore >= 60 ? '#2E7080' : '#A06020'
                 const topPct = Math.max(1, Math.round((z.rank / z.total) * 100))
                 return (
                   <div key={z.zip} style={{
-                    background: 'rgba(255,255,255,0.02)',
-                    border: `1px solid ${i === 0 ? 'rgba(240,75,40,0.25)' : '#424242'}`,
+                    background: 'rgba(255,255,255,0.45)',
+                    border: `1px solid ${i === 0 ? 'rgba(196,56,24,0.3)' : 'rgba(50,50,50,0.12)'}`,
                     borderRadius: 8, padding: '16px 18px',
                     borderLeft: `3px solid ${color}`,
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
                       <div>
-                        <div style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490', marginBottom: 2 }}>
+                        <div style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#6A5A50', marginBottom: 2 }}>
                           #{z.rank} of {z.total}
                         </div>
-                        <div style={{ fontFamily: "'Gotham'", fontSize: 13, color: '#F04B28', fontWeight: 600 }}>{z.zip}</div>
-                        <div style={{ fontFamily: "'Gotham',sans-serif", fontSize: 11, color: '#A89A88', marginTop: 2, lineHeight: 1.3 }}>{z.label}</div>
+                        <div style={{ fontFamily: "'Gotham'", fontSize: 13, color: '#C43818', fontWeight: 600 }}>{z.zip}</div>
+                        <div style={{ fontFamily: "'Gotham',sans-serif", fontSize: 11, color: '#5A4A40', marginTop: 2, lineHeight: 1.3 }}>{z.label}</div>
                       </div>
                       <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
                         <div style={{ fontFamily: "'Gotham',sans-serif", fontSize: 32, color, lineHeight: 1 }}>{z.fitScore}</div>
-                        <div style={{ fontFamily: "'Gotham'", fontSize: 9, color: '#B4A490' }}>top {topPct}%</div>
+                        <div style={{ fontFamily: "'Gotham'", fontSize: 9, color: '#6A5A50' }}>top {topPct}%</div>
                       </div>
                     </div>
-                    <div style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#7AA3AA', marginBottom: 6 }}>
+                    <div style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#2E7080', marginBottom: 6 }}>
                       YFI {z.yfi} · WFI {z.wfi} · {z.sesLabel}
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 6 }}>
                       {z.populationGrowth != null && (
-                        <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: z.populationGrowth >= 0 ? '#D4883A' : '#C45A46' }}>
+                        <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: z.populationGrowth >= 0 ? '#A06020' : '#B04030' }}>
                           Growth {z.populationGrowth.toFixed(1)}%
                         </span>
                       )}
-                      <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#A89A88' }}>
+                      <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#6A5A50' }}>
                         {z.churchesPer10k.toFixed(1)} chr/10K
                       </span>
                     </div>
-                    <div style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490', borderTop: '1px solid #1a1f2e', paddingTop: 8 }}>
+                    <div style={{ fontFamily: "'Gotham'", fontSize: 10, color: '#6A5A50', borderTop: '1px solid rgba(50,50,50,0.12)', paddingTop: 8 }}>
                       Driven by {z.driver1} + {z.driver2}
                     </div>
                   </div>
