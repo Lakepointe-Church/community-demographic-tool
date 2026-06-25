@@ -739,7 +739,7 @@ export default function ReligiousPage() {
           <div style={{ fontSize: 11, letterSpacing: '0.12em', color: '#F04B28', fontFamily: "'Gotham'", marginBottom: 6, textTransform: 'uppercase' }}>
             IRS 501(c) · Business Master File · DFW Metro
           </div>
-          <h1 style={{ fontWeight: 900, fontFamily: "'Gotham', sans-serif", fontSize: 48, margin: 0, color: '#E8DDD0', letterSpacing: '0.02em' }}>
+          <h1 style={{ fontWeight: 900, fontFamily: "'Gotham', sans-serif", fontSize: 48, margin: 0, color: '#FFFFFF', letterSpacing: '0.02em' }}>
             Religious Landscape
           </h1>
         </div>
@@ -753,11 +753,11 @@ export default function ReligiousPage() {
         {/* Stat Cards */}
         {overview && (
           <div style={{ display: 'grid', gridTemplateColumns: `repeat(${overview.saturation ? 5 : 4}, 1fr)`, gap: 16, marginBottom: 40 }}>
-            <StatCard label="Total Orgs · DFW"    value={String(overview.stats.total)}              accent="gold"   />
-            <StatCard label="Islamic Centers"      value={String(overview.stats.islamic)}            accent="blue"
+            <StatCard label="Total Orgs · DFW"    value={Number(overview.stats.total).toLocaleString()}              accent="gold"   />
+            <StatCard label="Islamic Centers"      value={Number(overview.stats.islamic).toLocaleString()}            accent="blue"
               sub={`+${overview.stats.islamic_new} since 2015`} />
-            <StatCard label="Christian Churches"   value={String(overview.stats.christian)}          accent="teal"   />
-            <StatCard label="New Since 2015"       value={String(overview.stats.new_since_2015)}     accent="purple"
+            <StatCard label="Christian Churches"   value={Number(overview.stats.christian).toLocaleString()}          accent="teal"   />
+            <StatCard label="New Since 2015"       value={Number(overview.stats.new_since_2015).toLocaleString()}     accent="purple"
               sub="across all faiths" />
             {overview.saturation && (
               <StatCard
