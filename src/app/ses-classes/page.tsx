@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef } from 'react'
 import { downloadCsv } from '@/lib/csv'
 import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
 import { sesComponents } from '@/lib/scoring'
-import { StatCard } from '@/components/ui/StatCard'
+import { StatCardAccent as StatCard } from '@/components/ui/StatCardAccent'
 import { Surface } from '@/components/ui/Surface'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 
@@ -532,10 +532,10 @@ export default function SesClassesPage() {
         <>
         {/* Stat cards */}
         <div className="fade-up-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: '12px', marginBottom: '24px' }}>
-          <StatCard label="Avg SES Score" value={loading ? '—' : String(summary?.avgScore ?? '—')} sub={coverage === 'core' ? 'Core MSA avg' : 'All DFW avg'} color="#F04B28" loading={loading} />
-          <StatCard label="Upper Middle+" value={loading ? '—' : String(upper)} sub={`of ${summary?.total ?? '—'} ZIPs`} color="#7AA3AA" loading={loading} />
-          <StatCard label="Middle Class" value={loading ? '—' : String(middle)} sub="score 40–57" color="#D4883A" loading={loading} />
-          <StatCard label="Lower Middle & Below" value={loading ? '—' : String(lower)} sub="score below 40" color="#C45A46" loading={loading} />
+          <StatCard label="Avg SES Score"        value={loading ? '—' : String(summary?.avgScore ?? '—')} sub={coverage === 'core' ? 'Core MSA avg' : 'All DFW avg'} accent="gold"   loading={loading} />
+          <StatCard label="Upper Middle+"        value={loading ? '—' : String(upper)} sub={`of ${summary?.total ?? '—'} ZIPs`}                                           accent="blue"   loading={loading} />
+          <StatCard label="Middle Class"         value={loading ? '—' : String(middle)} sub="score 40–57"                                                                  accent="teal"   loading={loading} />
+          <StatCard label="Lower Middle & Below" value={loading ? '—' : String(lower)} sub="score below 40"                                                                accent="coral"  loading={loading} />
         </div>
 
         {/* Charts */}

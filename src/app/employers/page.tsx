@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
-import { StatCard } from '@/components/ui/StatCard'
+import { StatCardAccent as StatCard } from '@/components/ui/StatCardAccent'
 import { Surface } from '@/components/ui/Surface'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 
@@ -89,12 +89,15 @@ function BarList({ rows, formatValue, singleColor }: {
 }
 
 // ── Donut Chart (per-ZIP) ─────────────────────────────────────────
-function DonutChart({ sectors }: { sectors: SectorRow[] }) {
+// totalEstab: the CBP NAICS='00' all-industries total (authoritative). Passed
+// separately because the sector-sum double-counts sub-NAICS hierarchy levels.
+function DonutChart({ sectors, totalEstab }: { sectors: SectorRow[]; totalEstab?: number }) {
   const [hovered, setHovered] = useState<number | null>(null)
   const top = sectors.slice(0, 8)
   const otherEstab = sectors.slice(8).reduce((s, x) => s + x.estab, 0)
   const slices = otherEstab > 0 ? [...top, { label: 'Other', estab: otherEstab }] : top
   const total = slices.reduce((s, x) => s + x.estab, 0)
+  const displayTotal = totalEstab ?? total
   if (total === 0) return <div style={{ color:'#B4A490', fontFamily:"'Gotham'", fontSize:'11px' }}>No data</div>
 
   const cx = 110, cy = 110, r = 84, inner = 54
@@ -124,7 +127,7 @@ function DonutChart({ sectors }: { sectors: SectorRow[] }) {
           />
         ))}
         <text x={cx} y={cy - 6} textAnchor="middle" fill="#FFFFFF" fontSize="20" fontFamily="Gotham" letterSpacing="0.05em">
-          {hov ? hov.pct + '%' : total.toLocaleString()}
+          {hov ? hov.pct + '%' : displayTotal.toLocaleString()}
         </text>
         <text x={cx} y={cy + 12} textAnchor="middle" fill="#A89A88" fontSize="9" fontFamily="Gotham">
           {hov ? hov.label.slice(0,14) : 'establishments'}
@@ -356,10 +359,10 @@ export default function EmployersPage() {
           <>
             {/* Stat cards */}
             <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginBottom:'16px' }}>
-              <StatCard compact label="Total Establishments" value={loading ? '—' : fmtK(dfw?.totalEstab ?? 0)} sub="DFW Metro"          color="#F04B28" loading={loading} />
-              <StatCard compact label="Total Employment"     value={loading ? '—' : fmtK(dfw?.totalEmp ?? 0)}   sub="CBP 2022"           color="#7AA3AA" loading={loading} />
-              <StatCard compact label="Annual Payroll"       value={loading ? '—' : `$${payrollB}B`}             sub="in $1,000s"          color="#D4883A" loading={loading} />
-              <StatCard compact label="Avg Annual Wage"      value={loading || !dfw?.avgWage ? '—' : fmt$(dfw.avgWage)} sub="payroll ÷ employment" color="#7A9E8A" loading={loading} />
+              <StatCard label="Total Establishments" value={loading ? '—' : fmtK(dfw?.totalEstab ?? 0)} sub="DFW Metro"             accent="gold"   loading={loading} />
+              <StatCard label="Total Employment"     value={loading ? '—' : fmtK(dfw?.totalEmp ?? 0)}   sub="CBP 2022"              accent="blue"   loading={loading} />
+              <StatCard label="Annual Payroll"       value={loading ? '—' : `$${payrollB}B`}             sub="in $1,000s"             accent="teal"   loading={loading} />
+              <StatCard label="Avg Annual Wage"      value={loading || !dfw?.avgWage ? '—' : fmt$(dfw.avgWage)} sub="payroll ÷ employment" accent="purple" loading={loading} />
             </div>
 
             {/* Industry Mix (donut) + Size Distribution — mirrors the per-ZIP view */}
@@ -370,7 +373,7 @@ export default function EmployersPage() {
                 <SectionHeader title="DFW Industry Mix" sub="Establishments by sector" marginBottom="14px" />
                 {loading
                   ? <div style={{ height:'220px', background:'rgba(255,255,255,0.03)', borderRadius:'2px', animation:'pulse 1.5s ease-in-out infinite' }} />
-                  : <DonutChart sectors={dfw?.sectors ?? []} />
+                  : <DonutChart sectors={dfw?.sectors ?? []} totalEstab={dfw?.totalEstab} />
                 }
               </Surface>
 
@@ -437,17 +440,17 @@ export default function EmployersPage() {
             {zipData && !zipLoading && (
               <>
                 <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'10px', marginBottom:'16px' }}>
-                  <StatCard compact label="Total Establishments" value={zipData.totalEstab.toLocaleString()} sub={zipData.name}               color="#F04B28" />
-                  <StatCard compact label="Large Employers (100+)" value={String(zipData.largeEstab || '—')} sub="100+ employee firms"         color="#7AA3AA" />
-                  <StatCard compact label="Avg Annual Wage"        value={zipData.avgWage ? fmt$(zipData.avgWage) : '—'} sub="payroll ÷ employment" color="#D4883A" />
-                  <StatCard compact label="Top Sector"             value={zipData.topSector?.split(' ')[0] ?? '—'} sub={zipData.topSector ?? 'by estab count'} color="#7A9E8A" />
+                  <StatCard label="Total Establishments"  value={zipData.totalEstab.toLocaleString()} sub={zipData.name}                     accent="gold"   />
+                  <StatCard label="Large Employers (100+)" value={String(zipData.largeEstab || '—')} sub="100+ employee firms"               accent="blue"   />
+                  <StatCard label="Avg Annual Wage"        value={zipData.avgWage ? fmt$(zipData.avgWage) : '—'} sub="payroll ÷ employment"  accent="teal"   />
+                  <StatCard label="Top Sector"             value={zipData.topSector?.split(' ')[0] ?? '—'} sub={zipData.topSector ?? 'by estab count'} accent="purple" />
                 </div>
 
                 <div className="fade-up-3" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'12px', marginBottom:'12px' }}>
                   <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #424242', borderRadius:'4px', padding:'18px' }}>
                     <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.14em', color:'#A89A88', textTransform:'uppercase', marginBottom:'3px' }}>Industry Mix</div>
                     <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#B4A490', marginBottom:'14px' }}>Establishments by sector · {zipData.name}</div>
-                    <DonutChart sectors={zipData.sectors} />
+                    <DonutChart sectors={zipData.sectors} totalEstab={zipData.totalEstab} />
                   </div>
                   <div style={{ background:'rgba(255,255,255,0.015)', border:'1px solid #424242', borderRadius:'4px', padding:'18px' }}>
                     <div style={{ fontFamily:"'Gotham'", fontSize:'10px', letterSpacing:'0.14em', color:'#A89A88', textTransform:'uppercase', marginBottom:'3px' }}>Employer Size Distribution</div>

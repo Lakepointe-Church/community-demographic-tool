@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
 import { CORE_MSA_COUNTIES } from '@/lib/zip-county'
-import { StatCardFlex as StatCard } from '@/components/ui/StatCardFlex'
+import { StatCardAccent as StatCard } from '@/components/ui/StatCardAccent'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -752,18 +752,18 @@ export default function ReligiousPage() {
 
         {/* Stat Cards */}
         {overview && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, marginBottom: 40 }}>
-            <StatCard label="Total Orgs · DFW"    value={overview.stats.total}     rgb="232,184,75" />
-            <StatCard label="Islamic Centers"      value={overview.stats.islamic}   rgb="45,212,191"
+          <div style={{ display: 'grid', gridTemplateColumns: `repeat(${overview.saturation ? 5 : 4}, 1fr)`, gap: 16, marginBottom: 40 }}>
+            <StatCard label="Total Orgs · DFW"    value={String(overview.stats.total)}              accent="gold"   />
+            <StatCard label="Islamic Centers"      value={String(overview.stats.islamic)}            accent="blue"
               sub={`+${overview.stats.islamic_new} since 2015`} />
-            <StatCard label="Christian Churches"   value={overview.stats.christian} rgb="78,174,255" />
-            <StatCard label="New Since 2015"       value={overview.stats.new_since_2015} rgb="167,139,250"
+            <StatCard label="Christian Churches"   value={String(overview.stats.christian)}          accent="teal"   />
+            <StatCard label="New Since 2015"       value={String(overview.stats.new_since_2015)}     accent="purple"
               sub="across all faiths" />
             {overview.saturation && (
               <StatCard
                 label="Avg Churches / 10K · DFW"
                 value={parseFloat(String(overview.saturation.avg_churches_per_10k)).toFixed(1)}
-                rgb="232,184,75"
+                accent="gold"
                 sub={`${overview.saturation.zips_with_churches} ZIPs w/ registered churches`}
               />
             )}

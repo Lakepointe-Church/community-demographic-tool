@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { downloadCsv } from '@/lib/csv'
 import { ZIP_GROUPS, DFW_ZIPS, CORE_MSA_ZIPS } from '@/lib/zips'
-import { StatCard } from '@/components/ui/StatCard'
+import { StatCardAccent as StatCard } from '@/components/ui/StatCardAccent'
 import { Surface } from '@/components/ui/Surface'
 import { SectionHeader } from '@/components/ui/SectionHeader'
 
@@ -291,18 +291,18 @@ export default function CommunityNeedsPage() {
           <div style={{ fontFamily:"'Gotham'", fontSize:'10px', color:'#A89A88', letterSpacing:'0.08em' }}>Across {overview?.zipCount ?? (coverage === 'core' ? CORE_MSA_ZIPS.length : DFW_ZIPS.length)} ZIP codes{coverage === 'core' ? ' · Core MSA (11 counties)' : ' · Full coverage area'} · CDC PLACES 2023</div>
         </div>
         <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
-          <StatCard label="Avg Diabetes Rate" value={loading ? '—' : fmtPct(overview?.avgDiabetes ?? null)} sub="% adults diagnosed" color="#C45A46" loading={loading} />
-          <StatCard label="Avg Obesity Rate"  value={loading ? '—' : fmtPct(overview?.avgObesity ?? null)}  sub="% adults" color="#F04B28" loading={loading} />
-          <StatCard label="Avg Uninsured"     value={loading ? '—' : fmtPct(overview?.avgUninsured ?? null)} sub="% without coverage" color="#7AA3AA" loading={loading} />
-          <StatCard label="Avg Depression"    value={loading ? '—' : fmtPct(overview?.avgDepression ?? null)} sub="% adults" color="#7A9E8A" loading={loading} />
+          <StatCard label="Avg Diabetes Rate" value={loading ? '—' : fmtPct(overview?.avgDiabetes ?? null)}   sub="% adults diagnosed"              accent="coral"  loading={loading} />
+          <StatCard label="Avg Obesity Rate"  value={loading ? '—' : fmtPct(overview?.avgObesity ?? null)}    sub="% adults"                        accent="gold"   loading={loading} />
+          <StatCard label="Avg Uninsured"     value={loading ? '—' : fmtPct(overview?.avgUninsured ?? null)}  sub="% without coverage"              accent="blue"   loading={loading} />
+          <StatCard label="Avg Depression"    value={loading ? '—' : fmtPct(overview?.avgDepression ?? null)} sub="% adults"                        accent="purple" loading={loading} />
         </div>
 
         {/* Second row of cards */}
         <div className="fade-up-2" style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
-          <StatCard label="Avg Smoking"        value={loading ? '—' : fmtPct(overview?.avgSmoking ?? null)}       sub="current cigarette use" color="#C45A46" loading={loading} />
-          <StatCard label="Avg Mental Distress" value={loading ? '—' : fmtPct(overview?.avgMentalDistress ?? null)} sub="frequent bad mental health days" color="#7A9E8A" loading={loading} />
-          <StatCard label="Avg High Blood Pressure" value={loading ? '—' : fmtPct(overview?.avgHighBP ?? null)}   sub="% adults" color="#F04B28" loading={loading} />
-          <StatCard label="CFPB Complaints"    value={loading ? '—' : fmtN(overview?.totalComplaints ?? null)}    sub={overview?.complaintsPer1k != null ? `${overview.complaintsPer1k}/1K residents` : undefined} color="#7AA3AA" loading={loading} />
+          <StatCard label="Avg Smoking"             value={loading ? '—' : fmtPct(overview?.avgSmoking ?? null)}       sub="current cigarette use"           accent="coral"  loading={loading} />
+          <StatCard label="Avg Mental Distress"     value={loading ? '—' : fmtPct(overview?.avgMentalDistress ?? null)} sub="frequent bad mental health days" accent="purple" loading={loading} />
+          <StatCard label="Avg High Blood Pressure" value={loading ? '—' : fmtPct(overview?.avgHighBP ?? null)}        sub="% adults"                        accent="gold"   loading={loading} />
+          <StatCard label="CFPB Complaints"         value={loading ? '—' : fmtN(overview?.totalComplaints ?? null)}    sub={overview?.complaintsPer1k != null ? `${overview.complaintsPer1k}/1K residents` : undefined} accent="blue" loading={loading} />
         </div>
 
         {/* ZIP Rankings Table */}
@@ -354,10 +354,10 @@ export default function CommunityNeedsPage() {
             <>
               {/* ZIP stat cards */}
               <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:'12px', marginBottom:'24px' }}>
-                <StatCard label="Diabetes" value={fmtPct(zipData.diabetes)} sub="% adults diagnosed" color={healthColor(zipData.diabetes, 10, 14)} />
-                <StatCard label="Obesity"  value={fmtPct(zipData.obesity)}  sub="% adults" color={healthColor(zipData.obesity, 33, 40)} />
-                <StatCard label="Uninsured" value={fmtPct(zipData.uninsured)} sub="% without coverage" color={healthColor(zipData.uninsured, 12, 20)} />
-                <StatCard label="Depression" value={fmtPct(zipData.depression)} sub="% adults" color={healthColor(zipData.depression, 22, 28)} />
+                <StatCard label="Diabetes"   value={fmtPct(zipData.diabetes)}  sub="% adults diagnosed"  accent="coral"  />
+                <StatCard label="Obesity"    value={fmtPct(zipData.obesity)}   sub="% adults"            accent="gold"   />
+                <StatCard label="Uninsured"  value={fmtPct(zipData.uninsured)} sub="% without coverage"  accent="blue"   />
+                <StatCard label="Depression" value={fmtPct(zipData.depression)} sub="% adults"           accent="purple" />
               </div>
 
               {/* Metric comparison vs DFW avg */}
