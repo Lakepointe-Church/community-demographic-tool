@@ -14,14 +14,17 @@ const ACCENTS = {
 
 export type Accent = keyof typeof ACCENTS
 
-// Accent-bar stat card: named `accent` drives a 2px top bar + glow; the value
-// renders white (#FFFFFF). Optional `tooltip` shows an info icon top-right.
+// Accent-bar stat card: named `accent` drives a 2px top bar + glow; value renders
+// white by default. Set `accentValue` to color the number in the accent hue — use
+// sparingly for the single lead/focal KPI per view (orange-on-neutral rule).
+// Optional `tooltip` shows an info icon top-right.
 // Used by Overview / Compare / Demographics. (Family B = `StatCard` w/ colored value.)
-export function StatCardAccent({ label, value, sub, accent = 'gold', loading = false, tooltip }: {
+export function StatCardAccent({ label, value, sub, accent = 'gold', accentValue = false, loading = false, tooltip }: {
   label: string
   value: string
   sub?: string
   accent?: Accent
+  accentValue?: boolean
   loading?: boolean
   tooltip?: string
 }) {
@@ -58,7 +61,7 @@ export function StatCardAccent({ label, value, sub, accent = 'gold', loading = f
         <div style={{ height: '40px', background: 'rgba(255,255,255,0.06)', borderRadius: '2px', animation: 'pulse 1.5s ease-in-out infinite' }} />
       ) : (
         <>
-          <div style={{ fontFamily: fonts.display, fontSize: '44px', lineHeight: 1, letterSpacing: '0.03em', color: colors.textStrong }}>{value}</div>
+          <div style={{ fontFamily: fonts.display, fontSize: '44px', lineHeight: 1, letterSpacing: '0.03em', color: accentValue ? color : colors.textStrong }}>{value}</div>
           {sub && <div style={{ fontFamily: fonts.mono, fontSize: '11px', color: colors.muted, marginTop: '8px', letterSpacing: '0.04em' }}>{sub}</div>}
         </>
       )}

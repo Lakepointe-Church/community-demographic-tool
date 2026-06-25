@@ -476,7 +476,7 @@ export default function OverviewPage() {
             label="Total Population"
             value={data ? fmtK(data.totals.population) : '—'}
             sub={data?.totals.avgGrowth != null ? `↑ ${data.totals.avgGrowth}% avg growth` : undefined}
-            accent="gold" loading={loading}
+            accent="gold" accentValue loading={loading}
           />
           <StatCard
             label="ZIP Codes Tracked"
