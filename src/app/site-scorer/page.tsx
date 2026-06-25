@@ -495,7 +495,7 @@ export default function SiteScorerPage() {
         .ss-campus-row:hover { background: rgba(240,75,40,0.08) !important; }
       `}</style>
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '40px 32px' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>

@@ -732,7 +732,7 @@ export default function ReligiousPage() {
         .org-row:hover { background: rgba(255,255,255,0.03) !important; }
       `}</style>
 
-      <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
+      <div style={{ maxWidth: '1440px', margin: '0 auto', padding: '40px 32px' }}>
 
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
