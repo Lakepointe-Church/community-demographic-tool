@@ -7,7 +7,7 @@ export function SectionTitle({ eyebrow, title }: { eyebrow: string; title: strin
   return (
     <div style={{ borderLeft: `3px solid ${colors.gold}`, paddingLeft: '16px', marginBottom: '24px' }}>
       <div style={{ fontFamily: fonts.mono, fontSize: '11px', letterSpacing: '0.15em', color: colors.gold, textTransform: 'uppercase', marginBottom: '6px' }}>{eyebrow}</div>
-      <div style={{ fontFamily: fonts.display, fontSize: '28px', letterSpacing: '0.04em', lineHeight: 1, color: colors.textStrong }}>{title}</div>
+      <div style={{ fontFamily: fonts.display, fontWeight: 900, fontSize: '28px', letterSpacing: '0.04em', lineHeight: 1, color: colors.textStrong }}>{title}</div>
     </div>
   )
 }

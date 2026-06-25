@@ -739,7 +739,7 @@ export default function ReligiousPage() {
           <div style={{ fontSize: 11, letterSpacing: '0.12em', color: '#F04B28', fontFamily: "'Gotham'", marginBottom: 6, textTransform: 'uppercase' }}>
             IRS 501(c) · Business Master File · DFW Metro
           </div>
-          <h1 style={{ fontFamily: "'Gotham', sans-serif", fontSize: 48, margin: 0, color: '#E8DDD0', letterSpacing: '0.02em' }}>
+          <h1 style={{ fontWeight: 900, fontFamily: "'Gotham', sans-serif", fontSize: 48, margin: 0, color: '#E8DDD0', letterSpacing: '0.02em' }}>
             Religious Landscape
           </h1>
         </div>

@@ -337,7 +337,7 @@ export default function EmployersPage() {
         <div className="fade-up" style={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', marginBottom:'28px', gap:'24px', position:'relative', zIndex:20 }}>
           <div>
             <div style={{ fontFamily:"'Gotham'", fontSize:'11px', letterSpacing:'0.2em', color:'#F04B28', textTransform:'uppercase', marginBottom:'10px' }}>Dashboard · Employers</div>
-            <h1 style={{ fontFamily:"'Gotham',sans-serif", fontSize:'clamp(32px,3.5vw,48px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#FFFFFF' }}>Business &<br />Employment</h1>
+            <h1 style={{ fontWeight: 900, fontFamily:"'Gotham',sans-serif", fontSize:'clamp(32px,3.5vw,48px)', letterSpacing:'0.05em', lineHeight:0.92, color:'#FFFFFF' }}>Business &<br />Employment</h1>
             <div style={{ width:'40px', height:'2px', background:'linear-gradient(90deg,#F04B28,rgba(240,75,40,0))', marginTop:'12px' }} />
             <div style={{ fontFamily:"'Gotham'", fontSize:'11px', color:'#A89A88', letterSpacing:'0.08em', marginTop:'10px', textTransform:'uppercase' }}>
               Census CBP 2022 · {loading ? '—' : dfw?.zipCount ?? '—'} DFW ZIPs

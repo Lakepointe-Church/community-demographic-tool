@@ -503,7 +503,7 @@ export default function SiteScorerPage() {
             <div style={{ fontSize: 11, letterSpacing: '0.12em', color: '#F04B28', fontFamily: "'Gotham'", marginBottom: 6, textTransform: 'uppercase' }}>
               Lakepointe · Campus Opportunity
             </div>
-            <h1 style={{ fontFamily: "'Gotham',sans-serif", fontSize: 48, margin: 0, color: '#E8DDD0', letterSpacing: '0.02em' }}>
+            <h1 style={{ fontWeight: 900, fontFamily: "'Gotham',sans-serif", fontSize: 48, margin: 0, color: '#E8DDD0', letterSpacing: '0.02em' }}>
               Site Scorer
             </h1>
           </div>

@@ -21,6 +21,7 @@ export default function TopNav() {
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexShrink: 0 }}>
         <div style={{
           fontFamily: "'Gotham', sans-serif",
+          fontWeight: 900,
           fontSize: '21px', letterSpacing: '0.1em', color: '#F04B28',
         }}>
           LAKEPOINTE
@@ -28,7 +29,7 @@ export default function TopNav() {
         <div style={{ width: '1px', height: '18px', background: '#4A4A4A' }} />
         <div style={{
           fontFamily: "'Gotham'",
-          fontSize: '10px', letterSpacing: '0.16em', color: '#A89A88',
+          fontSize: '10px', letterSpacing: '0.16em', color: '#FFFFFF',
           textTransform: 'uppercase' as const,
         }}>
           Community Intelligence

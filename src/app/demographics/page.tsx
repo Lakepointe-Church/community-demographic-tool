@@ -598,7 +598,7 @@ export default function DemographicsPage() {
               <div style={{ fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.2em', color: '#F04B28', textTransform: 'uppercase' as const, marginBottom: '12px' }}>
                 Dashboard · Demographics
               </div>
-              <h1 style={{ fontFamily: "'Gotham', sans-serif", fontSize: 'clamp(36px, 4vw, 52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#FFFFFF' }}>
+              <h1 style={{ fontWeight: 900, fontFamily: "'Gotham', sans-serif", fontSize: 'clamp(36px, 4vw, 52px)', letterSpacing: '0.05em', lineHeight: 0.92, color: '#FFFFFF' }}>
                 Demographic<br />Profile
               </h1>
               <div style={{ width: '48px', height: '2px', background: 'linear-gradient(90deg, #F04B28, rgba(240,75,40,0))', marginTop: '16px' }} />

@@ -37,15 +37,15 @@ function CoverageNavInner() {
             style={active ? {
               fontFamily: "'Gotham'",
               fontSize: '11px',
+              fontWeight: 600,
               letterSpacing: '0.1em',
               textTransform: 'uppercase' as const,
               textDecoration: 'none',
               whiteSpace: 'nowrap' as const,
-              color: '#F04B28',
-              background: 'rgba(240,75,40,0.12)',
+              color: '#323232',
+              background: '#FFFFFF',
               padding: '5px 10px',
               borderRadius: '4px',
-              border: '1px solid rgba(240,75,40,0.2)',
               transition: 'all 0.15s ease',
             } : {
               fontFamily: "'Gotham'",

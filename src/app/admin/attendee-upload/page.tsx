@@ -100,7 +100,7 @@ export default function AttendeeUploadPage() {
         <div style={{ ...MONO, fontSize: '11px', letterSpacing: '0.2em', color: '#F04B28', textTransform: 'uppercase', marginBottom: '12px' }}>
           Admin · Attendee Data
         </div>
-        <h1 style={{ fontFamily: "'Gotham', sans-serif", fontSize: '42px', letterSpacing: '0.04em', lineHeight: 0.95, color: '#FFFFFF', marginBottom: '8px' }}>
+        <h1 style={{ fontWeight: 900, fontFamily: "'Gotham', sans-serif", fontSize: '42px', letterSpacing: '0.04em', lineHeight: 0.95, color: '#FFFFFF', marginBottom: '8px' }}>
           Upload Attendee Density
         </h1>
         <div style={{ ...MONO, fontSize: '12px', color: '#A89A88', marginTop: '12px' }}>

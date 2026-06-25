@@ -76,7 +76,7 @@ export default function DecisionsPage() {
           <div style={{ fontFamily: "'Gotham'", fontSize: 11, letterSpacing: '0.12em', color: '#F04B28', textTransform: 'uppercase', marginBottom: 6 }}>
             Admin · Site Decisions
           </div>
-          <h1 style={{ fontFamily: "'Gotham',sans-serif", fontSize: 44, margin: '0 0 4px', color: '#E8DDD0', letterSpacing: '0.02em' }}>
+          <h1 style={{ fontWeight: 900, fontFamily: "'Gotham',sans-serif", fontSize: 44, margin: '0 0 4px', color: '#E8DDD0', letterSpacing: '0.02em' }}>
             Decision Log
           </h1>
           <div style={{ fontFamily: "'Gotham'", fontSize: 11, color: '#B4A490' }}>
