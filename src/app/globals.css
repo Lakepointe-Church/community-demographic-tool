@@ -61,9 +61,9 @@
 :root {
   --border:     #4A4A4A;
   --border-sub: #424242;
-  --text-2:     #C8BCA8;
-  --text-3:     #A89A88;
-  --text-muted: #9A8C7A;
+  --text-2:     #C8C8C8;   /* secondary text — neutral light gray */
+  --text-3:     #9A9A9A;   /* tertiary text — neutral mid gray */
+  --text-muted: #7C7C7C;   /* muted text — neutral gray */
 }
 
 body {
@@ -109,6 +109,6 @@ body::before {
 .fade-up-4 { animation: fadeUp 0.5s 0.24s ease forwards; opacity: 0; }
 
 .nav-link-item { transition: color 0.15s ease; }
-.nav-link-item:hover { color: #E8DDD0 !important; }
+.nav-link-item:hover { color: #F04B28 !important; }
 
 .tbl-row:hover td { background: rgba(122,163,170,0.07) !important; }
