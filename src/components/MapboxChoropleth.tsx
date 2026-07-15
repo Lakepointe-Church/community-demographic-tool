@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import type { CampusInfo } from '@/lib/campuses'
+import { ordinalRamps, ordinalTextColors, growthTier, GROWTH_THRESHOLDS } from '@/lib/theme'
 
 // ── Point-in-polygon (ray casting) ──────────────────────────────────────────
 function pointInRing(pt: [number, number], ring: number[][]): boolean {
@@ -65,12 +66,10 @@ interface Props {
   onCannibalizationResult?: (r: { totalHH: number; zipCount: number } | null) => void
 }
 
+// Popup text color — uses the AA-legible tier counterparts, not the fill ramp.
 function growthColor(g: number | null): string {
-  if (g == null) return '#2a3044'
-  if (g >= 20)   return '#D4883A'
-  if (g >= 8)    return '#7AA3AA'
-  if (g >= 0)    return '#3a4561'
-  return '#C45A46'
+  const tier = growthTier(g)
+  return tier ? ordinalTextColors.growth[tier] : '#A89A88'
 }
 
 // ── Compute simple centroid from a GeoJSON Polygon/MultiPolygon ───────────────
@@ -181,12 +180,19 @@ export default function MapboxChoropleth({
             'fill-color': [
               'case',
               ['==', ['get', 'growth'], null], '#2a3044',
-              ['>=', ['get', 'growth'], 20],   '#D4883A',
-              ['>=', ['get', 'growth'], 8],     '#7AA3AA',
-              ['>=', ['get', 'growth'], 0],     '#3a4561',
-              '#C45A46',
+              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.rapidGrowth], ordinalRamps.growth.rapidGrowth,
+              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.growing],     ordinalRamps.growth.growing,
+              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.stable],      ordinalRamps.growth.stable,
+              ordinalRamps.growth.declining,
             ],
-            'fill-opacity': 0.72,
+            // Top tier also pops by opacity (not hue alone); declining recedes.
+            'fill-opacity': [
+              'case',
+              ['==', ['get', 'growth'], null], 0.6,
+              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.rapidGrowth], 0.85,
+              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.stable],      0.65,
+              0.5,
+            ],
           },
         })
 
@@ -647,13 +653,13 @@ export default function MapboxChoropleth({
           flexWrap: 'wrap',
         }}>
           {[
-            { label: 'Declining',    color: '#C45A46' },
-            { label: 'Stable',       color: '#3a4561' },
-            { label: 'Growing',      color: '#7AA3AA' },
-            { label: 'Rapid Growth', color: '#D4883A' },
+            { label: 'Declining',    color: ordinalRamps.growth.declining },
+            { label: 'Stable',       color: ordinalRamps.growth.stable },
+            { label: 'Growing',      color: ordinalRamps.growth.growing },
+            { label: 'Rapid Growth', color: ordinalRamps.growth.rapidGrowth },
           ].map(({ label, color }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: 10, height: 10, background: color }} />
+              <div style={{ width: 10, height: 10, background: color, border: '1px solid rgba(255,255,255,0.25)' }} />
               <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>{label}</span>
             </div>
           ))}

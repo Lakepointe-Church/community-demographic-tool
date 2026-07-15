@@ -8,6 +8,7 @@ import {
   growthScore, satOpportunityScore, distanceScore,
   effectivePct, computeFitScore, type Weights,
 } from '@/lib/scoring'
+import { ordinalRamps, ordinalTextColors, fitTier } from '@/lib/theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -93,11 +94,14 @@ function topDrivers(z: ZipScore, eff: Weights): [string, string] {
   return [DRIVER_LABELS[keys[0]], DRIVER_LABELS[keys[1]]]
 }
 
+// Text color for a fit score — AA-legible tier counterparts of ordinalRamps.fitScore.
 function scoreColor(score: number): string {
-  if (score >= 75) return '#F04B28'
-  if (score >= 60) return '#7AA3AA'
-  if (score >= 45) return '#D4883A'
-  return '#A89A88'
+  return ordinalTextColors.fitScore[fitTier(score)]
+}
+
+// Fill color for scatter dots — the ordinal ramp itself (low tiers recede by design).
+function scoreFill(score: number): string {
+  return ordinalRamps.fitScore[fitTier(score)]
 }
 
 // ── URL helpers ───────────────────────────────────────────────────────────────
@@ -239,7 +243,7 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
           const x = toX(d.populationGrowth!)
           const y = toY(d.churchesPer10k)
           const score = computeFitScore(d, eff)
-          const color = scoreColor(score)
+          const color = scoreFill(score)
           const isH = hovered?.zip === d.zip
           const isCampus = EXISTING_CAMPUS_ZIPS.has(d.zip)
           return (
@@ -248,9 +252,9 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
               cx={x} cy={y}
               r={isH ? 5.5 : isCampus ? 4.5 : 3.5}
               fill={color}
-              fillOpacity={isH ? 1 : 0.65}
-              stroke={isCampus ? '#F04B28' : isH ? color : 'none'}
-              strokeWidth={isCampus ? 1.5 : isH ? 1.5 : 0}
+              fillOpacity={isH ? 1 : score >= 75 ? 0.9 : 0.65}
+              stroke={isCampus ? '#F04B28' : isH ? color : 'rgba(255,255,255,0.25)'}
+              strokeWidth={isCampus ? 1.5 : isH ? 1.5 : 0.75}
               style={{ cursor: 'pointer' }}
               onMouseEnter={() => onHover(d)}
             />
@@ -296,9 +300,14 @@ function ScatterChart({ data, eff, onHover, hovered }: ScatterProps) {
 
       {/* Legend */}
       <div style={{ display: 'flex', gap: 16, marginTop: 10, fontFamily: "'Gotham'", fontSize: 10, color: '#B4A490', flexWrap: 'wrap' }}>
-        {[['#F04B28', '≥ 75'], ['#7AA3AA', '60–74'], ['#D4883A', '45–59'], ['#A89A88', '< 45']].map(([c, l]) => (
+        {[
+          [ordinalRamps.fitScore.tier0_44,  '< 45'],
+          [ordinalRamps.fitScore.tier45_59, '45–59'],
+          [ordinalRamps.fitScore.tier60_74, '60–74'],
+          [ordinalRamps.fitScore.tier75up,  '≥ 75'],
+        ].map(([c, l]) => (
           <span key={l} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-            <span style={{ width: 8, height: 8, borderRadius: '50%', background: c, display: 'inline-block' }} />
+            <span style={{ width: 8, height: 8, borderRadius: '50%', background: c, border: '1px solid rgba(255,255,255,0.25)', display: 'inline-block' }} />
             Fit Score {l}
           </span>
         ))}

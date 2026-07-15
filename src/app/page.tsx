@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react
 import { downloadCsv } from '@/lib/csv'
 import { CAMPUSES } from '@/lib/campuses'
 import { BOUNDARY_CHANGED } from '@/lib/zips'
+import { ordinalTextColors, growthTier, SES_TIER_KEY, sesTierRgb } from '@/lib/theme'
 import { StatCardAccent as StatCard } from '@/components/ui/StatCardAccent'
 import { SectionTitle as SectionHeader } from '@/components/ui/SectionTitle'
 import { Surface } from '@/components/ui/Surface'
@@ -52,12 +53,10 @@ function fmtK(n: number) {
   return n.toLocaleString()
 }
 
+// Table text color — AA-legible tier counterparts of the map's growth ramp.
 function growthColor(g: number | null) {
-  if (g == null) return '#B4A490'
-  if (g >= 20)   return '#D4883A'
-  if (g >= 8)    return '#7AA3AA'
-  if (g >= 0)    return '#A89A88'
-  return '#C45A46'
+  const tier = growthTier(g)
+  return tier ? ordinalTextColors.growth[tier] : '#B4A490'
 }
 
 
@@ -116,14 +115,9 @@ function BarChart({ data, loading, barColors }: {
 
 // ── SES Badge ────────────────────────────────────────────────────
 function SEsBadge({ label }: { label: string }) {
-  const styles: Record<string, { bg: string; color: string }> = {
-    'Upper':        { bg: 'rgba(240,75,40,0.15)',  color: '#F04B28' },
-    'Upper Middle': { bg: 'rgba(122,163,170,0.15)',  color: '#7AA3AA' },
-    'Middle':       { bg: 'rgba(212,136,58,0.15)',  color: '#D4883A' },
-    'Lower Middle': { bg: 'rgba(196,90,70,0.15)', color: '#C45A46' },
-    'Lower Income': { bg: 'rgba(138,152,174,0.15)', color: '#A89A88' },
-  }
-  const s = styles[label] ?? styles['Lower Income']
+  // Sequential taupe SES ramp (ordinalTextColors.ses) — orange no longer mid-scale.
+  const key = SES_TIER_KEY[label] ?? 'lowerIncome'
+  const s = { bg: `rgba(${sesTierRgb[key]},0.13)`, color: ordinalTextColors.ses[key] }
   return (
     <span style={{
       background: s.bg, color: s.color,
@@ -517,7 +511,9 @@ export default function OverviewPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
               {insights.map((z, i) => {
-                const color = z.fitScore >= 75 ? '#C43818' : z.fitScore >= 60 ? '#2E7080' : '#A06020'
+                // Light-bg (#DED7CC) counterparts of ordinalRamps.fitScore — dark orange
+                // stays the top tier; lower tiers step down in warmth, not hue-jump.
+                const color = z.fitScore >= 75 ? '#C43818' : z.fitScore >= 60 ? '#A06020' : '#6A5A50'
                 const topPct = Math.max(1, Math.round((z.rank / z.total) * 100))
                 return (
                   <div key={z.zip} style={{

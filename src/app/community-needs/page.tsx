@@ -56,12 +56,14 @@ interface ZipData {
 function fmtPct(n: number | null) { return n != null ? n.toFixed(1) + '%' : '—' }
 function fmtN(n: number | null) { return n != null ? n.toLocaleString() : '—' }
 
-// Color thresholds — higher = worse for most health metrics
+// Color thresholds — higher = worse for most health metrics.
+// Ordered severity ramp: neutral → amber → terracotta (alert). Lakepointe Orange
+// is reserved site-wide for the top tier of positive/target scales, never mid-scale.
 function healthColor(val: number | null, warn: number, danger: number): string {
   if (val == null) return '#A89A88'
   if (val >= danger) return '#C45A46'
-  if (val >= warn)   return '#F04B28'
-  return '#D4883A'
+  if (val >= warn)   return '#D4883A'
+  return '#A89A88'
 }
 
 // ── Health Metric Row (horizontal fill bar) ────────────────────────

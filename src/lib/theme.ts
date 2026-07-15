@@ -44,6 +44,77 @@ export function toRgb(hex: string): string {
   return rgbMap[hex] ?? rgbMap[colors.gold]
 }
 
+// Ordinal ramps: index 0 = lowest/negative (darkest), last = highest/target (brightest).
+// #F04B28 (Lakepointe Orange) appears ONLY as the top tier of any ordinal scale.
+export const ordinalRamps = {
+  growth: {
+    declining:   '#33302C', // dark charcoal-taupe — recedes into basemap
+    stable:      '#5C6470', // muted slate-gray — neutral, low salience
+    growing:     '#D4883A', // warm amber — clearly "heating up"
+    rapidGrowth: '#F04B28', // Lakepointe Orange — the target, brightest/warmest
+  },
+  ses: { // ordered low → high income
+    lowerIncome: '#33302C',
+    lowerMiddle: '#5C554B',
+    middle:      '#8A7B63',
+    upperMiddle: '#C4A97E',
+    upper:       '#DED7CC', // brand Taupe — lightest; reads highest on dark bg
+  },
+  fitScore: { // ordered low → high
+    tier0_44:  '#3F3B36',
+    tier45_59: '#8A7B68',
+    tier60_74: '#D4883A',
+    tier75up:  '#F04B28',
+  },
+} as const
+
+// Text-legible counterparts for dark surfaces. The ramp's low-end fills sit near
+// the #323232 background and fall below WCAG AA as text — use these for colored
+// text/badges/labels keyed to a tier. Order (lightness/warmth) is preserved.
+export const ordinalTextColors = {
+  growth: { declining: '#C45A46', stable: '#A89A88', growing: '#D4883A', rapidGrowth: '#F04B28' },
+  ses:    { lowerIncome: '#A08E7A', lowerMiddle: '#A89A88', middle: '#B3A48C', upperMiddle: '#C4A97E', upper: '#DED7CC' },
+  fitScore: { tier0_44: '#A08E7A', tier45_59: '#B3966E', tier60_74: '#D4883A', tier75up: '#F04B28' },
+} as const
+
+// Comma-separated RGB of the text-legible SES tier colors, for rgba() badge tints.
+export const sesTierRgb: Record<keyof typeof ordinalRamps.ses, string> = {
+  lowerIncome: '160,142,122',
+  lowerMiddle: '168,154,136',
+  middle:      '179,164,140',
+  upperMiddle: '196,169,126',
+  upper:       '222,215,204',
+}
+
+// Single source for the growth tier thresholds (map fill, legend, table text).
+export type GrowthTier = keyof typeof ordinalRamps.growth
+export const GROWTH_THRESHOLDS = { rapidGrowth: 20, growing: 8, stable: 0 } as const
+export function growthTier(g: number | null): GrowthTier | null {
+  if (g == null) return null
+  if (g >= GROWTH_THRESHOLDS.rapidGrowth) return 'rapidGrowth'
+  if (g >= GROWTH_THRESHOLDS.growing)     return 'growing'
+  if (g >= GROWTH_THRESHOLDS.stable)      return 'stable'
+  return 'declining'
+}
+
+// Fit Score tier resolution (Site Scorer + Overview insights).
+export type FitTier = keyof typeof ordinalRamps.fitScore
+export function fitTier(score: number): FitTier {
+  if (score >= 75) return 'tier75up'
+  if (score >= 60) return 'tier60_74'
+  if (score >= 45) return 'tier45_59'
+  return 'tier0_44'
+}
+
+// SES label (as stored in the DB / API payloads) → ramp key.
+export const SES_TIER_KEY: Record<string, keyof typeof ordinalRamps.ses> = {
+  'Upper':        'upper',
+  'Upper Middle': 'upperMiddle',
+  'Middle':       'middle',
+  'Lower Middle': 'lowerMiddle',
+  'Lower Income': 'lowerIncome',
+}
+
 // Flat surface gradient used by Surface panels + stat-card base layer.
 export const CARD_BG =
   'linear-gradient(145deg,rgba(255,255,255,0.04) 0%,rgba(255,255,255,0.015) 100%)'

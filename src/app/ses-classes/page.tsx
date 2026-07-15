@@ -7,6 +7,7 @@ import { sesComponents } from '@/lib/scoring'
 import { StatCardAccent as StatCard } from '@/components/ui/StatCardAccent'
 import { Surface } from '@/components/ui/Surface'
 import { SectionHeader } from '@/components/ui/SectionHeader'
+import { ordinalRamps, ordinalTextColors, SES_TIER_KEY, sesTierRgb } from '@/lib/theme'
 
 interface ZipSes {
   zip: string
@@ -30,20 +31,18 @@ interface Summary {
 
 const TIERS = ['Upper', 'Upper Middle', 'Middle', 'Lower Middle', 'Lower Income'] as const
 
-const TIER_COLOR: Record<string, string> = {
-  'Upper':        '#7A9E8A',
-  'Upper Middle': '#7AA3AA',
-  'Middle':       '#D4883A',
-  'Lower Middle': '#F04B28',
-  'Lower Income': '#C45A46',
-}
-const TIER_RGB: Record<string, string> = {
-  'Upper':        '167,139,250',
-  'Upper Middle': '78,174,255',
-  'Middle':       '45,212,191',
-  'Lower Middle': '232,184,75',
-  'Lower Income': '255,107,107',
-}
+// Sequential taupe ramp (theme ordinalRamps.ses): fills encode tier by lightness.
+// TIER_FILL = chart fills (bars, scatter dots, legend); TIER_COLOR = AA-legible
+// text/badge counterparts; TIER_RGB = rgba() tint bases for badges/tabs.
+const TIER_FILL: Record<string, string> = Object.fromEntries(
+  Object.entries(SES_TIER_KEY).map(([label, key]) => [label, ordinalRamps.ses[key]])
+)
+const TIER_COLOR: Record<string, string> = Object.fromEntries(
+  Object.entries(SES_TIER_KEY).map(([label, key]) => [label, ordinalTextColors.ses[key]])
+)
+const TIER_RGB: Record<string, string> = Object.fromEntries(
+  Object.entries(SES_TIER_KEY).map(([label, key]) => [label, sesTierRgb[key]])
+)
 
 
 function fmt$(n: number | null) {
@@ -57,9 +56,9 @@ function fmtPct(n: number | null) {
 
 function trend(growth: number | null): { label: string; color: string } {
   if (growth == null) return { label: '—', color: '#B4A490' }
-  if (growth > 2)  return { label: '↑ Growing',   color: '#D4883A' }
-  if (growth >= 0) return { label: '→ Stable',    color: '#F04B28' }
-  return              { label: '↓ Declining',  color: '#C45A46' }
+  if (growth > 2)  return { label: '↑ Growing',   color: ordinalTextColors.growth.growing }
+  if (growth >= 0) return { label: '→ Stable',    color: ordinalTextColors.growth.stable }
+  return              { label: '↓ Declining',  color: ordinalTextColors.growth.declining }
 }
 
 // ── Distribution Bar Chart ────────────────────────────────────────
@@ -76,8 +75,8 @@ function DistributionChart({ countByTier, total }: { countByTier: Record<string,
       <defs>
         {TIERS.map((t, i) => (
           <linearGradient key={i} id={`dGrad-${i}`} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor={TIER_COLOR[t]} />
-            <stop offset="100%" stopColor={`${TIER_COLOR[t]}40`} />
+            <stop offset="0%" stopColor={TIER_FILL[t]} />
+            <stop offset="100%" stopColor={`${TIER_FILL[t]}40`} />
           </linearGradient>
         ))}
       </defs>
@@ -99,7 +98,7 @@ function DistributionChart({ countByTier, total }: { countByTier: Record<string,
         const y = padTop + chartH - barH
         return (
           <g key={tier}>
-            <rect x={x} y={y} width={barW} height={barH} fill={`url(#dGrad-${i})`} rx="2" />
+            <rect x={x} y={y} width={barW} height={barH} fill={`url(#dGrad-${i})`} rx="2" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
             <text x={x + barW / 2} y={y - 6} textAnchor="middle" fill={TIER_COLOR[tier]} fontSize="11" fontFamily="Gotham" fontWeight="600">{count}</text>
             <text x={x + barW / 2} y={padTop + chartH + 18} textAnchor="middle" fill="#A89A88" fontSize="9" fontFamily="Gotham">
               {tier.split(' ').map((word, wi) => (
@@ -154,10 +153,9 @@ function ScatterPlot({ zips }: { zips: ZipSes[] }) {
             cx={toX(z.medianHouseholdIncome!)}
             cy={toY(z.sesScore)}
             r="5"
-            fill={TIER_COLOR[z.sesLabel] ?? '#A89A88'}
-            fillOpacity="0.8"
-            stroke={TIER_COLOR[z.sesLabel] ?? '#A89A88'}
-            strokeOpacity="0.4"
+            fill={TIER_FILL[z.sesLabel] ?? '#A89A88'}
+            fillOpacity="0.85"
+            stroke="rgba(255,255,255,0.3)"
             strokeWidth="1"
             style={{ cursor: 'pointer' }}
             onMouseEnter={e => {
@@ -557,7 +555,7 @@ export default function SesClassesPage() {
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' as const, marginTop: '12px' }}>
               {TIERS.map(t => (
                 <div key={t} style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: TIER_COLOR[t] }} />
+                  <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: TIER_FILL[t], border: '1px solid rgba(255,255,255,0.3)' }} />
                   <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#A89A88' }}>{t}</span>
                 </div>
               ))}
@@ -594,7 +592,7 @@ export default function SesClassesPage() {
                     fontFamily: "'Gotham'", fontSize: '11px', letterSpacing: '0.06em',
                     padding: '5px 12px', borderRadius: '3px', cursor: 'pointer', border: '1px solid',
                     borderColor: active ? color : '#4A4A4A',
-                    background: active ? `rgba(${tab === 'All' ? '232,184,75' : TIER_RGB[tab]},0.12)` : 'transparent',
+                    background: active ? `rgba(${tab === 'All' ? '240,75,40' : TIER_RGB[tab]},0.12)` : 'transparent',
                     color: active ? color : '#A89A88',
                     transition: 'all 0.15s',
                   }}
