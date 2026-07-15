@@ -594,61 +594,37 @@ function ProxyPanel({ data }: { data: ProxyData }) {
 
 // ── County comparison panel (BMF) ─────────────────────────────────────────────
 
+// Single-series Islamic org concentration by county (Jolie, 7/15/26 — the
+// Islamic vs. Christian dual-series comparison was retired). One shared true
+// linear scale across all counties; sorted descending by count (API order).
 function CountyComparison({ data }: { data: CountyRow[] }) {
-  const maxIslamic   = Math.max(...data.map(d => d.islamic), 1)
-  const maxChristian = Math.max(...data.map(d => d.christian), 1)
+  const rows = [...data].sort((a, b) => b.islamic - a.islamic)
+  const maxIslamic = Math.max(...rows.map(d => d.islamic), 1)
 
   return (
     <div style={{ background: '#3C3C3C', border: '1px solid #4A4A4A', borderRadius: 10, padding: '24px 28px' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 4 }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 8, marginBottom: 18 }}>
         <div style={{ fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#A89A88', fontFamily: "'Gotham'" }}>
-          County · Islamic vs. Christian Registered Orgs
+          County · Islamic Registered Orgs
         </div>
         <SourceTag />
       </div>
 
-      {/* Legend — religiousOrgScale (red/green comparison per stakeholder request) */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.islamic }}>
-          <span style={{ width: 10, height: 10, borderRadius: 2, background: religiousOrgScale.islamic, display: 'inline-block' }} />
-          Islamic
-        </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.christian }}>
-          <span style={{ width: 10, height: 10, borderRadius: 2, background: religiousOrgScale.christian, display: 'inline-block' }} />
-          Christian
-        </span>
-      </div>
-
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {data.map(row => {
-          const islamicPct   = (row.islamic   / maxIslamic)   * 100
-          const christianPct = (row.christian / maxChristian) * 100
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {rows.map(row => {
+          const islamicPct = (row.islamic / maxIslamic) * 100
           const isMSA = CORE_MSA_COUNTIES.has(row.county)
 
           return (
-            <div key={row.county}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3 }}>
-                <div style={{ width: 90, flexShrink: 0, fontFamily: "'Gotham'", fontSize: 11, color: isMSA ? '#C8BCA8' : '#B4A490', textAlign: 'right' }}>
-                  {row.county}
-                  {!isMSA && <span style={{ color: '#B4A490', fontSize: 9, marginLeft: 3 }}>ext</span>}
-                </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                  {/* Islamic bar */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${islamicPct}%`, background: `linear-gradient(90deg,${religiousOrgScale.islamic},${religiousOrgScale.islamic}50)` }} />
-                    </div>
-                    <span style={{ width: 28, flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.islamic, fontWeight: 600 }}>{row.islamic}</span>
-                  </div>
-                  {/* Christian bar */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${christianPct}%`, background: `linear-gradient(90deg,${religiousOrgScale.christian},${religiousOrgScale.christian}50)` }} />
-                    </div>
-                    <span style={{ width: 28, flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.christian, fontWeight: 600 }}>{row.christian}</span>
-                  </div>
-                </div>
+            <div key={row.county} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ width: 90, flexShrink: 0, fontFamily: "'Gotham'", fontSize: 11, color: isMSA ? '#C8BCA8' : '#B4A490', textAlign: 'right' }}>
+                {row.county}
+                {!isMSA && <span style={{ color: '#B4A490', fontSize: 9, marginLeft: 3 }}>ext</span>}
               </div>
+              <div style={{ flex: 1, height: 10, background: 'rgba(255,255,255,0.05)', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
+                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${islamicPct}%`, background: `linear-gradient(90deg,${religiousOrgScale.islamic},${religiousOrgScale.islamic}50)` }} />
+              </div>
+              <span style={{ width: 28, flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.islamic, fontWeight: 600 }}>{row.islamic}</span>
             </div>
           )
         })}
@@ -825,7 +801,7 @@ export default function ReligiousPage() {
           )}
         </div>
 
-        {/* County comparison — Islamic vs Christian alongside each other */}
+        {/* County concentration — Islamic registered orgs (single series) */}
         {overview && overview.countyComparison.length > 0 && (
           <div style={{ marginBottom: 40 }}>
             <CountyComparison data={overview.countyComparison} />

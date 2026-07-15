@@ -48,11 +48,16 @@ export function toRgb(hex: string): string {
 // these prioritize instant readability of data weight over brand palette. Brand
 // orange #F04B28 is reserved for UI chrome + campus markers — zero data encodings.
 export const ordinalRamps = {
-  growth: { // diverging red→green; reds/greens differ in LIGHTNESS too (CVD-safe)
-    declining:   '#B3352B', // deep brick red — dark, clearly negative
-    stable:      '#3D434D', // dark neutral slate — recedes, near-basemap
-    growing:     '#5FA05A', // medium green
-    rapidGrowth: '#7ED957', // bright light green — highest luminance on the map
+  // Final growth palette chosen by stakeholder (Jolie, 7/15/26) after reviewing
+  // the first red/green pass live. Note: #AFA86B (growing) is lighter than
+  // #7C9749 (rapid growth), so peak brightness sits on tier 3, not tier 4 —
+  // if rapid growth doesn't pop enough in context, candidate tweak:
+  // growing → '#8F8A54'. Stakeholder decision.
+  growth: {
+    declining:   '#9C3521', // deep red
+    stable:      '#C38D2F', // amber
+    growing:     '#AFA86B', // olive
+    rapidGrowth: '#7C9749', // green
   },
   ses: { // sequential cool→warm, low→high; strong chroma for instant separation
     lowerIncome: '#1F3A5F', // deep navy
@@ -69,26 +74,23 @@ export const ordinalRamps = {
   },
 } as const
 
-// RELIGIOUS ORGS comparison (per stakeholder request).
-// Note: red/green here encodes the requested comparison for internal use. If this
-// chart is ever exported for external/leadership decks, consider a neutral
-// categorical pair (orange/teal) to avoid good-vs-bad connotation.
+// RELIGIOUS — single-series Islamic org concentration chart. The Islamic vs.
+// Christian comparison is gone (Jolie, 7/15/26), so no red/green semantics;
+// one neutral-strong hue from the growth-map palette family.
 export const religiousOrgScale = {
-  islamic:   '#C0392B', // red
-  christian: '#3FA34D', // green
+  islamic: '#C38D2F', // amber
 } as const
 
-// Text-legible counterparts of religiousOrgScale for small labels/counts on dark.
+// Text-legible counterpart of religiousOrgScale for small labels/counts on dark.
 export const religiousOrgTextColors = {
-  islamic:   '#E07A64',
-  christian: '#5FBF6E',
+  islamic: '#D3A044',
 } as const
 
 // Text-legible counterparts for dark surfaces. The ramp's dark fills sit near the
 // #323232 background and fall below WCAG AA as text — use these for colored
 // text/badges/labels keyed to a tier. Order (lightness) is preserved.
 export const ordinalTextColors = {
-  growth: { declining: '#E07A64', stable: '#A89A88', growing: '#6FB56A', rapidGrowth: '#7ED957' },
+  growth: { declining: '#E07A64', stable: '#D3A044', growing: '#AFA86B', rapidGrowth: '#8FAD57' },
   ses:    { lowerIncome: '#7A9BC4', lowerMiddle: '#5FA3C4', middle: '#4FC2B3', upperMiddle: '#E0B84B', upper: '#F2E86D' },
   fitScore: { tier0_44: '#A08E7A', tier45_59: '#B3966E', tier60_74: '#6FB56A', tier75up: '#7ED957' },
 } as const
