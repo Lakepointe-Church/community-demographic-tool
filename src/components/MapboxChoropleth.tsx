@@ -226,18 +226,21 @@ export default function MapboxChoropleth({
           paint:  { 'line-color': '#5C6B75', 'line-width': 1 },
         }, firstSymbolId)
 
-        // Near-black basemap labels, NO white halo. The paint override was always
-        // landing (devtools verified #2B2B2B) — what read as "white text" was the
-        // near-opaque white halo we were forcing: at map label sizes the outline
-        // swallows the thin dark glyph core and the label reads white. Per Jolie:
-        // dark font, no white stroke. Each property set is wrapped independently
-        // so one rejected layer/property can't abort the rest of the loop.
+        // Near-black basemap labels, NO white halo (per Jolie). Root cause of the
+        // invisible/white-looking labels: GL JS v3 lights the style, and symbol
+        // layers with low `text-emissive-strength` render their text FILL as
+        // effectively invisible under that lighting while the halo still draws —
+        // so our (correctly applied) dark text-color never reached the screen.
+        // Forcing emissive strength to 1 makes the glyph render its pure paint
+        // color, unshaded. Each property set is wrapped independently so one
+        // rejected layer/property can't abort the rest of the loop.
         for (const layer of map.getStyle()?.layers ?? []) {
           if (layer.type !== 'symbol') continue
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (!(layer as any).layout?.['text-field']) continue
           if (layer.id === 'zcta-label') continue // already themed explicitly below
           try { map.setPaintProperty(layer.id, 'text-color', '#1A1A1A') } catch { /* unsupported on this layer */ }
+          try { map.setPaintProperty(layer.id, 'text-emissive-strength', 1) } catch { /* unsupported on this layer */ }
           try { map.setPaintProperty(layer.id, 'text-halo-width', 0) } catch { /* unsupported on this layer */ }
         }
 
@@ -254,8 +257,10 @@ export default function MapboxChoropleth({
           },
           paint: {
             // Near-black, no white stroke — matches the basemap label treatment.
-            'text-color':      '#1A1A1A',
-            'text-halo-width': 0,
+            // Emissive 1 so the v3 lighting model can't dim the glyph fill.
+            'text-color':              '#1A1A1A',
+            'text-halo-width':         0,
+            'text-emissive-strength':  1,
           },
           minzoom: 9,
         })
