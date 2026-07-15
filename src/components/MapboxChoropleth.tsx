@@ -218,8 +218,22 @@ export default function MapboxChoropleth({
           id:     'zcta-border',
           type:   'line',
           source: 'zctas',
-          paint:  { 'line-color': '#B0BEC5', 'line-width': 1 },
+          paint:  { 'line-color': '#5C6B75', 'line-width': 1 },
         }, firstSymbolId)
+
+        // Darken the basemap's own place-name labels (city/town text) for contrast
+        // against the pastel fills — the default light-v11 gray reads too faint.
+        for (const layer of map.getStyle()?.layers ?? []) {
+          if (layer.type !== 'symbol') continue
+          if (!/place|settlement/i.test(layer.id)) continue
+          if (map.getPaintProperty(layer.id, 'text-color') !== undefined) {
+            map.setPaintProperty(layer.id, 'text-color', '#2B2B2B')
+          }
+          if (map.getPaintProperty(layer.id, 'text-halo-color') !== undefined) {
+            map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)')
+            map.setPaintProperty(layer.id, 'text-halo-width', 1.2)
+          }
+        }
 
         map.addLayer({
           id:     'zcta-label',
@@ -452,7 +466,7 @@ export default function MapboxChoropleth({
         height: ${isExisting ? 14 : 12}px;
         border-radius: 50%;
         background: ${isExisting ? '#F04B28' : '#A89A88'};
-        border: 2px solid ${isExisting ? '#fff' : 'rgba(255,255,255,0.4)'};
+        border: none;
         cursor: pointer;
         box-shadow: 0 0 ${isExisting ? '8px' : '4px'} ${isExisting ? 'rgba(240,75,40,0.6)' : 'rgba(0,0,0,0.5)'};
       `
@@ -601,7 +615,7 @@ export default function MapboxChoropleth({
       const el = document.createElement('div')
       el.style.cssText = `
         width: 16px; height: 16px; border-radius: 50%;
-        background: #7A9E8A; border: 2px solid #fff;
+        background: #7A9E8A; border: none;
         box-shadow: 0 0 10px rgba(122,158,138,0.7);
         cursor: pointer;
       `
@@ -676,7 +690,7 @@ export default function MapboxChoropleth({
           ))}
           {campuses.some(c => c.status === 'existing') && (
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#F04B28', border: '2px solid #fff' }} />
+              <div style={{ width: 10, height: 10, borderRadius: '50%', background: '#F04B28' }} />
               <span style={{ fontFamily: "'Gotham'", fontSize: '10px', color: '#9BA5B7', letterSpacing: '0.06em' }}>Campus</span>
             </div>
           )}
