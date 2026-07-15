@@ -172,6 +172,10 @@ export default function MapboxChoropleth({
           if (f.properties?.label) zctaLabelsRef.current[zcta] = f.properties.label as string
         }
 
+        // Insert the choropleth beneath the basemap's symbol layers so city/place
+        // names render on top of the (fully opaque) ZIP fills.
+        const firstSymbolId = map.getStyle()?.layers?.find(l => l.type === 'symbol')?.id
+
         map.addLayer({
           id:     'zcta-fill',
           type:   'fill',
@@ -185,18 +189,9 @@ export default function MapboxChoropleth({
               ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.stable],      ordinalRamps.growth.stable,
               ordinalRamps.growth.declining,
             ],
-            // Diverging scale: declining stays clearly visible as red; stable
-            // (and no-data) is the tier that fades into the basemap.
-            'fill-opacity': [
-              'case',
-              ['==', ['get', 'growth'], null], 0.45,
-              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.rapidGrowth], 0.85,
-              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.growing],     0.7,
-              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.stable],      0.45,
-              0.7,
-            ],
+            'fill-opacity': 1,
           },
-        })
+        }, firstSymbolId)
 
         map.addLayer({
           id:     'zcta-fill-hover',
@@ -206,14 +201,14 @@ export default function MapboxChoropleth({
             'fill-color':   '#ffffff',
             'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.15, 0],
           },
-        })
+        }, firstSymbolId)
 
         map.addLayer({
           id:     'zcta-border',
           type:   'line',
           source: 'zctas',
           paint:  { 'line-color': '#323232', 'line-width': 1.5 },
-        })
+        }, firstSymbolId)
 
         map.addLayer({
           id:     'zcta-label',
