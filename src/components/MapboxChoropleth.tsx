@@ -221,18 +221,18 @@ export default function MapboxChoropleth({
           paint:  { 'line-color': '#5C6B75', 'line-width': 1 },
         }, firstSymbolId)
 
-        // Darken the basemap's own place-name labels (city/town text) for contrast
-        // against the pastel fills — the default light-v11 gray reads too faint.
+        // Darken every basemap label (city/town/road/POI text) for contrast against
+        // the pastel fills — light-v11's default gray reads as washed-out/white.
+        // Force the override unconditionally (don't gate on a prior explicit
+        // value — the style always sets these, but the check was unreliable).
         for (const layer of map.getStyle()?.layers ?? []) {
           if (layer.type !== 'symbol') continue
-          if (!/place|settlement/i.test(layer.id)) continue
-          if (map.getPaintProperty(layer.id, 'text-color') !== undefined) {
-            map.setPaintProperty(layer.id, 'text-color', '#2B2B2B')
-          }
-          if (map.getPaintProperty(layer.id, 'text-halo-color') !== undefined) {
-            map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)')
-            map.setPaintProperty(layer.id, 'text-halo-width', 1.2)
-          }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          if (!(layer as any).layout?.['text-field']) continue
+          if (layer.id === 'zcta-label') continue // already themed explicitly below
+          map.setPaintProperty(layer.id, 'text-color', '#2B2B2B')
+          map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)')
+          map.setPaintProperty(layer.id, 'text-halo-width', 1.2)
         }
 
         map.addLayer({
