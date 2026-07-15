@@ -124,7 +124,7 @@ export default function MapboxChoropleth({
 
       map = new mapboxgl.Map({
         container: containerRef.current!,
-        style: 'mapbox://styles/mapbox/dark-v11',
+        style: 'mapbox://styles/mapbox/light-v11',
         center: [-96.82, 32.90],
         zoom: 8.8,
         attributionControl: false,
@@ -172,6 +172,16 @@ export default function MapboxChoropleth({
           if (f.properties?.label) zctaLabelsRef.current[zcta] = f.properties.label as string
         }
 
+        // Google Maps-style light basemap: tint the land background + water bodies
+        // (stakeholder hexes). Water is what shows through the gaps where ZCTA
+        // polygons don't cover open water (lakes/reservoirs).
+        if (map.getLayer('background')) {
+          map.setPaintProperty('background', 'background-color', '#F4F2F2')
+        }
+        if (map.getLayer('water')) {
+          map.setPaintProperty('water', 'fill-color', '#6E8794')
+        }
+
         // Insert the choropleth beneath the basemap's symbol layers so city/place
         // names render on top of the (fully opaque) ZIP fills.
         const firstSymbolId = map.getStyle()?.layers?.find(l => l.type === 'symbol')?.id
@@ -183,7 +193,7 @@ export default function MapboxChoropleth({
           paint:  {
             'fill-color': [
               'case',
-              ['==', ['get', 'growth'], null], '#2a3044',
+              ['==', ['get', 'growth'], null], ordinalRamps.growth.noData,
               ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.rapidGrowth], ordinalRamps.growth.rapidGrowth,
               ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.growing],     ordinalRamps.growth.growing,
               ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.stable],      ordinalRamps.growth.stable,
@@ -198,8 +208,9 @@ export default function MapboxChoropleth({
           type:   'fill',
           source: 'zctas',
           paint:  {
-            'fill-color':   '#ffffff',
-            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.15, 0],
+            // Light basemap — hover tint darkens instead of the old white-on-dark wash.
+            'fill-color':   '#000000',
+            'fill-opacity': ['case', ['boolean', ['feature-state', 'hover'], false], 0.08, 0],
           },
         }, firstSymbolId)
 
@@ -207,7 +218,7 @@ export default function MapboxChoropleth({
           id:     'zcta-border',
           type:   'line',
           source: 'zctas',
-          paint:  { 'line-color': '#323232', 'line-width': 1.5 },
+          paint:  { 'line-color': '#B0BEC5', 'line-width': 1 },
         }, firstSymbolId)
 
         map.addLayer({
@@ -222,9 +233,10 @@ export default function MapboxChoropleth({
             'text-anchor':      'center',
           },
           paint: {
-            'text-color':       'rgba(255,255,255,0.65)',
-            'text-halo-color':  'rgba(0,0,0,0.3)',
-            'text-halo-width':  1,
+            // Dark text + light halo — flipped for the light Google Maps-style basemap.
+            'text-color':       'rgba(43,43,43,0.75)',
+            'text-halo-color':  'rgba(255,255,255,0.85)',
+            'text-halo-width':  1.2,
           },
           minzoom: 9,
         })
@@ -655,6 +667,7 @@ export default function MapboxChoropleth({
             { label: 'Stable',       color: ordinalRamps.growth.stable },
             { label: 'Growing',      color: ordinalRamps.growth.growing },
             { label: 'Rapid Growth', color: ordinalRamps.growth.rapidGrowth },
+            { label: 'No Data',      color: ordinalRamps.growth.noData },
           ].map(({ label, color }) => (
             <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <div style={{ width: 10, height: 10, background: color, border: '1px solid rgba(255,255,255,0.25)' }} />

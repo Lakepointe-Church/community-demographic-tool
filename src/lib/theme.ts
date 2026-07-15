@@ -48,16 +48,14 @@ export function toRgb(hex: string): string {
 // these prioritize instant readability of data weight over brand palette. Brand
 // orange #F04B28 is reserved for UI chrome + campus markers — zero data encodings.
 export const ordinalRamps = {
-  // Final growth palette chosen by stakeholder (Jolie, 7/15/26) after reviewing
-  // the first red/green pass live. Note: #AFA86B (growing) is lighter than
-  // #7C9749 (rapid growth), so peak brightness sits on tier 3, not tier 4 —
-  // if rapid growth doesn't pop enough in context, candidate tweak:
-  // growing → '#8F8A54'. Stakeholder decision.
+  // Google Maps-style pastel palette chosen by stakeholder (Jolie, 7/16/26) —
+  // light basemap (mapbox/light-v11), soft desaturated tints per tier.
   growth: {
-    declining:   '#9C3521', // deep red
-    stable:      '#C38D2F', // amber
-    growing:     '#AFA86B', // olive
-    rapidGrowth: '#7C9749', // green
+    noData:      '#D7E0E4', // areas with no growth data
+    declining:   '#FBE7E5', // pale rose
+    stable:      '#F8F0DD', // pale cream
+    growing:     '#BBE5F0', // pale sky blue
+    rapidGrowth: '#C1F0D4', // pale mint green
   },
   ses: { // sequential cool→warm, low→high; strong chroma for instant separation
     lowerIncome: '#1F3A5F', // deep navy
@@ -105,7 +103,9 @@ export const sesTierRgb: Record<keyof typeof ordinalRamps.ses, string> = {
 }
 
 // Single source for the growth tier thresholds (map fill, legend, table text).
-export type GrowthTier = keyof typeof ordinalRamps.growth
+// 'noData' is a distinct bucket (no growth figure at all), not part of the
+// ordinal low→high tiers, so it's excluded from the threshold-driven type.
+export type GrowthTier = Exclude<keyof typeof ordinalRamps.growth, 'noData'>
 export const GROWTH_THRESHOLDS = { rapidGrowth: 20, growing: 8, stable: 0 } as const
 export function growthTier(g: number | null): GrowthTier | null {
   if (g == null) return null
