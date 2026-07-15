@@ -223,16 +223,18 @@ export default function MapboxChoropleth({
 
         // Darken every basemap label (city/town/road/POI text) for contrast against
         // the pastel fills — light-v11's default gray reads as washed-out/white.
-        // Force the override unconditionally (don't gate on a prior explicit
-        // value — the style always sets these, but the check was unreliable).
+        // Each property set is wrapped independently: a layer that rejects one
+        // paint property (e.g. no halo support) must not abort the whole loop
+        // and leave every later layer (settlement/place labels sort near the
+        // end of the style's layer array) unstyled.
         for (const layer of map.getStyle()?.layers ?? []) {
           if (layer.type !== 'symbol') continue
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (!(layer as any).layout?.['text-field']) continue
           if (layer.id === 'zcta-label') continue // already themed explicitly below
-          map.setPaintProperty(layer.id, 'text-color', '#2B2B2B')
-          map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)')
-          map.setPaintProperty(layer.id, 'text-halo-width', 1.2)
+          try { map.setPaintProperty(layer.id, 'text-color', '#2B2B2B') } catch { /* unsupported on this layer */ }
+          try { map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)') } catch { /* unsupported on this layer */ }
+          try { map.setPaintProperty(layer.id, 'text-halo-width', 1.2) } catch { /* unsupported on this layer */ }
         }
 
         map.addLayer({
