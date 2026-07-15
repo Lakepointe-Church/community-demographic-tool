@@ -227,15 +227,25 @@ export default function MapboxChoropleth({
         // paint property (e.g. no halo support) must not abort the whole loop
         // and leave every later layer (settlement/place labels sort near the
         // end of the style's layer array) unstyled.
-        for (const layer of map.getStyle()?.layers ?? []) {
+        // TEMPORARY DIAGNOSTIC — remove once the label-darkening bug is confirmed
+        // fixed. Logs exactly which style layers this loop finds/touches so we
+        // can tell a matching bug from a rendering-order bug from devtools output.
+        const allLayers = map.getStyle()?.layers ?? []
+        const matched: string[] = []
+        for (const layer of allLayers) {
           if (layer.type !== 'symbol') continue
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (!(layer as any).layout?.['text-field']) continue
           if (layer.id === 'zcta-label') continue // already themed explicitly below
-          try { map.setPaintProperty(layer.id, 'text-color', '#2B2B2B') } catch { /* unsupported on this layer */ }
-          try { map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)') } catch { /* unsupported on this layer */ }
-          try { map.setPaintProperty(layer.id, 'text-halo-width', 1.2) } catch { /* unsupported on this layer */ }
+          matched.push(layer.id)
+          try { map.setPaintProperty(layer.id, 'text-color', '#2B2B2B') } catch (e) { console.warn('[CIP label-darken] text-color rejected on', layer.id, e) }
+          try { map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)') } catch (e) { console.warn('[CIP label-darken] text-halo-color rejected on', layer.id, e) }
+          try { map.setPaintProperty(layer.id, 'text-halo-width', 1.2) } catch (e) { console.warn('[CIP label-darken] text-halo-width rejected on', layer.id, e) }
         }
+        console.log('[CIP label-darken] total style layers:', allLayers.length)
+        console.log('[CIP label-darken] symbol layers with text matched:', matched)
+        console.log('[CIP label-darken] sample verify — settlement-major-label text-color now:',
+          map.getLayer('settlement-major-label') ? map.getPaintProperty('settlement-major-label', 'text-color') : '(no such layer id)')
 
         map.addLayer({
           id:     'zcta-label',
