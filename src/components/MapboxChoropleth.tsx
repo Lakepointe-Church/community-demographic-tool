@@ -3,6 +3,12 @@
 import { useEffect, useRef } from 'react'
 import type { CampusInfo } from '@/lib/campuses'
 import { ordinalRamps, ordinalTextColors, growthTier, GROWTH_THRESHOLDS } from '@/lib/theme'
+// Static side-effect import so the bundler extracts + injects this stylesheet
+// before the map ever renders. The previous `import(...)` inside an async
+// callback (with no `await`) didn't reliably land in time — Mapbox GL warned
+// "missing CSS declarations" at runtime, which skews canvas sizing/DPR and,
+// in turn, how thin strokes (borders, text halos) actually render.
+import 'mapbox-gl/dist/mapbox-gl.css'
 
 // ── Point-in-polygon (ray casting) ──────────────────────────────────────────
 function pointInRing(pt: [number, number], ring: number[][]): boolean {
@@ -119,7 +125,6 @@ export default function MapboxChoropleth({
     let map: mapboxgl.Map
 
     import('mapbox-gl').then(({ default: mapboxgl }) => {
-      import('mapbox-gl/dist/mapbox-gl.css' as never)
       mapboxgl.accessToken = token
 
       map = new mapboxgl.Map({
@@ -227,25 +232,15 @@ export default function MapboxChoropleth({
         // paint property (e.g. no halo support) must not abort the whole loop
         // and leave every later layer (settlement/place labels sort near the
         // end of the style's layer array) unstyled.
-        // TEMPORARY DIAGNOSTIC — remove once the label-darkening bug is confirmed
-        // fixed. Logs exactly which style layers this loop finds/touches so we
-        // can tell a matching bug from a rendering-order bug from devtools output.
-        const allLayers = map.getStyle()?.layers ?? []
-        const matched: string[] = []
-        for (const layer of allLayers) {
+        for (const layer of map.getStyle()?.layers ?? []) {
           if (layer.type !== 'symbol') continue
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (!(layer as any).layout?.['text-field']) continue
           if (layer.id === 'zcta-label') continue // already themed explicitly below
-          matched.push(layer.id)
-          try { map.setPaintProperty(layer.id, 'text-color', '#2B2B2B') } catch (e) { console.warn('[CIP label-darken] text-color rejected on', layer.id, e) }
-          try { map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)') } catch (e) { console.warn('[CIP label-darken] text-halo-color rejected on', layer.id, e) }
-          try { map.setPaintProperty(layer.id, 'text-halo-width', 1.2) } catch (e) { console.warn('[CIP label-darken] text-halo-width rejected on', layer.id, e) }
+          try { map.setPaintProperty(layer.id, 'text-color', '#2B2B2B') } catch { /* unsupported on this layer */ }
+          try { map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)') } catch { /* unsupported on this layer */ }
+          try { map.setPaintProperty(layer.id, 'text-halo-width', 1.2) } catch { /* unsupported on this layer */ }
         }
-        console.log('[CIP label-darken] total style layers:', allLayers.length)
-        console.log('[CIP label-darken] symbol layers with text matched:', matched)
-        console.log('[CIP label-darken] sample verify — settlement-major-label text-color now:',
-          map.getLayer('settlement-major-label') ? map.getPaintProperty('settlement-major-label', 'text-color') : '(no such layer id)')
 
         map.addLayer({
           id:     'zcta-label',
