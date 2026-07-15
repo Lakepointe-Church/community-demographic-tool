@@ -226,20 +226,19 @@ export default function MapboxChoropleth({
           paint:  { 'line-color': '#5C6B75', 'line-width': 1 },
         }, firstSymbolId)
 
-        // Darken every basemap label (city/town/road/POI text) for contrast against
-        // the pastel fills — light-v11's default gray reads as washed-out/white.
-        // Each property set is wrapped independently: a layer that rejects one
-        // paint property (e.g. no halo support) must not abort the whole loop
-        // and leave every later layer (settlement/place labels sort near the
-        // end of the style's layer array) unstyled.
+        // Near-black basemap labels, NO white halo. The paint override was always
+        // landing (devtools verified #2B2B2B) — what read as "white text" was the
+        // near-opaque white halo we were forcing: at map label sizes the outline
+        // swallows the thin dark glyph core and the label reads white. Per Jolie:
+        // dark font, no white stroke. Each property set is wrapped independently
+        // so one rejected layer/property can't abort the rest of the loop.
         for (const layer of map.getStyle()?.layers ?? []) {
           if (layer.type !== 'symbol') continue
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           if (!(layer as any).layout?.['text-field']) continue
           if (layer.id === 'zcta-label') continue // already themed explicitly below
-          try { map.setPaintProperty(layer.id, 'text-color', '#2B2B2B') } catch { /* unsupported on this layer */ }
-          try { map.setPaintProperty(layer.id, 'text-halo-color', 'rgba(255,255,255,0.9)') } catch { /* unsupported on this layer */ }
-          try { map.setPaintProperty(layer.id, 'text-halo-width', 1.2) } catch { /* unsupported on this layer */ }
+          try { map.setPaintProperty(layer.id, 'text-color', '#1A1A1A') } catch { /* unsupported on this layer */ }
+          try { map.setPaintProperty(layer.id, 'text-halo-width', 0) } catch { /* unsupported on this layer */ }
         }
 
         map.addLayer({
@@ -254,10 +253,9 @@ export default function MapboxChoropleth({
             'text-anchor':      'center',
           },
           paint: {
-            // Dark text + light halo — flipped for the light Google Maps-style basemap.
-            'text-color':       'rgba(43,43,43,0.75)',
-            'text-halo-color':  'rgba(255,255,255,0.85)',
-            'text-halo-width':  1.2,
+            // Near-black, no white stroke — matches the basemap label treatment.
+            'text-color':      '#1A1A1A',
+            'text-halo-width': 0,
           },
           minzoom: 9,
         })
