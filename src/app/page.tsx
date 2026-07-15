@@ -511,14 +511,14 @@ export default function OverviewPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
               {insights.map((z, i) => {
-                // Light-bg (#DED7CC) counterparts of ordinalRamps.fitScore — dark orange
-                // stays the top tier; lower tiers step down in warmth, not hue-jump.
-                const color = z.fitScore >= 75 ? '#C43818' : z.fitScore >= 60 ? '#A06020' : '#6A5A50'
+                // Light-bg (#DED7CC) counterparts of ordinalRamps.fitScore — green top
+                // tier (spec v2); on light ground the strongest tier is the darkest.
+                const color = z.fitScore >= 75 ? '#1F6B1C' : z.fitScore >= 60 ? '#557A3A' : '#6A5A50'
                 const topPct = Math.max(1, Math.round((z.rank / z.total) * 100))
                 return (
                   <div key={z.zip} style={{
                     background: 'rgba(255,255,255,0.45)',
-                    border: `1px solid ${i === 0 ? 'rgba(196,56,24,0.3)' : 'rgba(50,50,50,0.12)'}`,
+                    border: `1px solid ${i === 0 ? 'rgba(31,107,28,0.4)' : 'rgba(50,50,50,0.12)'}`,
                     borderRadius: 8, padding: '16px 18px',
                     borderLeft: `3px solid ${color}`,
                   }}>
@@ -540,7 +540,7 @@ export default function OverviewPage() {
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' as const, marginBottom: 6 }}>
                       {z.populationGrowth != null && (
-                        <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: z.populationGrowth >= 0 ? '#A06020' : '#B04030' }}>
+                        <span style={{ fontFamily: "'Gotham'", fontSize: 10, color: z.populationGrowth >= 0 ? '#1F6B1C' : '#B04030' }}>
                           Growth {z.populationGrowth.toFixed(1)}%
                         </span>
                       )}

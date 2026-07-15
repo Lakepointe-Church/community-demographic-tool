@@ -44,46 +44,62 @@ export function toRgb(hex: string): string {
   return rgbMap[hex] ?? rgbMap[colors.gold]
 }
 
-// Ordinal ramps: index 0 = lowest/negative (darkest), last = highest/target (brightest).
-// #F04B28 (Lakepointe Orange) appears ONLY as the top tier of any ordinal scale.
+// Ordinal/diverging data scales (CIP spec v2 — brand-relaxed). CIP is internal-only:
+// these prioritize instant readability of data weight over brand palette. Brand
+// orange #F04B28 is reserved for UI chrome + campus markers — zero data encodings.
 export const ordinalRamps = {
-  growth: {
-    declining:   '#33302C', // dark charcoal-taupe — recedes into basemap
-    stable:      '#5C6470', // muted slate-gray — neutral, low salience
-    growing:     '#D4883A', // warm amber — clearly "heating up"
-    rapidGrowth: '#F04B28', // Lakepointe Orange — the target, brightest/warmest
+  growth: { // diverging red→green; reds/greens differ in LIGHTNESS too (CVD-safe)
+    declining:   '#B3352B', // deep brick red — dark, clearly negative
+    stable:      '#3D434D', // dark neutral slate — recedes, near-basemap
+    growing:     '#5FA05A', // medium green
+    rapidGrowth: '#7ED957', // bright light green — highest luminance on the map
   },
-  ses: { // ordered low → high income
-    lowerIncome: '#33302C',
-    lowerMiddle: '#5C554B',
-    middle:      '#8A7B63',
-    upperMiddle: '#C4A97E',
-    upper:       '#DED7CC', // brand Taupe — lightest; reads highest on dark bg
+  ses: { // sequential cool→warm, low→high; strong chroma for instant separation
+    lowerIncome: '#1F3A5F', // deep navy
+    lowerMiddle: '#2E6E8E', // ocean blue
+    middle:      '#3FA79A', // teal
+    upperMiddle: '#E0B84B', // gold
+    upper:       '#F2E86D', // bright pale gold — top of scale, brightest
   },
-  fitScore: { // ordered low → high
+  fitScore: { // ordered low → high; green-tinted top, consistent with growthScale
     tier0_44:  '#3F3B36',
     tier45_59: '#8A7B68',
-    tier60_74: '#D4883A',
-    tier75up:  '#F04B28',
+    tier60_74: '#5FA05A',
+    tier75up:  '#7ED957',
   },
 } as const
 
-// Text-legible counterparts for dark surfaces. The ramp's low-end fills sit near
-// the #323232 background and fall below WCAG AA as text — use these for colored
-// text/badges/labels keyed to a tier. Order (lightness/warmth) is preserved.
+// RELIGIOUS ORGS comparison (per stakeholder request).
+// Note: red/green here encodes the requested comparison for internal use. If this
+// chart is ever exported for external/leadership decks, consider a neutral
+// categorical pair (orange/teal) to avoid good-vs-bad connotation.
+export const religiousOrgScale = {
+  islamic:   '#C0392B', // red
+  christian: '#3FA34D', // green
+} as const
+
+// Text-legible counterparts of religiousOrgScale for small labels/counts on dark.
+export const religiousOrgTextColors = {
+  islamic:   '#E07A64',
+  christian: '#5FBF6E',
+} as const
+
+// Text-legible counterparts for dark surfaces. The ramp's dark fills sit near the
+// #323232 background and fall below WCAG AA as text — use these for colored
+// text/badges/labels keyed to a tier. Order (lightness) is preserved.
 export const ordinalTextColors = {
-  growth: { declining: '#C45A46', stable: '#A89A88', growing: '#D4883A', rapidGrowth: '#F04B28' },
-  ses:    { lowerIncome: '#A08E7A', lowerMiddle: '#A89A88', middle: '#B3A48C', upperMiddle: '#C4A97E', upper: '#DED7CC' },
-  fitScore: { tier0_44: '#A08E7A', tier45_59: '#B3966E', tier60_74: '#D4883A', tier75up: '#F04B28' },
+  growth: { declining: '#E07A64', stable: '#A89A88', growing: '#6FB56A', rapidGrowth: '#7ED957' },
+  ses:    { lowerIncome: '#7A9BC4', lowerMiddle: '#5FA3C4', middle: '#4FC2B3', upperMiddle: '#E0B84B', upper: '#F2E86D' },
+  fitScore: { tier0_44: '#A08E7A', tier45_59: '#B3966E', tier60_74: '#6FB56A', tier75up: '#7ED957' },
 } as const
 
 // Comma-separated RGB of the text-legible SES tier colors, for rgba() badge tints.
 export const sesTierRgb: Record<keyof typeof ordinalRamps.ses, string> = {
-  lowerIncome: '160,142,122',
-  lowerMiddle: '168,154,136',
-  middle:      '179,164,140',
-  upperMiddle: '196,169,126',
-  upper:       '222,215,204',
+  lowerIncome: '122,155,196',
+  lowerMiddle: '95,163,196',
+  middle:      '79,194,179',
+  upperMiddle: '224,184,75',
+  upper:       '242,232,109',
 }
 
 // Single source for the growth tier thresholds (map fill, legend, table text).

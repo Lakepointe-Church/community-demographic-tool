@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from 'react'
 import { ZIP_GROUPS, CAMPUS_ZIPS } from '@/lib/zips'
 import { CORE_MSA_COUNTIES } from '@/lib/zip-county'
 import { StatCardAccent as StatCard } from '@/components/ui/StatCardAccent'
+import { religiousOrgScale, religiousOrgTextColors } from '@/lib/theme'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -75,7 +76,7 @@ const FAITH_COLORS: Record<string, string> = {
   Islamic:    '#D4883A',
   Jewish:     '#7A9E8A',
   Hindu:      '#C45A46',
-  Buddhist:   '#F04B28',
+  Buddhist:   '#9C7BD4', // violet — brand orange is chrome-only, never a data fill (spec v2)
   Unitarian:  '#94A3B8',
   Other:      '#A89A88',
 }
@@ -606,14 +607,14 @@ function CountyComparison({ data }: { data: CountyRow[] }) {
         <SourceTag />
       </div>
 
-      {/* Legend */}
+      {/* Legend — religiousOrgScale (red/green comparison per stakeholder request) */}
       <div style={{ display: 'flex', gap: 16, marginBottom: 18 }}>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Gotham'", fontSize: 10, color: '#D4883A' }}>
-          <span style={{ width: 10, height: 10, borderRadius: 2, background: '#D4883A', display: 'inline-block' }} />
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.islamic }}>
+          <span style={{ width: 10, height: 10, borderRadius: 2, background: religiousOrgScale.islamic, display: 'inline-block' }} />
           Islamic
         </span>
-        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Gotham'", fontSize: 10, color: '#7AA3AA' }}>
-          <span style={{ width: 10, height: 10, borderRadius: 2, background: '#7AA3AA', display: 'inline-block' }} />
+        <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.christian }}>
+          <span style={{ width: 10, height: 10, borderRadius: 2, background: religiousOrgScale.christian, display: 'inline-block' }} />
           Christian
         </span>
       </div>
@@ -635,16 +636,16 @@ function CountyComparison({ data }: { data: CountyRow[] }) {
                   {/* Islamic bar */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${islamicPct}%`, background: 'linear-gradient(90deg,#D4883A,#D4883A50)' }} />
+                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${islamicPct}%`, background: `linear-gradient(90deg,${religiousOrgScale.islamic},${religiousOrgScale.islamic}50)` }} />
                     </div>
-                    <span style={{ width: 28, flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: 10, color: '#D4883A', fontWeight: 600 }}>{row.islamic}</span>
+                    <span style={{ width: 28, flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.islamic, fontWeight: 600 }}>{row.islamic}</span>
                   </div>
                   {/* Christian bar */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <div style={{ flex: 1, height: 8, background: 'rgba(255,255,255,0.05)', borderRadius: 2, position: 'relative', overflow: 'hidden' }}>
-                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${christianPct}%`, background: 'linear-gradient(90deg,#7AA3AA,#7AA3AA50)' }} />
+                      <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${christianPct}%`, background: `linear-gradient(90deg,${religiousOrgScale.christian},${religiousOrgScale.christian}50)` }} />
                     </div>
-                    <span style={{ width: 28, flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: 10, color: '#7AA3AA', fontWeight: 600 }}>{row.christian}</span>
+                    <span style={{ width: 28, flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: 10, color: religiousOrgTextColors.christian, fontWeight: 600 }}>{row.christian}</span>
                   </div>
                 </div>
               </div>

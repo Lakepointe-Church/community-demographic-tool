@@ -1054,9 +1054,9 @@ export default function DemographicsPage() {
                                 {place.name}
                               </div>
                               <div style={{ flex: 1, height: '12px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', position: 'relative', overflow: 'hidden' }}>
-                                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'linear-gradient(90deg,#F04B28,#F04B2850)' }} />
+                                <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${pct}%`, background: 'linear-gradient(90deg,#D4883A,#D4883A50)' }} />
                               </div>
-                              <div style={{ width: '50px', flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: '10px', color: '#F04B28', fontWeight: 600 }}>
+                              <div style={{ width: '50px', flexShrink: 0, textAlign: 'right', fontFamily: "'Gotham'", fontSize: '10px', color: '#D4883A', fontWeight: 600 }}>
                                 {place.totalPermits.toLocaleString()}
                               </div>
                               {place.yoyPct != null && (

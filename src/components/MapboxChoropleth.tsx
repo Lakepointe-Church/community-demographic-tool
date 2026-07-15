@@ -185,13 +185,15 @@ export default function MapboxChoropleth({
               ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.stable],      ordinalRamps.growth.stable,
               ordinalRamps.growth.declining,
             ],
-            // Top tier also pops by opacity (not hue alone); declining recedes.
+            // Diverging scale: declining stays clearly visible as red; stable
+            // (and no-data) is the tier that fades into the basemap.
             'fill-opacity': [
               'case',
-              ['==', ['get', 'growth'], null], 0.6,
+              ['==', ['get', 'growth'], null], 0.45,
               ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.rapidGrowth], 0.85,
-              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.stable],      0.65,
-              0.5,
+              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.growing],     0.7,
+              ['>=', ['get', 'growth'], GROWTH_THRESHOLDS.stable],      0.45,
+              0.7,
             ],
           },
         })
@@ -479,8 +481,9 @@ export default function MapboxChoropleth({
       return
     }
 
-    // Assign colors based on drive-time order (outermost = lightest)
-    const colors = ['#7AA3AA', '#D4883A', '#F04B28']
+    // Assign colors based on drive-time order (outermost = lightest).
+    // Brand orange is chrome/campus-marker-only (spec v2) — not used for rings.
+    const colors = ['#7AA3AA', '#D4883A', '#E8DDD0']
     const features = isochroneGeoJson.features.map((f, i) => ({
       ...f,
       properties: { ...f.properties, color: colors[i % colors.length] },
